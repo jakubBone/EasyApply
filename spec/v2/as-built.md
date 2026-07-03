@@ -190,10 +190,13 @@ offers a per-card one-click archive as `REJECTED` / `NO_RESPONSE` (v1 enums).
 
 ## 7. v2 status
 
-Phases 1-6 built (frontend **120/120**, lint + build green). Backend is **not
-compiled in this workspace (no JDK)**; `./mvnw test` is run on a dev machine.
-**v2 is not yet released** — no CHANGELOG entry, README still omits v2 features, app
-version is still `1.1.0`, no deploy. Release chores are the remaining work.
+Phases 1-6 built. Re-verified 2026-07-03: frontend **120/120** (`npm run test:run`),
+`lint` and `build` green. Backend is **not compiled in this workspace (no JDK)**;
+`./mvnw test` needs to be run on a dev machine to confirm.
+**v2 is not yet released** — no CHANGELOG entry, app version is still `1.1.0`, no
+deploy. (Main `README.md`'s feature list was updated 2026-07-03 to mention the
+cheat sheet and board cleanup — the remaining release chores are CHANGELOG, version
+bump, `npm run e2e`, and deploy.)
 
 ---
 
