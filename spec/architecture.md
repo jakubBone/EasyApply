@@ -1,6 +1,9 @@
-# Applikon v1 — Architecture Reference
+# Applikon — Architecture Reference
 
 > Source of truth: the code. This document reflects the actual implemented state.
+> Originally written for v1; per `spec/PROCESS.md`, v2 gets no separate
+> `architecture.md` of its own (it adds no new technology), so its schema/endpoint/
+> component additions are folded into the same sections here, tagged **(v2)**.
 
 ---
 
@@ -134,6 +137,20 @@ com.applikon/
 |--------|------|-------------|
 | `GET` | `/api/statistics/badges` | Get badge stats (rejections, ghosting, offers, badges) |
 
+**ScreeningAnswerController — `/api/screening-answers`** (v2)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/screening-answers` | List current user's global "General" answers, ordered |
+| `PUT` | `/api/screening-answers` | Replace-all save of the global set |
+
+**ApplicationScreeningAnswerController — `/api/applications/{applicationId}/screening-answers`** (v2)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/applications/{applicationId}/screening-answers` | List "About the company" answers for one application |
+| `PUT` | `/api/applications/{applicationId}/screening-answers` | Replace-all save, scoped to that application (ownership verified) |
+
 **SystemController — `/api/system`** (phase 08)
 
 | Method | Path | Description |
@@ -194,6 +211,11 @@ com.applikon/
 | V13 | `V13__user_privacy_policy_accepted_at.sql` | Add privacy_policy_accepted_at column (phase 07) |
 | V14 | `V14__service_notices.sql` | Create service_notices table (phase 08) |
 | V15 | `V15__user_last_login_at.sql` | Add last_login_at column to users (phase 07) |
+| V16 | `V16__add_salary_field.sql` | Add flat `salary` column to `applications` (pre-v2; distinct from the existing `salary_min`/`salary_max` range) |
+| V17 | `V17__screening_answers.sql` | Create `screening_answers` table — global per-user "General" template (v2 Phase 1) |
+| V18 | `V18__application_company_research.sql` | Add `applications.company_research` TEXT (v2 Phase 3) — **dropped in V20** |
+| V19 | `V19__screening_answers_application_scope.sql` | Add nullable `screening_answers.application_id` FK — scopes rows to one application for "About the company" (v2 Phase 6) |
+| V20 | `V20__drop_application_company_research.sql` | Drop `applications.company_research` — superseded by V19 (v2 Phase 6) |
 
 ### Current tables
 
@@ -221,6 +243,7 @@ com.applikon/
 | link | VARCHAR(500) | nullable |
 | salary_min | INTEGER | nullable |
 | salary_max | INTEGER | nullable |
+| salary | INTEGER | nullable — flat proposed salary (V16, pre-v2), distinct from the min/max range above |
 | currency | VARCHAR(10) | nullable |
 | salary_type | VARCHAR(50) | nullable (GROSS/NET) |
 | contract_type | VARCHAR(50) | nullable (B2B/EMPLOYMENT/MANDATE/OTHER) |
@@ -274,6 +297,26 @@ com.applikon/
 
 **`stage_history`** — DROPPED (V12). Was: id, application_id FK, stage_name, completed, created_at, completed_at.
 
+**`screening_answers`** (v2)
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | BIGSERIAL | PK |
+| user_id | UUID | FK → users(id), NOT NULL, ON DELETE CASCADE |
+| application_id | BIGINT | FK → applications(id), nullable, ON DELETE CASCADE (V19) — `NULL` = global "General" row, set = "About the company" row for that application |
+| question_key | VARCHAR(64) | nullable — stable key for fixed questions (e.g. `about-me`, `company-knowledge`) |
+| label | VARCHAR(255) | nullable — used for custom questions |
+| answer | TEXT | nullable, max 1000 chars (app-level validation) |
+| custom | BOOLEAN | NOT NULL, default false |
+| sort_order | INT | NOT NULL, default 0 |
+| created_at | TIMESTAMP | NOT NULL |
+| updated_at | TIMESTAMP | nullable |
+
+**`applications.company_research`** (v2) — TEXT column added V18, held the per-application
+"About the company" free-text note before custom questions existed. DROPPED (V20) once
+superseded by `screening_answers.application_id` (V19) — see
+`spec/v2/as-built.md` §2.
+
 ### Relations
 
 - `applications.user_id` → `users.id`
@@ -281,6 +324,8 @@ com.applikon/
 - `cvs.user_id` → `users.id`
 - `notes.application_id` → `applications.id` (CASCADE DELETE)
 - `service_notices` — no FK relations; standalone admin-managed table
+- `screening_answers.user_id` → `users.id` (CASCADE DELETE) (v2)
+- `screening_answers.application_id` → `applications.id` (nullable, CASCADE DELETE) (v2)
 
 ---
 
@@ -306,6 +351,7 @@ com.applikon/
 | `list` | ApplicationTable | Sortable table with bulk delete |
 | `cv` | CVManager | Upload/manage CVs, assign to applications |
 | `details` | ApplicationDetails | Full application view with notes, CV, stage |
+| `answers` | CheatSheet | (v2) Cheat-sheet hub — company picker + "About the company" / "General" prep; view key unchanged from Phase 2, tab relabeled "Cheat sheet" in Phase 5 |
 
 ### Component tree
 
@@ -337,8 +383,10 @@ App.tsx
           fab                  — mobile floating action button
           main-content
             KanbanBoard
+              StaleBanner    — (v2) shown when ≥1 application is stale (SENT >60 days)
               KanbanColumn × 3 (SENT / IN_PROGRESS / FINISHED)
                 ApplicationCard (draggable)
+                  — (v2) stale badge + one-click archive action
                   DragOverlayCard
               OnboardingOverlay
               MoveModal     — status transition confirmation
@@ -347,7 +395,14 @@ App.tsx
             ApplicationTable
             CVManager        — disabled file upload (phase 07)
             ApplicationDetails
+              CollapsibleSection × 4 — accordion: Cheat sheet / Information / Job description / Notes (v2, Phase 5)
+                PrepReadonly   — same read-only Q&A used by the CheatSheet tab (v2)
               NotesList
+            CheatSheet         — (v2) company picker + collapsible "About the company" / "General"
+              CollapsibleSection × 2
+                PrepReadonly
+              GlobalAnswersModal      — edit "General" (v2)
+              CompanyQuestionsModal   — edit "About the company" (v2)
           Footer             — privacy policy link + contact email (phase 07)
 ```
 
@@ -369,6 +424,20 @@ App.tsx
 | `CountdownLabel` | `components/notices/CountdownLabel.tsx` | Inline `⏳ time left: X days X hours MM:SS` label (PL/EN); shown only when expiresAt is set |
 | `useCountdown` | `components/notices/useCountdown.ts` | setInterval-based hook; returns `TimeLeft {days, hours, minutes, seconds, expired} \| null` |
 
+### New components (v2)
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `CheatSheet` | `components/cheatsheet/CheatSheet.tsx` | Cheat-sheet tab: company picker + two read-only collapsible sections + edit-modal triggers |
+| `CollapsibleSection` | `components/prep/CollapsibleSection.tsx` | Accordion with icon/colour header, shared by the cheat sheet and `ApplicationDetails` |
+| `PrepReadonly` | `components/prep/PrepReadonly.tsx` | `CompanyPrepReadonly` (salary + company Q&A) and `GlobalAnswersReadonly` |
+| `GlobalAnswersModal` | `components/prep/GlobalAnswersModal.tsx` | Modal editor for "General" (fixed + custom questions, Save) |
+| `CompanyQuestionsModal` | `components/prep/CompanyQuestionsModal.tsx` | Modal editor for "About the company" (same shape as General, per application) |
+| `StaleBanner` | `components/kanban/StaleBanner.tsx` | Top-of-board banner counting stale (`SENT` >60 days) applications |
+| `utils/stale.ts` | `utils/stale.ts` | `isStale`, `daysSince`, `STALE_THRESHOLD_DAYS`, `ARCHIVE_STALE_PAYLOAD` |
+| `utils/salary.ts` | `utils/salary.ts` | `formatSalary` — shared by the cheat sheet and details |
+| `components/prep/globalAnswers.ts` | — | Shared template logic: `FIXED_QUESTION_KEYS`, `FIXED_COMPANY_KEY`, `buildItems` |
+
 ### Hooks (server state via React Query)
 
 | Hook | File | Manages |
@@ -378,6 +447,8 @@ App.tsx
 | `useCV` | hooks/useCV.ts | fetch, upload, create, update, delete, assignCV |
 | `useBadgeStats` | hooks/useBadgeStats.ts | fetch badge statistics |
 | `useServiceNotices` | hooks/useServiceNotices.ts | fetch active notices; staleTime 5 min; returns `[]` on error (phase 08) |
+| `useScreeningAnswers` / `useSaveScreeningAnswers` | hooks/useScreeningAnswers.ts | (v2) fetch/save the global "General" set |
+| `useApplicationScreeningAnswers` / `useSaveApplicationScreeningAnswers` | hooks/useScreeningAnswers.ts | (v2) fetch/save "About the company" for one application |
 
 ### API calls (api.ts → backend endpoints)
 
@@ -410,6 +481,10 @@ App.tsx
 | `fetchBadgeStats` | GET | `/api/statistics/badges` |
 | `fetchActiveNotices` | GET | `/api/system/notices/active` — returns `[]` on error, never breaks app (phase 08) |
 | `exportMyData` | GET | `/api/auth/me/export` — triggers blob download as `applikon-export.json` (phase 08) |
+| `fetchScreeningAnswers` | GET | `/api/screening-answers` (v2) |
+| `saveScreeningAnswers` | PUT | `/api/screening-answers` (v2) |
+| `fetchApplicationScreeningAnswers` | GET | `/api/applications/{id}/screening-answers` (v2) |
+| `saveApplicationScreeningAnswers` | PUT | `/api/applications/{id}/screening-answers` (v2) |
 
 ### i18n
 

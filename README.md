@@ -41,15 +41,17 @@
 Built with **Claude Code** using a strict spec-first approach. No code was written
 without a plan first; no plan was written without knowing what *not* to do.
 
-🟦 **Specify** → 🟪 **Plan** → 🟧 **Implement** → 🟨 **Review** → 🟩 **Refactor** ↺
+🟦 **Specify** → 🟪 **Plan** → 🟧 **Implement** → 🟥 **Use it for real** → back to 🟦 ↺
+*(🟨 Review and 🟩 Refactor ran once, for the v1 MVP - available anytime since via dedicated skills.)*
 
-|     | Stage          | What it produces                                                                                                              |
-|-----|----------------|-------------------------------------------------------------------------------------------------------------------------------|
-| 🟦  | **Specify**    | Defines the feature before any code: the idea, user, scope, **out of scope**, user stories with acceptance criteria.          |
-| 🟪  | **Plan**       | Implementation steps with tests batched at the end of each stage.                                                             |
-| 🟧  | **Implement**  | Code against the plan - each step with tests, DoD, and a Conventional Commit (`feat(backend)`, `refactor(frontend)`).         |
-| 🟨  | **Review**     | Findings classified **Critical / Important / Nice-to-have**, with **Status** and **Tested** columns until each one is closed. |
-| 🟩  | **Refactor**   | Fixes applied alongside learning: explain → fix → control questions → notes (the AI runs in *mentor mode*).                   |
+|     | Stage          | What it produces                                                                                                       |
+|-----|----------------|--------------------------------------------------------------------------------------------------------------------------|
+| 🟦  | **Specify**    | The idea, user, scope, **out of scope**, user stories with acceptance criteria.                                          |
+| 🟪  | **Plan**       | Implementation steps with tests batched at the end of each stage.                                                        |
+| 🟧  | **Implement**  | Code against the plan - each step with tests, DoD, and a Conventional Commit.                                            |
+| 🟥  | **Use it for real** | Ship it, then dogfood it. If reality disagrees, that's the next **Specify** - never a rewrite of the last one.      |
+| 🟨  | **Review**     | Findings classified **Critical / Important / Nice-to-have** until each is closed.                                        |
+| 🟩  | **Refactor**   | Fixes applied alongside learning: explain → fix → control questions → notes (mentor mode).                               |
 
 ## 🤖 Specs & Config
 
@@ -94,6 +96,8 @@ without a plan first; no plan was written without knowing what *not* to do.
 - **Data export** - download all personal data as JSON (RODO Art. 20)
 - **Service notices** - system announcements displayed on login (maintenance, updates)
 - **API documentation** - Swagger UI with all endpoints, schemas, and authorization
+- **Screening cheat sheet** - a "General" answers template (written once) plus a per-application "About the company" note, composed with the proposed salary on one screen before a recruiter call
+- **Board cleanup** - flags applications stuck in "Sent" for 60+ days with no response, with one-click archiving
 
 
 ## 🐳 Running with Docker

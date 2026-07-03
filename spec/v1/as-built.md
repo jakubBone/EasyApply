@@ -3,7 +3,7 @@
 > Generated: 2026-04-23. Describes the actual implemented state of Applikon v1 (ex. EasyApply)
 > Source of truth: the code. This document reflects what exists, not what was planned.
 >
-> **Architecture reference** (package structure, REST endpoints, DB schema, FE components) moved to `spec/v1/architecture.md`.
+> **Architecture reference** (package structure, REST endpoints, DB schema, FE components) is `spec/architecture.md` — moved out of `spec/v1/` since it now also covers v2's additions.
 >
 > **Latest update:** Post-v1 security cleanup (2026-05-08): `MdcUserFilter` moved to `observability/`, `ConsentRequiredFilter` migrated to `@Component`, dead code removed in `ConsentRequiredFilter`. No behaviour change. See section 10.
 
