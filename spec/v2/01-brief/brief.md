@@ -81,7 +81,7 @@ Deliberately excluded — v2 is the smallest release that delivers real value:
 - **Any new dependency, module split, or infrastructure.** v2 builds on the v1
   monolith as-is.
 - **No separate `architecture.md`:** the only new resource ("My answers") is fully
-  specified in [`03-plan.md`](03-plan.md), and v2 adds no new technology — there is
+  specified in [`../03-plan/plan.md`](../03-plan/plan.md), and v2 adds no new technology — there is
   nothing left to design.
 
 ---

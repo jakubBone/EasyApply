@@ -1,9 +1,9 @@
 
 # Applikon v2 — Implementation Plan
 
-> Phases with a testable Definition of Done. Sources: [`01-brief.md`](01-brief.md),
-> [`02-user-stories.md`](02-user-stories.md). Grounded in the v1 code
-> (`spec/v1/architecture.md`). v2 runs on the v1 monolith — no new infrastructure.
+> Phases with a testable Definition of Done. Sources: [`../01-brief/brief.md`](../01-brief/brief.md),
+> [`../02-user-stories/user-stories.md`](../02-user-stories/user-stories.md). Grounded in the v1 code
+> (`spec/architecture.md`). v2 runs on the v1 monolith — no new infrastructure.
 
 **Key reuse / grounding (from the v1 code):**
 - Applications already carry `status` and `appliedAt` (`@CreatedDate`); the
@@ -196,112 +196,22 @@ Covers US-3.1 / 3.2. Front-only.
 
 ---
 
-> **Phases 5–6 — pre-release UX revision (added 2026-07-02).** Phases 1–4 built the
-> v2 features; dogfooding *before the first v2 release* showed the UI had drifted into
-> clutter (scattered similar surfaces, confusing global-vs-per-application, the cheat
-> sheet hard to reach and hard to read). These phases consolidate the preparation
-> surfaces. They are part of **the same unreleased v2** (not a new version); phases 1–4
-> above stay as the truthful original record.
-
-## Phase 5 — UX consolidation (cheat-sheet hub, front-only)
-
-No DB change. Reworks how the v2 features are surfaced.
-
-**Build**
-- **The cheat-sheet tab replaces the old answers tab** as the single preparation surface:
-  - a **company picker** at the top (`Company - Position`);
-  - two **collapsible bars** (chevron), visually distinguished (emoji + colour):
-    **🏢 About the company** (read-only: proposed salary + "what do you know about us") and
-    **💬 General** (read-only global answers).
-  - Everything **read-only**; **Edit** opens a **modal with Save** (like
-    `ApplicationForm`) — separate modal for *General* and for *About the company*; salary
-    **Edit** opens the application edit form. Replaces the old inline autosave.
-  - This *is* the fast path for the recruiter-call scenario (tab → pick company →
-    questions). The per-card 📋 icon (found unintuitive) is **removed**.
-- **Details view** becomes an **accordion** with icon + colour headers:
-  **📋 Cheat sheet** (default open) · **ℹ️ Information** · **📄 Job description** · **📝 Notes**.
-  - The `▼ Cheat sheet` section is the same read-only content (no picker — the company is
-    known), with the same **Edit → modal** pattern.
-  - **Proposed salary removed from Information**; it lives only in the cheat sheet, shown as
-    an editable question-style item ("Your salary" → `7000 PLN (net, …)`).
-  - **Status badge is the change-status control** (click the badge, e.g. "Sent");
-    the separate button / `⋮` item is dropped.
-  - Status + stage collapse into **one label**: `In progress (Final interview)`.
-- **Consistency pass:** one shared visual language (`prep.css`) across the cheat sheet /
-  details; consistent typography & spacing; short dashes `-` everywhere; renames
-  **"Global" → "General"** (keep **"About the company"**); the tab label becomes "Cheat sheet".
-- i18n PL/EN for all new/changed strings.
-
-**Tests (vitest)** — picker selects a company; the cheat sheet renders read-only + Edit opens
-the modal; details accordion (cheat sheet open, salary absent from Information); status badge
-opens status change.
-
-**DoD** — one cheat-sheet hub (pick company → read questions), edit only via modals,
-decluttered accordion details, consistent style. `npm run test:run` + `lint` + `build` green.
-
-**Checklist**
-- [x] Cheat-sheet tab: company picker + collapsible 🏢 About the company / 💬 General (read-only)
-- [x] Edit via modals (General, About the company); salary read-only in the cheat sheet (§8)
-- [x] Details accordion (icon+colour headers); salary out of Information → cheat sheet
-- [x] Status badge = change status; `In progress (Final interview)` single label
-- [x] Shared style + typography, short dashes `-`, renames (General / keep About the company)
-- [x] i18n PL/EN · tests + lint + build green
-
----
-
-## Phase 6 — Per-application questions (backend `V19`)
-
-Lets **About the company** carry its own custom questions (like General), not just one note.
-
-> **History:** first delivered front-only (custom questions as JSON in the existing
-> `companyResearch` field), then — since v2 is unreleased — reworked to the planned `V19`
-> backend before shipping. See as-built §8.
-
-**Build — backend (`V19`, additive)**
-- `screening_answers` gains a nullable **`application_id`** (FK → `applications`,
-  `ON DELETE CASCADE`): `NULL` = global (General), set = per-application (About the company).
-- `db/migration/V19__screening_answers_application_scope.sql` — add column + index
-  `(user_id, application_id)`. **Additive only, no data backfill** — v2 is unreleased, so
-  the dormant `companyResearch` JSON is not migrated into rows.
-- Service/API extended to fetch/save answers **by scope** (global filters
-  `application_id IS NULL`; per-app verifies ownership via `existsByIdAndUserId`);
-  replace-all upsert per scope (as today), one scope never touching the other.
-- `ApplicationScreeningAnswerController` — `GET`/`PUT
-  /api/applications/{id}/screening-answers`; global endpoints unchanged.
-
-**Build — frontend**
-- **About the company** uses the same "fixed + add custom" editor as General, pointed at
-  the selected application via new per-app hooks/api; the JSON shim (`companyQuestions.ts`)
-  is deleted.
-
-**Tests** — backend: per-application save/fetch, foreign-application rejection, scope
-isolation from the global set; frontend: add/remove custom company question in the modal.
-
-**DoD** — About the company supports custom questions per application, consistent with
-General; `./mvnw test` + `npm run test:run` green. Flyway migration written **once, at build
-time** (immutable after apply).
-
-**Delivered ✅**
-- [x] "About the company" = fixed "What do you know about us?" + the user's own custom questions
-- [x] `V19`: `screening_answers.application_id` + scoped repo/service + per-app controller
-- [x] Frontend rewired onto the per-application endpoint; JSON shim deleted
-- [x] Same modal UX as General; read-only Q&A on the cheat-sheet tab + details
-- [x] Frontend tests green; backend tests written (run `./mvnw test` — no JDK in-session)
-
-**Follow-up `V20` (second safe step) — done ✅:**
-- [x] Drop `applications.company_research` + remove entity field / `ApplicationResponse` /
-  export / `PATCH .../company-research` / i18n / tests (done after `V19` verified green).
-
----
-
 ## Cross-cutting Definition of Done (whole version)
 
-- [x] All success criteria in `01-brief.md` §5 met.
-- [x] All new UI strings exist in PL **and** EN.
-- [x] Frontend `npm run test:run` (120) + `npm run build` green (matches CI).
-  Backend `V19` written with tests; `./mvnw test` runs on a dev machine (no JDK in-session).
-- [x] No new dependency, module split, or infrastructure introduced.
-- [x] Cypress E2E happy path added (`cypress/e2e/cheat-sheet.cy.ts`, updated for the
-  cheat-sheet hub flow). Not executed in-session (needs a running dev server) — run
-  `npm run e2e` locally to confirm.
+- [ ] All success criteria in `../01-brief/brief.md` §5 met.
+- [ ] All new UI strings exist in PL **and** EN.
+- [ ] Backend `./mvnw test` and frontend `npm run test:run` + `npm run build` green
+  (matches CI).
+- [ ] No new dependency, module split, or infrastructure introduced.
+- [ ] One optional Cypress E2E happy path: fill "My answers" → open an application's
+  cheat sheet → see them composed with the proposed salary.
 
+---
+
+## Suggested commit sequence (Conventional Commits)
+
+1. `feat(backend): add screening answers resource (entity, repo, service, API, V17)`
+2. `feat(frontend): add "My answers" screening template page`
+3. `feat(backend): add per-application companyResearch field (V18, PATCH endpoint)`
+4. `feat(frontend): add per-application cheat sheet modal`
+5. `feat(frontend): add board cleanup for stale applications`
