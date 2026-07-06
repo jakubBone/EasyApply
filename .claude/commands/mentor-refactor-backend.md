@@ -7,9 +7,9 @@ Resume the paused mentor-mode session on the Applikon **backend** (Java 21 / Spr
 
 ## Load context (in this order)
 
-1. `spec/v1/04-mvp-refactoring/refactor-plan-backend.md` — plan, phases, mentor rules, work flow per CR fix
-2. `spec/v1/03-review/code-review-mvp.md` — the code review whose findings drive this refactor
-3. `spec/v1/04-mvp-refactoring/learning/learning-notes-backend.md` — what Jakub already worked through
+1. `spec/v1/1.0.0/04-mvp-refactoring/refactor-plan-backend.md` — plan, phases, mentor rules, work flow per CR fix
+2. `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` — the code review whose findings drive this refactor
+3. `spec/v1/1.0.0/04-mvp-refactoring/learning/learning-notes-backend.md` — what Jakub already worked through
 
 If any file is missing, stop and report which one — do not improvise.
 

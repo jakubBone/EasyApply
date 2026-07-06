@@ -117,7 +117,7 @@ Single feature, frontend only — one implementation plan:
 
 - `spec/v1/as-built.md` — update after completion
 - `spec/README.md` — add row for phase 15
-- `spec/v1/15-landing-page/implementation-plan-frontend.md` — step-by-step plan
+- `spec/v1/1.1.0/15-landing-page/implementation-plan-frontend.md` — step-by-step plan
 
 ---
 

@@ -102,7 +102,7 @@ Phase 11 is closed when:
 ## 8. Related Documents
 
 - `spec/v1/as-built.md` — update after completion
-- `spec/v1/11-swagger/implementation-plan-backend.md` — detailed plan
+- `spec/v1/1.0.0/11-swagger/implementation-plan-backend.md` — detailed plan
 - `spec/README.md` — add row for phase 11
 
 ---

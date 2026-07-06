@@ -1,7 +1,7 @@
 # Applikon v2 — User Stories
 
 > Stories, edge cases, and acceptance criteria for v2 (Screening Companion).
-> Source of features: [`../01-brief/brief.md`](../01-brief/brief.md). Decisions taken with the user
+> Source of features: [`brief.md`](brief.md). Decisions taken with the user
 > are recorded inline as acceptance criteria.
 
 ---

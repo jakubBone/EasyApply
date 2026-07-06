@@ -116,7 +116,7 @@ Tests run once after Phase 4 (per project convention).
 
 ## 8. Related Documents
 
-- `spec/v1/14-rebrand-applikon/implementation-plan.md` — step-by-step actions.
+- `spec/v1/1.0.0/14-rebrand-applikon/implementation-plan.md` — step-by-step actions.
 - `spec/v1/as-built.md` — update after completion.
 - `spec/README.md` — add row for phase 14.
 

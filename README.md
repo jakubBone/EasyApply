@@ -167,5 +167,5 @@ ghcr.io/jakubbone/applikon-frontend:latest
 - **Logs** contain UUIDs only - no emails, names, or tokens in plaintext
 - **Account deletion** permanently removes all data; inactive accounts purged after 12 months
 
-Full design rationale: [`spec/v1/07-privacy-rodo/`](spec/v1/07-privacy-rodo/)
+Full design rationale: [`spec/v1/1.0.0/07-privacy-rodo/`](spec/v1/1.0.0/07-privacy-rodo/)
 

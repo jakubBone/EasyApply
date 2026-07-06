@@ -95,8 +95,8 @@ Phase 08 is closed when:
 
 - `spec/v1/as-built.md` — update after each thread
 - `spec/README.md` — add row for phase 08
-- `spec/v1/08-user-data/data-export/` — backend and frontend plans
-- `spec/v1/08-user-data/service-notices/` — backend and frontend plans
+- `spec/v1/1.0.0/08-user-data/data-export/` — backend and frontend plans
+- `spec/v1/1.0.0/08-user-data/service-notices/` — backend and frontend plans
 
 ---
 

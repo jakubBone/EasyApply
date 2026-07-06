@@ -88,8 +88,8 @@ Phase 13 is closed when:
 
 ## 8. Related Documents
 
-- `spec/v1/12-ci/brief.md` — previous phase, CI pipeline foundation
-- `spec/v1/13-docker-registry/implementation-plan.md` — exact file changes
+- `spec/v1/1.0.0/12-ci/brief.md` — previous phase, CI pipeline foundation
+- `spec/v1/1.0.0/13-docker-registry/implementation-plan.md` — exact file changes
 - `spec/deployment/deployment-hetzner.md` — server setup and deploy commands
 - `spec/README.md` — phase index
 

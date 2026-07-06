@@ -141,7 +141,7 @@ application functionally identical.
 4. **`spec/README.md`** — add row for phase 14, update brand references.
 5. **`spec/v1/architecture.md`**, **`security.md`**, **`as-built.md`** —
    replace in titles + body. Add as-built entry for phase 14.
-6. **`spec/v1/01-vision/brief.md`** — replace.
+6. **`spec/v1/1.0.0/01-vision/brief.md`** — replace.
 7. **All phase docs** (`02-` through `13-`) — replace in titles, headers, body
    text. Existing learning notes in `04-mvp-refactoring/learning/*` and
    `05-additional-features/i18n/learning/*` get the brand replaced too.

@@ -118,9 +118,9 @@ Suggested order (each step independently committable):
 - `spec/v1/as-built.md` — update after each thread
 - `README.md` — "Privacy & Data" section after phase completion
 - `spec/README.md` — add row for phase 07
-- `spec/v1/07-privacy-rodo/cv-link-only/` — plans for CV link-only (backend + frontend)
-- `spec/v1/07-privacy-rodo/rodo-minimum/` — plans for RODO + policy content (backend + frontend + privacy-policy.md)
-- `spec/v1/07-privacy-rodo/retention-hygiene/` — plan for retention and log audit
+- `spec/v1/1.0.0/07-privacy-rodo/cv-link-only/` — plans for CV link-only (backend + frontend)
+- `spec/v1/1.0.0/07-privacy-rodo/rodo-minimum/` — plans for RODO + policy content (backend + frontend + privacy-policy.md)
+- `spec/v1/1.0.0/07-privacy-rodo/retention-hygiene/` — plan for retention and log audit
 
 ---
 

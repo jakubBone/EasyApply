@@ -44,7 +44,7 @@
 
 ## 2. Features — Status
 
-Based on `spec/v1/01-vision/brief.md`:
+Based on `spec/v1/1.0.0/01-vision/brief.md`:
 
 ### MVP Features (§4)
 
@@ -160,7 +160,7 @@ Not in brief or implementation plan:
 
 ### 7c. i18n (internationalization, EN/PL)
 
-Not in brief or MVP implementation plan (documented as a separate additional feature in `spec/v1/05-additional-features/i18n/`):
+Not in brief or MVP implementation plan (documented as a separate additional feature in `spec/v1/1.0.0/05-additional-features/i18n/`):
 - i18next with 4 namespaces: `common`, `errors`, `badges`, `tour`
 - Language auto-detection from localStorage or browser (navigator)
 - `LanguageSwitcher.tsx` — PL/EN toggle, visible on login page and in header
@@ -182,7 +182,7 @@ Not in spec. The project includes Cypress for end-to-end testing (`cypress/e2e/`
 
 ### 7g. Logout button
 
-Documented as a separate additional feature (`spec/v1/05-additional-features/logout/`). Frontend `signOut()` calls `POST /api/auth/logout` before clearing localStorage.
+Documented as a separate additional feature (`spec/v1/1.0.0/05-additional-features/logout/`). Frontend `signOut()` calls `POST /api/auth/logout` before clearing localStorage.
 
 ---
 
@@ -228,7 +228,7 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 - Scheduled job (daily 3:00 AM) deleting accounts inactive > 12 months
 - Refresh token hashing (SHA-256) — store hash, not plaintext
 - Audit: verify logs don't leak email/name/tokens
-- Spec exists in `v1/07-privacy-rodo/retention-hygiene/implementation-plan-backend.md`
+- Spec exists in `v1/1.0.0/07-privacy-rodo/retention-hygiene/implementation-plan-backend.md`
 
 **Why deferred:** Compliance with minimum RODO is now met. retention-hygiene improves infrastructure security & data minimization but is not blocking publication. Will implement post-MVP launch.
 
@@ -438,7 +438,7 @@ LinkedIn's "Easy Apply" feature and `applicotrack.com`. Polish identity
 - **Docs:** `README.md` (title, tagline, screenshot alt, GHCR refs);
   `CLAUDE.md`; `SECURITY.md`; full sweep across `spec/v1/**`, `spec/v2/**`,
   `spec/deployment/**`. The rebrand spec at
-  `spec/v1/14-rebrand-applikon/` is intentionally left with its
+  `spec/v1/1.0.0/14-rebrand-applikon/` is intentionally left with its
   before/after references for historical context.
 
 ### What did NOT change

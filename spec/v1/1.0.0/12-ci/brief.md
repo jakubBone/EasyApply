@@ -76,7 +76,7 @@ No code phases; the workflow file is the entire implementation.
 ## 8. Related Documents
 
 - `spec/v1/as-built.md` — update after completion
-- `spec/v1/12-ci/implementation-plan.md` — workflow file content + badge syntax
+- `spec/v1/1.0.0/12-ci/implementation-plan.md` — workflow file content + badge syntax
 - `spec/post/pre-deploy-checklist.md` — broader GitHub publication checklist
 - `spec/README.md` — add row for phase 12
 

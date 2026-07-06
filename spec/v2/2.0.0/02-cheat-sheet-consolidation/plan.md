@@ -1,6 +1,6 @@
 # v2 Phase 5-6 — Implementation Plan
 
-> Continues the phase numbering from [`../03-plan/plan.md`](../03-plan/plan.md) (Phases 1-4).
+> Continues the phase numbering from [`../01-screening-companion/plan.md`](../01-screening-companion/plan.md) (Phases 1-4).
 > See [`brief.md`](brief.md) for why this phase exists. 
 
 ---
@@ -93,7 +93,7 @@ time** (immutable after apply).
 
 ## Cross-cutting Definition of Done (Phases 5-6)
 
-- [x] All success criteria in `../01-brief/brief.md` §5 still met (superseded mechanics
+- [x] All success criteria in `../01-screening-companion/brief.md` §5 still met (superseded mechanics
   described in `brief.md`, not the original brief).
 - [x] All new UI strings exist in PL **and** EN.
 - [x] Frontend `npm run test:run` (120) + `npm run build` green (matches CI).

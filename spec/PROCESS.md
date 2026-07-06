@@ -19,11 +19,25 @@ cross-version reference, written only when a version adds something new to desig
 
 ## 📂 Numbering
 
-Every phase is a numbered **folder** (`01-brief/`, `02-user-stories/`, …), not a
-bare numbered file — folders and files sort separately in most file browsers. If
-reality disagrees with a shipped phase, that becomes the **next** numbered folder —
-never a retroactive edit to an earlier `brief.md`/`plan.md`. The gap goes in
-`as-built.md`. I drive this chain with my own `spec-assistant` skill.
+A **phase is a topic or feature**, never an artifact type — `brief.md`,
+`user-stories.md`, `plan.md` are files *inside* one phase folder, never separate
+numbered folders of their own (e.g. `07-privacy-rodo/` holds its own `brief.md` +
+whatever else it needs; there is no separate `08-privacy-rodo-plan/`). A phase
+folder is a numbered **folder** (`07-privacy-rodo/`, `14-rebrand-applikon/`, …),
+not a bare numbered file — folders and files sort separately in most file
+browsers — and holds only the files it actually needs (§"The files"): a single
+`brief.md` if that's all a phase needs, several files or subfolders if it needs
+more.
+
+Phase numbers are **continuous across an entire era**, not reset per release —
+they cross release (`X.Y.Z/`) boundaries the same way v1's phase 14
+(`1.0.0/14-rebrand-applikon/`) is followed by phase 15
+(`1.1.0/15-landing-page/`). A new architectural era (new top-level `vN`, see
+below) restarts the counter at 01.
+
+If reality disagrees with a shipped phase, that becomes the **next** numbered
+phase — never a retroactive edit to an earlier `brief.md`/`plan.md`. The gap goes
+in `as-built.md`. I drive this chain with my own `spec-assistant` skill.
 
 ## 🏁 Each version ends with
 
@@ -32,10 +46,25 @@ Working deploy · updated `as-built.md`. Conventional commits, scopes as in v1
 
 ## 🔢 Spec version vs app version
 
-`spec/vN` numbers **planning phases**, not releases. The app's own version
-(`CHANGELOG.md`, `package.json`, `pom.xml`, the README badge) is a separate axis:
-v1 (the MVP) shipped two releases (`1.0.0`, `1.1.0`) before any versioning rule was
-stated. `2.0.0` (start of spec-v2) marks the end of that ad-hoc MVP phase — from
-here on the app follows standard SemVer (`feat` → minor, `fix` → patch, breaking →
-major) via Conventional Commits, independently of which `spec/vN` is being worked
-on. A given spec version can span zero, one, or several app releases.
+The app's own version (`CHANGELOG.md`, `package.json`, `pom.xml`, the README badge)
+follows standard SemVer (`feat` → minor, `fix` → patch, breaking → major) via
+Conventional Commits. v1 (the MVP) shipped two releases (`1.0.0`, `1.1.0`) before
+any versioning rule was stated; `2.0.0` marks the end of that ad-hoc phase and the
+start of the rule below.
+
+`spec/vN` numbers **architectural eras**, not every release — a new top-level `vN`
+folder is created only for a release that earns a deliberate SemVer **major** bump
+(a genuinely new architectural decision: e.g. introducing Spring Modulith, or
+extracting a worker over Kafka), not for every `feat` commit. Incremental releases
+*within* an era (new features, no new architecture) don't get a new `vN` — they get
+a subfolder named after the exact app version they ship: `v2/2.0.0/`, `v2/2.1.0/`,
+`v2/2.2.0/`, … So a spec path and a CHANGELOG entry are always the same number —
+`spec/v3/` reader-facing work always corresponds to app version `3.0.0`, no
+translation needed. `as-built.md` lives once per era (`v2/as-built.md`), not per
+release, since it tracks the whole era continuously.
+
+Deciding "new era vs. new release-in-era": ask whether the feature needs a genuinely
+new architectural decision to support it (module boundaries, an outbox, a new
+deployable, a new event scheme). If yes → new `vN` era, major bump. If no (it's
+composable on what already exists) → next `X.Y.0` release folder inside the current
+era's `vN`.

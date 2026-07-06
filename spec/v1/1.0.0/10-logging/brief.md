@@ -147,7 +147,7 @@ Single thread, phases executed in order:
 ## 8. Related Documents
 
 - `spec/v1/as-built.md` — update after completion (logging coverage section)
-- `spec/v1/10-logging/implementation-plan-backend.md` — detailed implementation plan
+- `spec/v1/1.0.0/10-logging/implementation-plan-backend.md` — detailed implementation plan
 - `spec/README.md` — add row for phase 10
 
 ---

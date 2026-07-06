@@ -1,8 +1,8 @@
 
 # Applikon v2 — Implementation Plan
 
-> Phases with a testable Definition of Done. Sources: [`../01-brief/brief.md`](../01-brief/brief.md),
-> [`../02-user-stories/user-stories.md`](../02-user-stories/user-stories.md). Grounded in the v1 code
+> Phases with a testable Definition of Done. Sources: [`brief.md`](brief.md),
+> [`user-stories.md`](user-stories.md). Grounded in the v1 code
 > (`spec/architecture.md`). v2 runs on the v1 monolith — no new infrastructure.
 
 **Key reuse / grounding (from the v1 code):**
@@ -198,7 +198,7 @@ Covers US-3.1 / 3.2. Front-only.
 
 ## Cross-cutting Definition of Done (whole version)
 
-- [ ] All success criteria in `../01-brief/brief.md` §5 met.
+- [ ] All success criteria in `brief.md` §5 met.
 - [ ] All new UI strings exist in PL **and** EN.
 - [ ] Backend `./mvnw test` and frontend `npm run test:run` + `npm run build` green
   (matches CI).

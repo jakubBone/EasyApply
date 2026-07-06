@@ -6,10 +6,10 @@
 > has no phase number: it is updated continuously as phases land, mirroring
 > [`../v1/as-built.md`](../v1/as-built.md).
 >
-> Original plan (Phases 1-4): [`03-plan/plan.md`](03-plan/plan.md) ·
-> [`02-user-stories/user-stories.md`](02-user-stories/user-stories.md) ·
-> [`01-brief/brief.md`](01-brief/brief.md).
-> Later phases (5-6): [`04-cheat-sheet-consolidation/`](04-cheat-sheet-consolidation/)
+> Original plan (Phases 1-4, release `2.0.0`): [`2.0.0/01-screening-companion/plan.md`](2.0.0/01-screening-companion/plan.md) ·
+> [`2.0.0/01-screening-companion/user-stories.md`](2.0.0/01-screening-companion/user-stories.md) ·
+> [`2.0.0/01-screening-companion/brief.md`](2.0.0/01-screening-companion/brief.md).
+> Later phases (5-6, same `2.0.0` release): [`2.0.0/02-cheat-sheet-consolidation/`](2.0.0/02-cheat-sheet-consolidation/)
 > (its own `brief.md` + `plan.md`). Process: [`../PROCESS.md`](../PROCESS.md).
 >
 > **Update policy:** after each phase lands (tests green), tick its checklist in the
@@ -26,8 +26,8 @@
 | 2 | Frontend: "My answers" page | ✅ Built (2026-06-30) |
 | 3 | Per-application company note (single field) | ✅ Built (2026-06-30), superseded by Phase 6 — see §2 |
 | 4 | Frontend: Board cleanup | ✅ Built (2026-06-30) |
-| 5 | UX consolidation (cheat-sheet hub) — [`04-cheat-sheet-consolidation/`](04-cheat-sheet-consolidation/) | ✅ Built (2026-07-02) |
-| 6 | Per-application questions in "About the company" — [`04-cheat-sheet-consolidation/`](04-cheat-sheet-consolidation/) | ✅ Built (2026-07-02) — `V19` backend; `companyResearch` removed in `V20` |
+| 5 | UX consolidation (cheat-sheet hub) — [`2.0.0/02-cheat-sheet-consolidation/`](2.0.0/02-cheat-sheet-consolidation/) | ✅ Built (2026-07-02) |
+| 6 | Per-application questions in "About the company" — [`2.0.0/02-cheat-sheet-consolidation/`](2.0.0/02-cheat-sheet-consolidation/) | ✅ Built (2026-07-02) — `V19` backend; `companyResearch` removed in `V20` |
 
 ---
 
@@ -37,9 +37,9 @@
 |-------|---------|-------|-----|
 | 1 | Migration `V16` | `V17` | `V16__add_salary_field.sql` already existed |
 | 1 | `ScreeningAnswerRequest`/`Response` only | Added wrapper `ScreeningAnswersRequest` | Lets `@Valid` cascade to list items for a clean 400 on an over-long answer |
-| 3 → 6 | Per-application company knowledge as one `companyResearch` TEXT field + `PATCH .../company-research` (`V18`) | Replaced by per-application rows in `screening_answers` (`V19`), so the company section supports custom questions like "General" does; the `V18` column and its endpoint were then dropped (`V20`) | A single text field couldn't hold multiple custom questions — needed the same row-based model as "General". Full story: [`04-cheat-sheet-consolidation/brief.md`](04-cheat-sheet-consolidation/brief.md) |
+| 3 → 6 | Per-application company knowledge as one `companyResearch` TEXT field + `PATCH .../company-research` (`V18`) | Replaced by per-application rows in `screening_answers` (`V19`), so the company section supports custom questions like "General" does; the `V18` column and its endpoint were then dropped (`V20`) | A single text field couldn't hold multiple custom questions — needed the same row-based model as "General". Full story: [`2.0.0/02-cheat-sheet-consolidation/brief.md`](2.0.0/02-cheat-sheet-consolidation/brief.md) |
 | 5 | Inline autosave everywhere (matching Phase 1-3 UX) | Read-only sections; editing opens a **Save modal** | Requested by the user after dogfooding — clearer than editing inline during a call |
-| 5 | Cheat sheet reachable via a per-card icon + a details-header button | One cheat-sheet hub tab (company picker) + the same content as the details' default accordion section; the per-card icon was dropped | Scattered entry points were confusing; one hub is the fast path for the recruiter-call scenario. Full story: [`04-cheat-sheet-consolidation/brief.md`](04-cheat-sheet-consolidation/brief.md) |
+| 5 | Cheat sheet reachable via a per-card icon + a details-header button | One cheat-sheet hub tab (company picker) + the same content as the details' default accordion section; the per-card icon was dropped | Scattered entry points were confusing; one hub is the fast path for the recruiter-call scenario. Full story: [`2.0.0/02-cheat-sheet-consolidation/brief.md`](2.0.0/02-cheat-sheet-consolidation/brief.md) |
 
 ---
 
@@ -144,9 +144,10 @@ cheat-sheet hub in Phase 5; the underlying resource is unchanged.)
 per-application `companyResearch` field, exposed via a focused `PATCH` endpoint and
 edited inline in a `CheatSheetModal`. Both the field and the modal were later removed
 — see §2 for what replaced them and §9 for the current mechanism, and
-[`04-cheat-sheet-consolidation/brief.md`](04-cheat-sheet-consolidation/brief.md) for
+[`2.0.0/02-cheat-sheet-consolidation/brief.md`](2.0.0/02-cheat-sheet-consolidation/brief.md) for
 why. Nothing from this phase remains in the codebase; kept here as the historical
-record of what shipped at the time.
+record of what shipped at the time. Rationale:
+[`2.0.0/02-cheat-sheet-consolidation/brief.md`](2.0.0/02-cheat-sheet-consolidation/brief.md).
 
 ---
 
@@ -205,7 +206,7 @@ bump, `npm run e2e`, and deploy.)
 **Built (2026-07-02).** Consolidates the preparation surfaces into a single hub: one
 cheat-sheet tab with a company picker, plus the same content as the default accordion
 section in application details. No backend change. Plan + rationale:
-[`04-cheat-sheet-consolidation/`](04-cheat-sheet-consolidation/).
+[`2.0.0/02-cheat-sheet-consolidation/`](2.0.0/02-cheat-sheet-consolidation/).
 
 ### Design
 
@@ -249,7 +250,7 @@ section in application details. No backend change. Plan + rationale:
 **Built (2026-07-02).** "About the company" holds a fixed "What do you know about us?"
 question **plus the user's own custom questions**, scoped to one application — the
 same shape as "General". Plan + rationale:
-[`04-cheat-sheet-consolidation/`](04-cheat-sheet-consolidation/).
+[`2.0.0/02-cheat-sheet-consolidation/`](2.0.0/02-cheat-sheet-consolidation/).
 
 ### Backend (`V19`, additive)
 - `db/migration/V19__screening_answers_application_scope.sql` — adds

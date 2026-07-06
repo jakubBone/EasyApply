@@ -8,7 +8,7 @@ Backend was written with AI help — Jakub understands general architecture but 
 
 **Goal:** Better understand backend flow, fix code review problems, fill security gaps. Not learning from zero — explaining what needs clarification.
 
-**How sessions resume:** the `/mentor-refactor-backend` slash command loads this file plus `spec/v1/03-review/code-review-mvp.md` and `spec/v1/04-mvp-refactoring/learning/learning-notes-backend.md`, then continues from the current phase.
+**How sessions resume:** the `/mentor-refactor-backend` slash command loads this file plus `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` and `spec/v1/1.0.0/04-mvp-refactoring/learning/learning-notes-backend.md`, then continues from the current phase.
 
 ---
 
@@ -125,7 +125,7 @@ service/
 3. **Control Questions:** After each phase 2-3 specific questions.
    Concrete, referencing the project.
 
-4. **Notes After Each Phase:** Save summary to `spec/v1/04-mvp-refactoring/learning/learning-notes-backend.md`.
+4. **Notes After Each Phase:** Save summary to `spec/v1/1.0.0/04-mvp-refactoring/learning/learning-notes-backend.md`.
    Format: phase heading, key concepts, important files, what was fixed.
 
 5. **Always Show Code:** Discuss specific project files. Point to line.
@@ -186,7 +186,7 @@ After each phase Claude asks:
 
 ## List of Fixes from CR (Progress Tracking)
 
-Source: `spec/v1/03-review/code-review-mvp.md` (reviewer: DR & AI)
+Source: `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` (reviewer: DR & AI)
 
 ### 🔴 Critical (security / correctness)
 

@@ -55,9 +55,9 @@ Example: `refactor(backend): extract validation into ApplicationValidator`
 | User-facing project overview | `README.md`                                            |
 | Architecture / DB schema / REST endpoints / FE components (v1 + v2) | `spec/architecture.md`                              |
 | Security flow / filter chain / tokens / headers / CORS | `spec/v1/security.md`                                  |
-| Original vision / problem / MVP scope | `spec/v1/01-vision/brief.md`                           |
+| Original vision / problem / MVP scope | `spec/v1/1.0.0/01-vision/brief.md`                           |
 | Plan vs reality / phase history | `spec/v1/as-built.md`                                  |
 | Spec phases index | `spec/README.md`                                       |
-| Current next version (planning + build) | `spec/v2/` (`01-brief/` → `02-user-stories/` → `03-plan/`; later phases in `04-cheat-sheet-consolidation/`; `as-built.md` is the living current-state doc) |
+| Current version era (planning + build) | `spec/v2/` — release `2.0.0` in `2.0.0/` (phase `01-screening-companion/` has `brief.md`+`user-stories.md`+`plan.md`; phase `02-cheat-sheet-consolidation/` follows); `as-built.md` is the living current-state doc for the whole era |
 | Spec-driven process / per-version artifact map | `spec/PROCESS.md`                                       |
 | Deploy instructions | `spec/deployment/deployment-hetzner.md` (step-by-step) |

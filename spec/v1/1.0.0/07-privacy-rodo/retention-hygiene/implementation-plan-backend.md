@@ -198,13 +198,13 @@ Security + restriction to logged-in users is sufficient. Deferring.
   - Decision: CV only via link (variant B from phase 07 brief)
   - Link to `/privacy` in live app
   - Link to retention policy
-  - Note: "Portfolio project — see `spec/v1/07-privacy-rodo/` for design rationale"
+  - Note: "Portfolio project — see `spec/v1/1.0.0/07-privacy-rodo/` for design rationale"
 
 **File:** `spec/README.md`
 
 - [ ] Add row to V1 table:
   ```
-  | Privacy & RODO | `v1/07-privacy-rodo/` | Complete |
+  | Privacy & RODO | `v1/1.0.0/07-privacy-rodo/` | Complete |
   ```
 
 **File:** `spec/v1/as-built.md`

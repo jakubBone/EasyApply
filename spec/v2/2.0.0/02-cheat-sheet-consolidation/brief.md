@@ -1,7 +1,7 @@
 # v2 Phase 5-6 — Cheat-sheet consolidation
 
 > **Status:** Built (2026-07-02).
-> Follows [`../03-plan/plan.md`](../03-plan/plan.md) Phases 1-4 (Screening Companion, shipped
+> Follows [`../01-screening-companion/plan.md`](../01-screening-companion/plan.md) Phases 1-4 (Screening Companion, shipped
 > 2026-06-30). Not a new version — v2 was not yet released, so this phase still
 > ships inside v2.
 
