@@ -17,6 +17,11 @@ Each version uses only the files it needs — skip the rest and say why in
 `architecture.md` lives once at `spec/architecture.md`, not per version — a living
 cross-version reference, written only when a version adds something new to design.
 
+ADRs live once at `spec/adr/` (numbered `ADR-NNN-*.md`), written only when a
+release makes a genuinely contested decision — real alternatives, long-lived
+consequences. Conventional-default choices don't get one; their rationale stays
+in phase briefs and `as-built.md`. First: ADR-001 (release 2.1.0).
+
 ## 📂 Numbering
 
 A **phase is a topic or feature**, never an artifact type — `brief.md`,
