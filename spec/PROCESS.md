@@ -29,3 +29,13 @@ never a retroactive edit to an earlier `brief.md`/`plan.md`. The gap goes in
 
 Working deploy · updated `as-built.md`. Conventional commits, scopes as in v1
 (`backend`, `frontend`, `spec`, `db`, `infra`).
+
+## 🔢 Spec version vs app version
+
+`spec/vN` numbers **planning phases**, not releases. The app's own version
+(`CHANGELOG.md`, `package.json`, `pom.xml`, the README badge) is a separate axis:
+v1 (the MVP) shipped two releases (`1.0.0`, `1.1.0`) before any versioning rule was
+stated. `2.0.0` (start of spec-v2) marks the end of that ad-hoc MVP phase — from
+here on the app follows standard SemVer (`feat` → minor, `fix` → patch, breaking →
+major) via Conventional Commits, independently of which `spec/vN` is being worked
+on. A given spec version can span zero, one, or several app releases.

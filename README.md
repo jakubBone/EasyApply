@@ -1,6 +1,6 @@
 # 💼 Applikon
 
-![Version](https://img.shields.io/badge/v-1.1.0-green.svg)
+![Version](https://img.shields.io/badge/v-2.0.0-green.svg)
 ![Java](https://img.shields.io/badge/Java-21-007396?style=flat&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4-6DB33F?style=flat&logo=springboot&logoColor=white)
 ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=flat&logo=springsecurity&logoColor=white)
@@ -40,6 +40,9 @@
 
 Built with **Claude Code** using a strict spec-first approach. No code was written
 without a plan first; no plan was written without knowing what *not* to do.
+
+Currently on **v2 - Screening Companion** (`spec/v2/`): a screening cheat sheet and
+board cleanup, built on top of the **v1 MVP** (`spec/v1/`).
 
 🟦 **Specify** → 🟪 **Plan** → 🟧 **Implement** → 🟥 **Use it for real** → back to 🟦 ↺
 *(🟨 Review and 🟩 Refactor ran once, for the v1 MVP - available anytime since via dedicated skills.)*
