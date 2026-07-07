@@ -1,4 +1,4 @@
-# Applikon — Phase 07: Privacy & RODO (preparation for publication)
+# Applikon — Privacy & RODO (preparation for publication)
 
 ## 1. Context
 
@@ -82,15 +82,15 @@ Consciously **not** entering:
 - **End-to-end CV encryption** (variant C) — rejected in section 3
 - **External audit / certification / ISO** — disproportionate to scale
 - **Cookie consent banner** — application doesn't use tracking or advertising cookies, only technical (session)
-- **Right to data portability** (`GET /me/export`) — considered optional, outside MVP of this phase
+- **Right to data portability** (`GET /me/export`) — considered optional, outside MVP of this topic
 - **Multi-language privacy policy beyond PL/EN** — two versions only
 - **Migration of existing CV files to elsewhere** — resolved per user by account deletion
 
 ---
 
-## 6. Success Criteria (Definition of Done for phase)
+## 6. Success Criteria (Definition of Done)
 
-Phase 07 is closed when:
+`07-privacy-rodo` is closed when:
 
 1. ✅ UI doesn't allow uploading CV file (disabled + tooltip), can still add link
 2. ✅ `/privacy` page publicly available, contains all required sections (who, what, why, how long, user rights, contact)
@@ -115,9 +115,9 @@ Suggested order (each step independently committable):
 
 ## 8. Related Documents
 
-- `spec/v1/as-built.md` — update after each thread
-- `README.md` — "Privacy & Data" section after phase completion
-- `spec/README.md` — add row for phase 07
+- `spec/v1/1.0.0/as-built.md` — update after each thread
+- `README.md` — "Privacy & Data" section after this topic completes
+- `spec/README.md` — add row for 07-privacy-rodo
 - `spec/v1/1.0.0/07-privacy-rodo/cv-link-only/` — plans for CV link-only (backend + frontend)
 - `spec/v1/1.0.0/07-privacy-rodo/rodo-minimum/` — plans for RODO + policy content (backend + frontend + privacy-policy.md)
 - `spec/v1/1.0.0/07-privacy-rodo/retention-hygiene/` — plan for retention and log audit

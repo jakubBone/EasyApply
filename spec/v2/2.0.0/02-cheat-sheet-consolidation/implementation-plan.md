@@ -1,11 +1,11 @@
-# v2 Phase 5-6 — Implementation Plan
+# 2.0.0 02-cheat-sheet-consolidation — Implementation Plan
 
-> Continues the phase numbering from [`../01-screening-companion/plan.md`](../01-screening-companion/plan.md) (Phases 1-4).
-> See [`brief.md`](brief.md) for why this phase exists. 
+> Follows [`../01-screening-companion/plan.md`](../01-screening-companion/plan.md) (topic 01, Steps 1-4).
+> See [`brief.md`](brief.md) for why this topic exists. 
 
 ---
 
-## Phase 5 — UX consolidation (cheat-sheet hub)
+## Step 1 — UX consolidation (cheat-sheet hub)
 
 No DB change. Reworks how the v2 features are surfaced.
 
@@ -51,10 +51,10 @@ decluttered accordion details, consistent style. `npm run test:run` + `lint` + `
 
 ---
 
-## Phase 6 — Per-application questions (backend `V19`)
+## Step 2 — Per-application questions (backend `V19`)
 
 Lets **About the company** carry its own custom questions (like General), not just one
-note — replaces the single `companyResearch` field from Phase 3 (see `brief.md` §1b).
+note — replaces the single `companyResearch` field from 01-screening-companion Step 3 (see `brief.md` §1b).
 
 **Build — backend (`V19`, additive)**
 - `screening_answers` gains a nullable **`application_id`** (FK → `applications`,
@@ -91,7 +91,7 @@ time** (immutable after apply).
 
 ---
 
-## Cross-cutting Definition of Done (Phases 5-6)
+## Cross-cutting Definition of Done
 
 - [x] All success criteria in `../01-screening-companion/brief.md` §5 still met (superseded mechanics
   described in `brief.md`, not the original brief).

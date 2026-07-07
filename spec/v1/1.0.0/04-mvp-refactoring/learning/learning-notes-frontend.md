@@ -1,10 +1,10 @@
 # Frontend Learning Notes — Applikon
 
-Reference file for learning progress. Each phase = key concepts, Java analogies, important files.
+Reference file for learning progress. Each step = key concepts, Java analogies, important files.
 
 ---
 
-## Phase 1 — Ecosystem and Tools
+## Step 1 — Ecosystem and Tools
 
 ### Tools — Analogies to Java
 
@@ -98,7 +98,7 @@ The ONLY HTML file in entire app. Contains empty `<div id="root">` — React inj
 Equivalent of `public static void main()`. Finds `<div id="root">` and runs React (`createRoot().render()`). `StrictMode` = debug mode (double-calls in dev, no effect on production).
 
 **`applikon-frontend/src/App.tsx`**
-App root — only routing and Providers, zero business logic. Provider pattern = wrapping components to make something globally available (like `@Bean` in Spring). Routing details in Phase 6, Providers in Phases 5 and 6.
+App root — only routing and Providers, zero business logic. Provider pattern = wrapping components to make something globally available (like `@Bean` in Spring). Routing details in Step 6, Providers in Steps 5 and 6.
 
 ### Provider Pattern (Preview)
 
@@ -115,7 +115,7 @@ Each layer "wraps" and provides something to all children inside.
 
 ---
 
-## Phase 2 — Component — Basic Unit
+## Step 2 — Component — Basic Unit
 
 ### What Is a Component
 
@@ -244,7 +244,7 @@ Analogy: `@GetMapping("/login")` in Spring MVC.
 Import makes component available in file. Route decides when to show it.
 
 **Rendering** = React calls component function → gets JSX → converts to HTML → inserts into `<div id="root">`.
-Re-rendering = React calls function again when data changed, updates only changed parts. Details in Phase 3.
+Re-rendering = React calls function again when data changed, updates only changed parts. Details in Step 3.
 
 ### Props — Details
 
@@ -274,7 +274,7 @@ One file can have many named exports, but only one default.
 
 ---
 
-## Phase 3 — State and Re-rendering
+## Step 3 — State and Re-rendering
 
 ### ✅ STATUS: UNDERSTOOD (Session 3 — 2026-03-13)
 
@@ -530,7 +530,7 @@ useEffect(() => {
 
 ---
 
-## Phase 4 — React Hooks
+## Step 4 — React Hooks
 
 ### ✅ STATUS: UNDERSTOOD (Session 4 — 2026-03-17)
 
@@ -636,7 +636,7 @@ Project hooks:
 
 ### Preview: CR-7
 
-`CVManager.tsx` doesn't use ready `useCVs()` — instead writes `useState + useEffect + fetchCVs()` manually. Like controller ignoring service and going straight to repository. Problem: inconsistency, duplication, no cache. Fix in Phase 5.
+`CVManager.tsx` doesn't use ready `useCVs()` — instead writes `useState + useEffect + fetchCVs()` manually. Like controller ignoring service and going straight to repository. Problem: inconsistency, duplication, no cache. Fix in Step 5.
 
 ---
 
@@ -650,7 +650,7 @@ Project hooks:
 
 ---
 
-## Phase 5 — React Query — Heart of Frontend
+## Step 5 — React Query — Heart of Frontend
 
 ### ✅ STATUS: UNDERSTOOD (Session 5 — 2026-03-17)
 
@@ -752,7 +752,7 @@ queryClient.invalidateQueries({ queryKey: ['applications'] })
 
 ---
 
-## Phase 6 — Routing and Page Protection
+## Step 6 — Routing and Page Protection
 
 ### ✅ STATUS: UNDERSTOOD (Session 6 — 2026-03-17)
 
@@ -868,7 +868,7 @@ Use in `App.tsx`:
 
 ---
 
-## Phase 7 — Frontend ↔ Backend Communication
+## Step 7 — Frontend ↔ Backend Communication
 
 ### fetch() — HTTP Client in Browser
 
@@ -971,7 +971,7 @@ After page refresh (`F5`):
 
 ---
 
-## Phase 8 — OAuth2 and JWT — Complete Login Flow
+## Step 8 — OAuth2 and JWT — Complete Login Flow
 
 ### ✅ STATUS: UNDERSTOOD (Session 8 — 2026-03-23)
 
@@ -1207,7 +1207,7 @@ Found by Jakub! 🎯
 
 ---
 
-## Phase 9 — TypeScript in React
+## Step 9 — TypeScript in React
 
 ### ✅ STATUS: UNDERSTOOD (Session 9 — 2026-03-24)
 
@@ -1371,7 +1371,7 @@ Extracted duplicates to `src/constants/applicationStatus.ts`:
 
 ---
 
-## Phase 10 — Frontend Testing
+## Step 10 — Frontend Testing
 
 ### ✅ STATUS: UNDERSTOOD (Session 10 — 2026-03-26)
 

@@ -1,7 +1,6 @@
+# 2.0.0 01-screening-companion — Implementation Plan
 
-# Applikon v2 — Implementation Plan
-
-> Phases with a testable Definition of Done. Sources: [`brief.md`](brief.md),
+> Steps with a testable Definition of Done. Sources: [`brief.md`](brief.md),
 > [`user-stories.md`](user-stories.md). Grounded in the v1 code
 > (`spec/architecture.md`). v2 runs on the v1 monolith — no new infrastructure.
 
@@ -21,7 +20,7 @@
 
 ---
 
-## Phase 1 — Backend: "My answers" resource
+## Step 1 — Backend: "My answers" resource
 
 New per-user screening answers (fixed template + custom questions).
 
@@ -63,7 +62,7 @@ New per-user screening answers (fixed template + custom questions).
 
 ---
 
-## Phase 2 — Frontend: "My answers" page
+## Step 2 — Frontend: "My answers" page
 
 Covers US-1.1 / 1.2 / 1.3.
 
@@ -77,7 +76,7 @@ Covers US-1.1 / 1.2 / 1.3.
 - Fixed template (**4 global questions**, labels via i18n keys): about-me ·
   why-changing · project · expected-salary. Each is a plain-text field, **max 1000
   chars** with a counter. *"What do you know about the company" is NOT here — it is
-  per-application (`Application.companyResearch`), handled in Phase 3.*
+  per-application (`Application.companyResearch`), handled in Step 3.*
 - Add / remove **custom** questions (label + answer); fixed ones not removable.
 - **Empty state**: placeholder + **"Fill in your answers"** action.
 - i18n: PL/EN strings + the 5 fixed labels (`common` namespace).
@@ -102,9 +101,9 @@ Covers US-1.1 / 1.2 / 1.3.
 
 ---
 
-## Phase 3 — Cheat sheet modal + per-application company note
+## Step 3 — Cheat sheet modal + per-application company note
 
-Covers US-2.1 / US-2.2. Depends on Phase 1/2 (reads "My answers"). Adds **one
+Covers US-2.1 / US-2.2. Depends on Steps 1/2 (reads "My answers"). Adds **one
 per-application field** (`Application.companyResearch`) — a scope addition agreed with
 the user: most prep is global, but each application carries its own "what do you know
 about this company" note.
@@ -124,7 +123,7 @@ about this company" note.
 **Build — frontend**
 - `types/domain.ts` — `Application.companyResearch: string | null`; `services/api.ts`
   `updateCompanyResearch(id, value)`; a hook/mutation (reuse `useApplications`
-  optimistic pattern) with **debounced autosave** (reuse the Phase-2 debounce shape).
+  optimistic pattern) with **debounced autosave** (reuse the Step-2 debounce shape).
 - `components/applications/CheatSheetModal.tsx` — opened by a **"Cheat sheet"** button
   in the `ApplicationDetails` header. Composes:
   1. **proposed salary for this application** — from the loaded application
@@ -161,7 +160,7 @@ about this company" note.
 
 ---
 
-## Phase 4 — Frontend: Board cleanup
+## Step 4 — Frontend: Board cleanup
 
 Covers US-3.1 / 3.2. Front-only.
 

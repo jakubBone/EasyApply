@@ -145,4 +145,4 @@ After all steps:
 ## When to Do This
 
 This plan is ready to execute at any time as a separate session.
-It's not part of Phase 4 learning — it's independent cleanup.
+It's not part of Step 4 learning — it's independent cleanup.

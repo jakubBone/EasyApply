@@ -111,7 +111,7 @@ Add below the project title (first line after `# Applikon` or equivalent):
 - [x] Backend job: `./mvnw test` passes on GitHub runner
 - [x] Frontend job: `npm run test:run && npm run build` pass on GitHub runner
 - [x] CI badge visible and green in `README.md`
-- [x] `spec/README.md` updated with phase 12 row
+- [x] `spec/README.md` updated with 12-ci row
 
 ---
 

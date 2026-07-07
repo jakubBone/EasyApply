@@ -171,7 +171,7 @@ Independent of the access rules above. Even when JWT auth has succeeded, this fi
 | Item | Detail |
 |------|--------|
 | Access token | JWT, RS256, 15 min lifetime, `sub` = user UUID |
-| Refresh token | Opaque UUID, 7-day lifetime, delivered as `HttpOnly` cookie. Stored in DB as **HMAC-SHA256** hash (with a server-side secret) via `TokenHasher`. A DB dump alone is useless — the attacker would also need the secret to compute lookup hashes (phase 09 hardening, replacing plain SHA-256 originally planned in phase 07) |
+| Refresh token | Opaque UUID, 7-day lifetime, delivered as `HttpOnly` cookie. Stored in DB as **HMAC-SHA256** hash (with a server-side secret) via `TokenHasher`. A DB dump alone is useless — the attacker would also need the secret to compute lookup hashes (09-security-review hardening, replacing plain SHA-256 originally planned in 07-privacy-rodo) |
 | RSA key pair | 2048-bit, generated in-memory at application startup. After a restart all access tokens become invalid — acceptable because their lifetime is 15 min anyway. Production deployments may load a PEM from env instead |
 | Admin key compare | `MessageDigest.isEqual` — constant-time, defends against timing attacks |
 

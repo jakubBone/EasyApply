@@ -1,6 +1,6 @@
 # RODO Minimum Implementation Plan — Applikon Frontend
 
-## Work Process (applicable to each phase)
+## Work Process (applicable to each step)
 
 1. **Implementation** — Claude makes code changes
 2. **Automatic verification** — `npm run build` + `npm run test:run`, both must be green
@@ -8,7 +8,7 @@
 4. **Update plans** — Claude updates checkboxes in this file
 5. **Commit suggestion** — Claude proposes commit message (format: `type(frontend): description`)
 6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next phase
+7. **Continue question** — Claude asks if we proceed to the next step
 
 ---
 
@@ -25,7 +25,7 @@ Build RODO frontend layer:
 
 ## Implementation Status
 
-### Phase 1 — Route `/privacy` + Static Component
+### Step 1 — Route `/privacy` + Static Component
 
 **New file:** `src/pages/PrivacyPolicy.tsx`
 
@@ -52,7 +52,7 @@ To be decided during implementation.
 
 ---
 
-### Phase 2 — `User` Type in API Client Extended with `privacyPolicyAcceptedAt`
+### Step 2 — `User` Type in API Client Extended with `privacyPolicyAcceptedAt`
 
 **File:** `src/types/domain.ts`
 
@@ -62,7 +62,7 @@ To be decided during implementation.
 
 ---
 
-### Phase 3 — Consent Screen `ConsentGate.tsx`
+### Step 3 — Consent Screen `ConsentGate.tsx`
 
 **New file:** `src/components/auth/ConsentGate.tsx`
 
@@ -91,7 +91,7 @@ To be decided during implementation.
 
 ---
 
-### Phase 4 — API Functions
+### Step 4 — API Functions
 
 **File:** `src/services/api.ts`
 
@@ -101,7 +101,7 @@ To be decided during implementation.
 
 ---
 
-### Phase 5 — Handle `403 CONSENT_REQUIRED` (optional)
+### Step 5 — Handle `403 CONSENT_REQUIRED` (optional)
 
 **Decision:** **Skipped** — we rely on ConsentGate
 - ConsentGate blocks UI earlier for users without consent
@@ -109,7 +109,7 @@ To be decided during implementation.
 
 ---
 
-### Phase 6 — Settings page `/settings` with "Delete account" button
+### Step 6 — Settings page `/settings` with "Delete account" button
 
 **New file:** `src/pages/Settings.tsx`
 
@@ -126,7 +126,7 @@ To be decided during implementation.
 
 ---
 
-### Phase 7 — Footer
+### Step 7 — Footer
 
 **New file:** `src/components/layout/Footer.tsx`
 
@@ -140,7 +140,7 @@ To be decided during implementation.
 
 ---
 
-### Phase 8 — i18n Keys
+### Step 8 — i18n Keys
 
 **Files:** `src/i18n/locales/pl/common.json`, `src/i18n/locales/en/common.json`
 
@@ -169,7 +169,7 @@ To be decided during implementation.
 
 ---
 
-### Phase 9 — Tests
+### Step 9 — Tests
 
 **Tests added:**
 
@@ -182,10 +182,10 @@ To be decided during implementation.
 
 ## Out of Scope
 
-- **User data export (GET /me/export)** — beyond MVP for this phase
+- **User data export (GET /me/export)** — beyond MVP for this plan
 - **History of accepted policy versions** — single policy, no versioning
 - **Cookie consent banner** — we don't use trackers, only technical session cookies
-- **Terms of Service / ToS page** — separate document, out of scope for phase 07
+- **Terms of Service / ToS page** — separate document, out of scope for 07-privacy-rodo
 - **Custom modal library** — we use existing components/patterns from project
 
 ---

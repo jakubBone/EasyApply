@@ -1,6 +1,6 @@
 # Data Export Implementation Plan — Backend
 
-## Work Process (applicable to each phase)
+## Work Process (applicable to each step)
 
 1. **Implementation** — Claude makes code changes
 2. **Automatic verification** — `./mvnw test` must be green
@@ -8,7 +8,7 @@
 4. **Update plans** — Claude updates checkboxes in this file
 5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
 6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next phase
+7. **Continue question** — Claude asks if we proceed to the next step
 
 ---
 
@@ -40,7 +40,7 @@ filename: applikon-export.json
 
 ## Implementation Status
 
-### Phase 1 — DTO `UserExportResponse`
+### Step 1 — DTO `UserExportResponse`
 
 **New file:** `dto/UserExportResponse.java`
 
@@ -104,7 +104,7 @@ internal CV and note IDs, `user_id` in applications — these are system data.
 
 ---
 
-### Phase 2 — `UserExportService`
+### Step 2 — `UserExportService`
 
 **New file:** `service/UserExportService.java`
 
@@ -203,7 +203,7 @@ public class UserExportService {
 
 ---
 
-### Phase 3 — Endpoint w `AuthController`
+### Step 3 — Endpoint w `AuthController`
 
 **File:** `controller/AuthController.java`
 
@@ -231,7 +231,7 @@ file instead of displaying it in a tab.
 
 ---
 
-### Phase 4 — Tests
+### Step 4 — Tests
 
 **File:** `test/controller/AuthControllerTest.java`
 
@@ -265,7 +265,7 @@ file instead of displaying it in a tab.
 
 | # | Scenario | Decision |
 |---|---|---|
-| EC-1 | CV type `FILE` — `externalUrl` may be null (upload disabled since phase 07) | Export metadata as-is; `externalUrl: null` in JSON is correct behavior |
+| EC-1 | CV type `FILE` — `externalUrl` may be null (upload disabled since 07-privacy-rodo) | Export metadata as-is; `externalUrl: null` in JSON is correct behavior |
 
 ---
 
@@ -274,7 +274,7 @@ file instead of displaying it in a tab.
 - **CSV export** — JSON only; sufficient for GDPR requirements
 - **File encryption** — user downloads via HTTPS, responsible for storage
 - **CV file export (FILE type)** — export metadata only (name, URL);
-  PDF files out of scope (CV file upload disabled since phase 07 anyway)
+  PDF files out of scope (CV file upload disabled since 07-privacy-rodo anyway)
 
 ---
 

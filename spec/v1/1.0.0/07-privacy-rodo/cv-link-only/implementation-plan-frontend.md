@@ -1,6 +1,6 @@
 # CV Link-Only Implementation Plan — Applikon Frontend
 
-## Work Process (applicable to each phase)
+## Work Process (applicable to each step)
 
 1. **Implementation** — Claude makes code changes
 2. **Automatic verification** — `npm run build` + `npm run test:run`, both must be green
@@ -8,7 +8,7 @@
 4. **Update plans** — Claude updates checkboxes in this file
 5. **Commit suggestion** — Claude proposes commit message (format: `type(frontend): description`)
 6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next phase
+7. **Continue question** — Claude asks if we proceed to the next step
 
 ---
 
@@ -30,13 +30,13 @@ in database) still display in the list, can be downloaded and deleted.
   (shows implemented upload), but not clickable.
 - **Tooltip via native `title` attribute** — no tooltip library to avoid
   introducing new dependency for this detail.
-- **Mutation `useUploadCV` stays in code** — we don't remove it because backend won't call it (endpoint 503). Unused import would be flagged, so decision needed per-case (see Phase 3).
+- **Mutation `useUploadCV` stays in code** — we don't remove it because backend won't call it (endpoint 503). Unused import would be flagged, so decision needed per-case (see Step 3).
 
 ---
 
 ## Implementation Status
 
-### Phase 1 — Disable "Upload PDF" Card in Add CV Modal
+### Step 1 — Disable "Upload PDF" Card in Add CV Modal
 
 **File:** `applikon-frontend/src/components/cv/CVManager.tsx`
 
@@ -71,7 +71,7 @@ Currently card (line 406):
 
 ---
 
-### Phase 2 — CSS Styles for Disabled State
+### Step 2 — CSS Styles for Disabled State
 
 **File:** `applikon-frontend/src/components/cv/CVManager.css` (or appropriate style file — to verify)
 
@@ -98,7 +98,7 @@ Currently card (line 406):
 
 ---
 
-### Phase 3 — i18n Keys for Tooltip
+### Step 3 — i18n Keys for Tooltip
 
 **Files:** `src/i18n/locales/pl/*.json`, `src/i18n/locales/en/*.json`
 
@@ -110,7 +110,7 @@ Currently card (line 406):
 
 ---
 
-### Phase 4 — Handle 503 Error from Backend (Defensive) — SKIPPED
+### Step 4 — Handle 503 Error from Backend (Defensive) — SKIPPED
 
 Per plan decision: we rely on `ConsentGate` / disabled UI. Endpoint
 503 is unreachable through normal user flow, so dedicated handling
@@ -134,7 +134,7 @@ still available in code.
 
 ---
 
-### Phase 5 — Test Updates — N/A
+### Step 5 — Test Updates — N/A
 
 **No `CVManager.test.tsx` file** in project (verified: `src/test/components/`
 contains only `App.test.tsx` and `BadgeWidget.test.tsx`). `api.test.ts` tests
@@ -167,7 +167,7 @@ the same, backend behavior is mocked.
 - **Custom tooltip component** — using native `title`, sufficient
 - **Hiding existing FILE type CVs from list** — they remain visible
 - **"Migrate your CV to Drive" info message** — optional, to be considered
-  in `rodo-minimum/` phase (message in privacy policy)
+  in `rodo-minimum/` (message in privacy policy)
 
 ---
 

@@ -1,6 +1,6 @@
 # Retention & Hygiene Implementation Plan — Applikon Backend
 
-## Work Process (applicable to each phase)
+## Work Process (applicable to each step)
 
 1. **Implementation** — Claude makes code changes
 2. **Automatic verification** — `./mvnw test` must be green
@@ -8,20 +8,20 @@
 4. **Update plans** — Claude updates checkboxes in this file
 5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
 6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next phase
+7. **Continue question** — Claude asks if we proceed to the next step
 
 ---
 
 ## Goal
 
-Close phase 07 in three data hygiene areas:
+Close 07-privacy-rodo in three data hygiene areas:
 
 1. **Auto-retention** — cron removes inactive accounts > 12 months
 2. **Log audit** — verify logs don't contain emails, names, tokens
 3. **Refresh token hashing** — store token in DB as hash, not plaintext
 
 Finally: update documentation (`README.md`, `spec/README.md`, `as-built.md`)
-closing phase 07.
+closing 07-privacy-rodo.
 
 ---
 
@@ -37,7 +37,7 @@ closing phase 07.
 
 ## Implementation Status
 
-### Phase 1 — Add `last_login_at` Field to User
+### Step 1 — Add `last_login_at` Field to User
 
 **File:** `entity/User.java`
 
@@ -56,7 +56,7 @@ which is significant overhead.
 
 ---
 
-### Phase 2 — Scheduled Job to Delete Inactive Accounts
+### Step 2 — Scheduled Job to Delete Inactive Accounts
 
 **New file:** `service/AccountRetentionService.java`
 
@@ -83,7 +83,7 @@ which is significant overhead.
 
 ---
 
-### Phase 3 — Retention Tests
+### Step 3 — Retention Tests
 
 **New file:** `test/service/AccountRetentionServiceTest.java`
 
@@ -95,7 +95,7 @@ which is significant overhead.
 
 ---
 
-### Phase 4 — Refresh Token Hashing
+### Step 4 — Refresh Token Hashing
 
 **Current state:**
 
@@ -137,7 +137,7 @@ logged out. **Acceptable** (one-time inconvenience for < 10 users at this point)
 
 ---
 
-### Phase 5 — Hashing Tests
+### Step 5 — Hashing Tests
 
 **Files:** `test/security/JwtServiceTest.java` / `test/service/UserServiceTest.java`
 
@@ -149,7 +149,7 @@ logged out. **Acceptable** (one-time inconvenience for < 10 users at this point)
 
 ---
 
-### Phase 6 — Log Audit
+### Step 6 — Log Audit
 
 **Goal:** review code for PII logging (email, name, tokens).
 
@@ -178,24 +178,24 @@ logged out. **Acceptable** (one-time inconvenience for < 10 users at this point)
 
 ---
 
-### Phase 7 — Rate Limiting on Sensitive Endpoints (optional)
+### Step 7 — Rate Limiting on Sensitive Endpoints (optional)
 
 **Goal:** minimize abuse risk for `DELETE /me` (so logged-in attacker can't spam requests).
 
 **Decision:** for portfolio project with ~10-50 users this is **excessive**. Spring
 Security + restriction to logged-in users is sufficient. Deferring.
 
-- [ ] This phase marked as "not implemented in phase 07"
+- [ ] This step marked as "not implemented in 07-privacy-rodo"
 
 ---
 
-### Phase 8 — Close Phase 07: Documentation
+### Step 8 — Close 07-privacy-rodo: Documentation
 
 **File:** `README.md`
 
 - [ ] Add **"Privacy & Data"** section:
   - What data we collect (minimum)
-  - Decision: CV only via link (variant B from phase 07 brief)
+  - Decision: CV only via link (variant B from 07-privacy-rodo brief)
   - Link to `/privacy` in live app
   - Link to retention policy
   - Note: "Portfolio project — see `spec/v1/1.0.0/07-privacy-rodo/` for design rationale"
@@ -207,7 +207,7 @@ Security + restriction to logged-in users is sufficient. Deferring.
   | Privacy & RODO | `v1/1.0.0/07-privacy-rodo/` | Complete |
   ```
 
-**File:** `spec/v1/as-built.md`
+**File:** `spec/v1/1.0.0/as-built.md`
 
 - [ ] Update sections:
   - REST endpoints: `POST /api/auth/consent`, `DELETE /api/auth/me` (new), `POST /api/cv/upload` returns 503
@@ -228,14 +228,14 @@ Security + restriction to logged-in users is sufficient. Deferring.
 - [ ] Logs don't contain emails, user names, tokens in plaintext (manual verification + code review)
 - [ ] `./mvnw test` — 0 failed
 - [ ] `README.md` has "Privacy & Data" section
-- [ ] `spec/README.md` marks phase 07 as "Complete"
-- [ ] `spec/v1/as-built.md` updated
+- [ ] `spec/README.md` marks 07-privacy-rodo as "Complete"
+- [ ] `spec/v1/1.0.0/as-built.md` updated
 
 ---
 
 ## Out of Scope
 
-- **Rate limiting** — considered in Phase 7, rejected for this phase
+- **Rate limiting** — considered in Step 7, rejected for this plan
 - **Audit log tables (who logged in when)** — contradicts data minimization
 - **Encryption of entire `users` table at-rest in application** — infrastructure level (DB/disk), not application
 - **Email notifications before deleting inactive account** — no mail system, out of scope
@@ -260,8 +260,8 @@ Security + restriction to logged-in users is sufficient. Deferring.
 | `test/service/UserServiceTest.java` | modify | Refresh token hashing tests |
 | Review `log.*` in `main/java/com/applikon/**` | modify | Remove PII from logs |
 | `README.md` | modify | "Privacy & Data" section |
-| `spec/README.md` | modify | Phase 07 row |
-| `spec/v1/as-built.md` | modify | New endpoints, DB fields, frontend, scheduled jobs |
+| `spec/README.md` | modify | 07-privacy-rodo row |
+| `spec/v1/1.0.0/as-built.md` | modify | New endpoints, DB fields, frontend, scheduled jobs |
 
 ---
 

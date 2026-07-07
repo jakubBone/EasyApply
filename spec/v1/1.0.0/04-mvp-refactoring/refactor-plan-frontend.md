@@ -6,7 +6,7 @@ This document is a learning guide for Jakub — author of Applikon.
 Jakub is a backend developer (Java/Spring) who wrote this application with Claude Code help.
 He wants to understand how frontend works at basic level.
 
-**How sessions resume:** the `/mentor-refactor-frontend` slash command loads this file plus `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` and `spec/v1/1.0.0/04-mvp-refactoring/learning/learning-notes-frontend.md`, then continues from the current phase. The notes file is key context — it shows which analogies (usually Java/Spring) work best for Jakub.
+**How sessions resume:** the `/mentor-refactor-frontend` slash command loads this file plus `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` and `spec/v1/1.0.0/04-mvp-refactoring/learning/learning-notes-frontend.md`, then continues from the current step. The notes file is key context — it shows which analogies (usually Java/Spring) work best for Jakub.
 
 ---
 
@@ -76,20 +76,20 @@ types/
 2. **Interaction:** After explaining each topic OBLIGATORILY ask if clear.
    Don't move forward without explicit confirmation ("ok", "understood", "next").
 
-3. **Quiz After Each Subtopic:** After explaining each small topic in a phase
+3. **Quiz After Each Subtopic:** After explaining each small topic in a step
    (e.g., "what is Vite", "what is useState") ask Jakub 5 comprehension questions.
    Questions must be concrete, reference the project, not abstractions.
    Wait for answers, fix mistakes before moving.
 
-4. **Notes After Each Large Phase:** After completing entire phase (1–10) save summary
-   to `spec/v1/1.0.0/04-mvp-refactoring/learning/learning-notes-frontend.md`. Format: phase heading, key concepts with explanations,
-   Java analogies, most important project files that apply to phase.
+4. **Notes After Each Large Step:** After completing entire step (1–10) save summary
+   to `spec/v1/1.0.0/04-mvp-refactoring/learning/learning-notes-frontend.md`. Format: step heading, key concepts with explanations,
+   Java analogies, most important project files that apply to step.
    File serves as Jakub's cheat sheet.
 
 5. **Always Show Code:** Discuss specific project files, not abstract examples.
    Point to line numbers (format: `file.tsx:42`).
 
-6. **CR Integrated With Learning:** When code review points to problem in current phase — first explain mechanism, then fix together with Jakub.
+6. **CR Integrated With Learning:** When code review points to problem in current step — first explain mechanism, then fix together with Jakub.
    Don't fix without explanation — reason matters.
 
 7. **Don't Ask "Ready to move on?"** — make decisions based on quiz results and whether Jakub confirmed understanding.
@@ -115,22 +115,22 @@ Each code change must go through this process. Don't skip steps.
                   and add entry to "Session Notes"
 ```
 
-**End of phase (not after every fix):**
+**End of step (not after every fix):**
 - Run `npm test` (Vitest) in `applikon-frontend`. If broken — update tests, re-run until green.
 - Run `npm run build` to confirm TypeScript compiles.
-- Only then mark the phase complete.
+- Only then mark the step complete.
 
 **Important Rules:**
-- Don't run `npm test` / `npm run build` after each CR fix — batch them at the end of the phase.
+- Don't run `npm test` / `npm run build` after each CR fix — batch them at the end of the step.
 - Step 5 (browser) is always Jakub's task, not Claude's.
 - Step 6 (question) — Claude asks, Jakub decides.
-- If end-of-phase tests don't pass — **don't close the phase** until green.
+- If end-of-step tests don't pass — **don't close the step** until green.
 
 ---
 
 ## Learning Progress
 
-| Phase | Topic | Learning | CR Fixed This Phase |
+| Step | Topic | Learning | CR Fixed This Step |
 |-------|-------|----------|-------------------|
 | 1 | Ecosystem and Tools | ✅ | — |
 | 2 | Component — Basic Unit | ✅ | — |
@@ -143,8 +143,8 @@ Each code change must go through this process. Don't skip steps.
 | 9 | TypeScript in React | ✅ | CR-2, CR-8 |
 | 10 | Frontend Testing | ✅ | — |
 
-After each phase Claude asks:
-> _"Should we mark Phase X as complete? I'll update table and notes with session info."_
+After each step Claude asks:
+> _"Should we mark Step X as complete? I'll update table and notes with session info."_
 
 ---
 
@@ -154,22 +154,22 @@ Source: `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` (reviewer: DR & AI)
 
 ### 🔴 Critical (security / correctness)
 
-| ID | Problem | File(s) | Phase | Status | Tested |
+| ID | Problem | File(s) | Step | Status | Tested |
 |----|---------|---------|-------|--------|--------|
-| CR-2 | Missing URL validation (XSS through href) | `ApplicationDetails.tsx`, `CVManager.tsx` | Phase 9 | ✅ | ✅ |
-| CR-3 | Refresh token contract (`token` vs `accessToken`) | `api.ts` + backend controller | Phase 7 | ✅ | ✅ |
-| CR-4 | Hardcoded `http://localhost:8080` in LoginPage | `LoginPage.tsx` | Phase 7 | ✅ | ✅ |
-| CR-5 | Missing SameSite on refresh_token cookie | `OAuth2AuthenticationSuccessHandler.java` | Phase 8 | ✅ | ✅ |
-| CR-6 | Missing Error Boundary + crash `new URL()` in CVManager | `App.tsx`, `CVManager.tsx` | Phase 8 | ✅ | ✅ |
+| CR-2 | Missing URL validation (XSS through href) | `ApplicationDetails.tsx`, `CVManager.tsx` | Step 9 | ✅ | ✅ |
+| CR-3 | Refresh token contract (`token` vs `accessToken`) | `api.ts` + backend controller | Step 7 | ✅ | ✅ |
+| CR-4 | Hardcoded `http://localhost:8080` in LoginPage | `LoginPage.tsx` | Step 7 | ✅ | ✅ |
+| CR-5 | Missing SameSite on refresh_token cookie | `OAuth2AuthenticationSuccessHandler.java` | Step 8 | ✅ | ✅ |
+| CR-6 | Missing Error Boundary + crash `new URL()` in CVManager | `App.tsx`, `CVManager.tsx` | Step 8 | ✅ | ✅ |
 
 ### 🟡 Important (quality / consistency)
 
-| ID | Problem | File(s) | Phase | Status | Tested |
+| ID | Problem | File(s) | Step | Status | Tested |
 |----|---------|---------|-------|--------|--------|
-| CR-7 | CVManager uses useState instead of useCV() | `CVManager.tsx` | Phase 5 | ✅ | ✅ |
-| CR-8 | Duplicate status color constants | `ApplicationDetails.tsx`, `ApplicationTable.tsx` | Phase 9 | ✅ | ✅ |
-| CR-9 | `apiFetch()` redirect without stopping processing | `api.ts` | Phase 7 | ✅ | ✅ |
-| CR-11 | Missing memoization for sort/filter | `ApplicationTable.tsx` | Phase 3 | ✅ | ✅ |
+| CR-7 | CVManager uses useState instead of useCV() | `CVManager.tsx` | Step 5 | ✅ | ✅ |
+| CR-8 | Duplicate status color constants | `ApplicationDetails.tsx`, `ApplicationTable.tsx` | Step 9 | ✅ | ✅ |
+| CR-9 | `apiFetch()` redirect without stopping processing | `api.ts` | Step 7 | ✅ | ✅ |
+| CR-11 | Missing memoization for sort/filter | `ApplicationTable.tsx` | Step 3 | ✅ | ✅ |
 | CR-12 | KanbanBoard.tsx ~987 lines — needs decomposition | `KanbanBoard.tsx` | optional | ✅ | ✅ |
 
 **Legend:**
@@ -178,11 +178,11 @@ Source: `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` (reviewer: DR & AI)
 
 ---
 
-## Detailed Phase Descriptions
+## Detailed Step Descriptions
 
 ---
 
-### Phase 1 — Ecosystem and Tools
+### Step 1 — Ecosystem and Tools
 
 **Goal:** Understand what React, TypeScript, Vite are at "what is it and why" level.
 
@@ -207,11 +207,11 @@ Source: `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` (reviewer: DR & AI)
 - `applikon-frontend/src/main.tsx` — entry point
 - `applikon-frontend/src/App.tsx` — app root
 
-**CR Related:** none on this phase.
+**CR Related:** none on this step.
 
 ---
 
-### Phase 2 — Component — Basic Unit
+### Step 2 — Component — Basic Unit
 
 **Goal:** Understand React component, JSX, props.
 
@@ -233,11 +233,11 @@ Source: `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` (reviewer: DR & AI)
 - `src/pages/LoginPage.tsx` — simple page component
 - `src/components/badges/BadgeWidget.tsx` — small component with props
 
-**CR Related:** none on this phase.
+**CR Related:** none on this step.
 
 ---
 
-### Phase 3 — State and Re-rendering
+### Step 3 — State and Re-rendering
 
 **Goal:** Understand `useState`, how React updates UI, why it's different from Java.
 
@@ -262,7 +262,7 @@ Source: `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` (reviewer: DR & AI)
 
 ---
 
-### Phase 4 — React Hooks
+### Step 4 — React Hooks
 
 **Goal:** Understand hooks, `useEffect`, and custom hooks in project.
 
@@ -285,11 +285,11 @@ Source: `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` (reviewer: DR & AI)
 
 **CR Related:**
 - CR-7 (preview): `CVManager.tsx` uses `useState + useEffect` instead of ready `useCV()`.
-  Show inconsistency. Fix in Phase 5.
+  Show inconsistency. Fix in Step 5.
 
 ---
 
-### Phase 5 — React Query — Frontend Heart
+### Step 5 — React Query — Frontend Heart
 
 **Goal:** Understand why React Query is key and how it works in project.
 
@@ -317,7 +317,7 @@ Source: `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` (reviewer: DR & AI)
 
 ---
 
-### Phase 6 — Routing and Page Protection
+### Step 6 — Routing and Page Protection
 
 **Goal:** Understand SPA navigation and page protection for logged-in users.
 
@@ -340,11 +340,11 @@ Source: `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` (reviewer: DR & AI)
 - `src/auth/AuthProvider.tsx` — Context API, global auth state
 - `src/auth/ProtectedRoute.tsx` — component guard
 
-**CR Related:** none fixes, but preview Error Boundary (CR-6 from Phase 8).
+**CR Related:** none fixes, but preview Error Boundary (CR-6 from Step 8).
 
 ---
 
-### Phase 7 — Frontend ↔ Backend Communication
+### Step 7 — Frontend ↔ Backend Communication
 
 **Goal:** Understand how frontend sends HTTP requests to Spring Boot and handles responses.
 
@@ -366,7 +366,7 @@ Source: `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` (reviewer: DR & AI)
 - `src/services/api.ts` — entire API layer
 - (backend) `applikon-backend/.../controller/` — compare with Spring endpoints
 
-**CR Related (to fix in this phase):**
+**CR Related (to fix in this step):**
 - **CR-3:** Token contract — backend returns `"token"`, frontend expects `"accessToken"`
   (`api.ts:71`). Explain + fix both ends. Full work flow + tests + browser.
 - **CR-4:** `LoginPage.tsx` — hardcoded `http://localhost:8080`.
@@ -375,7 +375,7 @@ Source: `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` (reviewer: DR & AI)
 
 ---
 
-### Phase 8 — OAuth2 and JWT — Complete Login Flow
+### Step 8 — OAuth2 and JWT — Complete Login Flow
 
 **Goal:** Trace step by step what happens from clicking "Login with Google"
 to seeing dashboard. Understand role of each file.
@@ -406,7 +406,7 @@ Complete flow step by step:
 - `src/services/api.ts` — `refreshToken()`, `getHeaders()`
 - (backend) `OAuth2AuthenticationSuccessHandler.java` — token generation
 
-**CR Related (to fix in this phase):**
+**CR Related (to fix in this step):**
 - **CR-5:** Missing `SameSite` on refresh_token cookie — explain CSRF,
   fix on backend side (`OAuth2AuthenticationSuccessHandler.java`). Tests + restart.
 - **CR-6:** Error Boundary — explain purpose and fix (add to `App.tsx`).
@@ -414,7 +414,7 @@ Complete flow step by step:
 
 ---
 
-### Phase 9 — TypeScript in React
+### Step 9 — TypeScript in React
 
 **Goal:** Understand how TypeScript adds type safety to frontend
 and how `domain.ts` mirrors backend.
@@ -438,7 +438,7 @@ and how `domain.ts` mirrors backend.
 - `src/services/api.ts` — how types used in fetch
 - `applikon-frontend/tsconfig.json` — strict mode config
 
-**CR Related (to fix in this phase):**
+**CR Related (to fix in this step):**
 - **CR-2:** URL validation — `javascript:` XSS through href.
   Explain attack, write `isSafeUrl()` function, fix `ApplicationDetails.tsx` and `CVManager.tsx`.
   Full work flow + tests + browser.
@@ -447,7 +447,7 @@ and how `domain.ts` mirrors backend.
 
 ---
 
-### Phase 10 — Frontend Testing
+### Step 10 — Frontend Testing
 
 **Goal:** Understand test pyramid and how frontend tests differ from JUnit.
 
@@ -488,12 +488,12 @@ what needs repeat, which CR fixed, next step.
 - Reviewed learning plan and approved
 - Established work flow for CR fixes (tests → build → browser → question about marking done)
 - Added reference to `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` as source
-- Completed Phase 1 — tools ecosystem, Vite flow, files package.json / index.html / main.tsx / App.tsx
+- Completed Step 1 — tools ecosystem, Vite flow, files package.json / index.html / main.tsx / App.tsx
 - To remember: ports (5432/5173/8080), JSX ≠ HTML, browser understands only JS not JSX
 
 **CR Fixed:** none
 
-**Next Step:** Phase 3 — State and Re-rendering
+**Next Step:** Step 3 — State and Re-rendering
 
 ---
 

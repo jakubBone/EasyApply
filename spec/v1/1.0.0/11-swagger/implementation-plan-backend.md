@@ -1,13 +1,13 @@
 # Swagger Implementation Plan — Applikon Backend
 
-## Work Process (applicable to each phase)
+## Work Process (applicable to each step)
 
 1. **Implementation** — Claude makes code changes
 2. **Manual verification** — user opens `/swagger-ui.html` in browser (where noted)
 3. **Update plans** — Claude updates checkboxes in this file
 4. **Commit suggestion** — Claude proposes commit message (`type(backend): description`)
 5. **Commit** — user runs `git add` + `git commit`
-6. **Continue question** — Claude asks if we proceed to the next phase
+6. **Continue question** — Claude asks if we proceed to the next step
 
 ---
 
@@ -37,7 +37,7 @@ shapes, and call authenticated endpoints directly from the UI using a JWT token.
 
 ## Implementation Status
 
-### Phase 1 — Dependency + properties + security permit
+### Step 1 — Dependency + properties + security permit
 
 **File 1:** `applikon-backend/pom.xml`
 
@@ -75,7 +75,7 @@ shapes, and call authenticated endpoints directly from the UI using a JWT token.
 
 ---
 
-### Phase 2 — Global API info + JWT security scheme
+### Step 2 — Global API info + JWT security scheme
 
 **File:** `applikon-backend/src/main/java/com/applikon/config/OpenApiConfig.java` *(new file)*
 
@@ -105,7 +105,7 @@ Paste a valid access token → subsequent calls to authenticated endpoints retur
 
 ---
 
-### Phase 3 — Controller annotations
+### Step 3 — Controller annotations
 
 Add `@Tag` to every controller and `@Operation` to non-obvious endpoints.
 
@@ -148,7 +148,7 @@ Add `@Tag` to every controller and `@Operation` to non-obvious endpoints.
 
 ## Verification
 
-- [ ] `./mvnw test` — 0 failed (run once after all phases)
+- [ ] `./mvnw test` — 0 failed (run once after all steps)
 
 ---
 

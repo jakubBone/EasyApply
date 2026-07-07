@@ -1,6 +1,6 @@
 # Landing Page — Implementation Plan (Frontend)
 
-## Work Process (applicable to each phase)
+## Work Process (applicable to each step)
 
 1. **Implementation** — Claude makes code changes
 2. **Verification** — `npm run build` + `npm run test:run`, both must pass
@@ -8,7 +8,7 @@
 4. **Update plan** — Claude updates checkboxes in this file
 5. **Commit proposal** — Claude proposes commit message (`type(frontend): description`)
 6. **Commit** — user runs `git add` + `git commit`
-7. **Continue** — Claude asks if we proceed to next phase
+7. **Continue** — Claude asks if we proceed to next step
 
 ---
 
@@ -42,16 +42,16 @@
 
 ## Implementation Status
 
-### Phase 0 — Screenshot
+### Step 0 — Screenshot
 
 - [x] User provides Kanban screenshot → replaced by static HTML Kanban mock (no screenshot needed)
 
-> **Blocker:** phases 1–3 can be implemented without the screenshot.
-> Phase 3 (Hero) uses `<img src="/screenshot-kanban.png" />` — visible only after Phase 0.
+> **Blocker:** steps 1–3 can be implemented without the screenshot.
+> Step 3 (Hero) uses `<img src="/screenshot-kanban.png" />` — visible only after Step 0.
 
 ---
 
-### Phase 1 — Routing
+### Step 1 — Routing
 
 **File:** `src/App.tsx`
 
@@ -62,7 +62,7 @@
 
 ---
 
-### Phase 2 — i18n Keys
+### Step 2 — i18n Keys
 
 **Files:** `src/i18n/locales/pl/common.json`, `src/i18n/locales/en/common.json`
 
@@ -152,7 +152,7 @@
 
 ---
 
-### Phase 3 — LandingPage Component
+### Step 3 — LandingPage Component
 
 **New files:**
 - `src/pages/LandingPage.tsx`
@@ -187,7 +187,7 @@
 
 ---
 
-### Phase 4 — Mobile Responsive
+### Step 4 — Mobile Responsive
 
 **File:** `src/pages/LandingPage.css`
 
@@ -205,7 +205,7 @@ Breakpoint `@media (max-width: 768px)`:
 
 ---
 
-### Phase 5 — Tests
+### Step 5 — Tests
 
 **New file:** `src/test/pages/LandingPage.test.tsx`
 
@@ -222,11 +222,11 @@ Pattern: same as `ProtectedRoute.test.tsx` — mock `useAuth` via `vi.mock`, ren
 
 ---
 
-### Phase 6 — Cleanup & Docs
+### Step 6 — Cleanup & Docs
 
 - [x] Remove `landing-mockup.html` from repo root (was a design tool only)
-- [x] Update `spec/v1/as-built.md`: new route `/`, new component `LandingPage`, rotating portal animation
-- [x] Update `spec/README.md`: add row for Phase 15
+- [x] Update `spec/v1/1.1.0/as-built.md`: new route `/`, new component `LandingPage`, rotating portal animation
+- [x] Update `spec/README.md`: add row for 15-landing-page
 
 ---
 
@@ -246,7 +246,7 @@ src/
     pages/
       LandingPage.test.tsx  ← new (routing + auth-state tests)
 public/
-  screenshot-kanban.png ← provided by user (Phase 0)
+  screenshot-kanban.png ← provided by user (Step 0)
 ```
 
 ---

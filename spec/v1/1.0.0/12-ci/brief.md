@@ -1,4 +1,4 @@
-# Applikon — Phase 12: GitHub Actions CI
+# Applikon — GitHub Actions CI
 
 ## 1. Context
 
@@ -56,29 +56,29 @@ No backend or frontend source code changes.
 
 ## 6. Success Criteria (Definition of Done)
 
-Phase 12 is closed when:
+`12-ci` is closed when:
 
 1. ✅ Push to `main` triggers the workflow on GitHub Actions
 2. ✅ Backend job: `./mvnw test` passes on GitHub-hosted runner (Java 21)
 3. ✅ Frontend job: `npm run test:run && npm run build` passes (Node 22)
 4. ✅ CI badge in `README.md` shows green
-5. ✅ `spec/README.md` updated with phase 12 row
+5. ✅ `spec/README.md` updated with 12-ci row
 
 ---
 
 ## 7. Implementation Order
 
 Single step — create `.github/workflows/ci.yml` and add badge to `README.md`.
-No code phases; the workflow file is the entire implementation.
+No code steps; the workflow file is the entire implementation.
 
 ---
 
 ## 8. Related Documents
 
-- `spec/v1/as-built.md` — update after completion
+- `spec/v1/1.0.0/as-built.md` — update after completion
 - `spec/v1/1.0.0/12-ci/implementation-plan.md` — workflow file content + badge syntax
 - `spec/post/pre-deploy-checklist.md` — broader GitHub publication checklist
-- `spec/README.md` — add row for phase 12
+- `spec/README.md` — add row for 12-ci
 
 ---
 

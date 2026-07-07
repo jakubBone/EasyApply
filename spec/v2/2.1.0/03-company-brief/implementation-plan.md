@@ -1,20 +1,20 @@
-# v2/2.1.0 Phase 7-10 — Implementation Plan
+# 2.1.0 03-company-brief — Implementation Plan
 
-> Continues the era phase numbering from
-> [`../../2.0.0/02-cheat-sheet-consolidation/plan.md`](../../2.0.0/02-cheat-sheet-consolidation/plan.md) (Phases 5-6).
+> Topic 03 of the v2 era — follows
+> [`../../2.0.0/02-cheat-sheet-consolidation/implementation-plan.md`](../../2.0.0/02-cheat-sheet-consolidation/implementation-plan.md) (topic 02, Steps 1-2).
 > Why this release exists: [`brief.md`](brief.md) · decisions:
 > [`user-stories.md`](user-stories.md) · provider & trust boundary:
 > [`../../../adr/ADR-001-gemini-free-tier-grounding.md`](../../../adr/ADR-001-gemini-free-tier-grounding.md).
 
-**Working rhythm — a phase is done only when:** its tests are green (frontend
+**Working rhythm — a step is done only when:** its tests are green (frontend
 verified in-session; backend `./mvnw test` on the dev machine — no JDK
 in-session), its checklist below is ticked, and
-[`../../as-built.md`](../../as-built.md) records what was actually built
-(deviations go to as-built §2, never back into this file).
+[`../as-built.md`](../as-built.md) records what was actually built
+(deviations go to as-built, never back into this file).
 
 ---
 
-## Phase 7 — Backend: brief resource on a stub `ChatModel`
+## Step 1 — Backend: brief resource on a stub `ChatModel`
 
 The whole resource, testable without any live AI: generation is called through
 the Spring AI `ChatModel` abstraction, and every test runs against a stub
@@ -69,7 +69,7 @@ zero API keys**; `./mvnw test` green on the dev machine.
 
 ---
 
-## Phase 8 — Backend: live Gemini with search grounding
+## Step 2 — Backend: live Gemini with search grounding
 
 Swap the stub for the real provider — config and prompt only, no domain change.
 
@@ -105,7 +105,7 @@ offline; cost 0.
 
 ---
 
-## Phase 9 — Frontend: generate button, states, editing
+## Step 3 — Frontend: generate button, states, editing
 
 **Build**
 - `api.ts` + hooks: `useBrief(applicationId)` (GET, polls while `PENDING`),
@@ -145,14 +145,14 @@ no regenerate control when `READY`.
 
 ---
 
-## Phase 10 — Release chores (2.1.0)
+## Step 4 — Release chores (2.1.0)
 
 **Build**
 - Cypress E2E: stubbed happy path (open application → generate → fields appear
   → edit one) via `data-cy`, language-independent.
 - `spec/architecture.md`: new tables, endpoints, the async AI call and its trust
   boundary (link ADR-001).
-- `../../as-built.md`: final pass for Phases 7-10.
+- `../as-built.md`: final pass for Steps 1-4.
 - CHANGELOG `2.1.0` (`feat` → minor) + version bump (`package.json`, `pom.xml`,
   README badge).
 - Deploy per `spec/deployment/deployment-hetzner.md` (prod API key configured
@@ -170,7 +170,7 @@ CHANGELOG/versions consistent; `npm run e2e` green locally.
 
 ---
 
-## Cross-cutting Definition of Done (Phases 7-10)
+## Cross-cutting Definition of Done
 
 - [ ] All success criteria in [`brief.md`](brief.md) §5 met; all acceptance
   criteria in [`user-stories.md`](user-stories.md) hold.

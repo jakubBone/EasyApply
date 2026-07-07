@@ -1,6 +1,6 @@
 # i18n Implementation Plan — Applikon Frontend
 
-## Work Process (applicable to each phase)
+## Work Process (applicable to each step)
 
 1. **Implementation** — Claude makes code changes
 2. **Automatic verification** — `npm run build` + `npm run test:run`, both must be green
@@ -8,13 +8,13 @@
 4. **Update plans** — Claude updates checkboxes in this file
 5. **Commit suggestion** — Claude proposes commit message (format: `type(frontend): description`)
 6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next phase
+7. **Continue question** — Claude asks if we proceed to the next step
 
 ---
 
 ## Implementation Status
 
-### Phase 0 — Preparation
+### Step 0 — Preparation
 - [x] Inventory string literals in components
 - [x] Install packages: `i18next react-i18next`
 - [x] Create directory structure `src/i18n/`
@@ -23,17 +23,17 @@
 - [x] Verification: application works identically as before
 - [x] Fill all JSON files (pl + en): `common`, `errors`, `badges`, `tour`
 
-### Phase 1 — `errors` Namespace
+### Step 1 — `errors` Namespace
 - [x] `throw new Error(...)` from `api.ts` → i18n keys
 - [x] `alert(...)` from `CVManager.tsx` → i18n keys
 - [x] `throw new Error` from `AuthProvider.tsx` → i18n keys
 - [x] `en/errors.json` translated
 - [x] `api.test.ts` — assertions updated to keys
 
-### Phase 2 — `common` Namespace (main UI)
+### Step 2 — `common` Namespace (main UI)
 - [x] `LoginPage.tsx`
 - [x] `AppContent.tsx`
-- [x] `NotesList.tsx` (partially — see Phase 2a)
+- [x] `NotesList.tsx` (partially — see Step 2a)
 - [x] `SalaryFormSection.tsx`
 - [x] `EndModal.tsx`
 - [x] `MoveModal.tsx`
@@ -44,30 +44,30 @@
 - [x] `ApplicationTable.tsx`
 - [x] `CVManager.tsx`
 
-### Phase 2a — Skipped Files (BUGFIX)
+### Step 2a — Skipped Files (BUGFIX)
 - [x] `ErrorBoundary.tsx` — hardcoded `"Something went wrong"`, `"Sorry"`, `"Refresh page"` → i18n
 - [x] `NotesList.tsx` — hardcoded `"Just now"` and relative times → i18n
 
-### Phase 3 — `badges` Namespace
+### Step 3 — `badges` Namespace
 - [x] `BadgeWidget.tsx` + `constants/` → `badges.json`
 - [x] `BadgeWidget.test.tsx` updated
 - [x] `badges.cy.ts` updated
 
-### Phase 4 — `tour` Namespace
+### Step 4 — `tour` Namespace
 - [x] `TourGuide.tsx` → `tour.json`
 - [x] Verify tour mobile and desktop
 
-### Phase 5 — Cypress `data-cy`
+### Step 5 — Cypress `data-cy`
 - [x] Identify all `cy.contains(...)` on interactive elements
 - [x] Add `data-cy` to React components
 - [x] Migrate selectors in Cypress files
 - [x] Full E2E suite passing
 
-### Phase 6 — TypeScript Type Keys
+### Step 6 — TypeScript Type Keys
 - [x] `src/i18n/types.ts` with module declaration
 - [x] `tsc --noEmit` without errors
 
-### Phase 7 — Language Detector + Switcher
+### Step 7 — Language Detector + Switcher
 - [x] Install: `npm install i18next-browser-languagedetector`
 - [x] Update `src/i18n/index.ts`:
   - Remove hardcoded `lng: 'pl'`
@@ -85,9 +85,9 @@
 - [x] `npm run test:run` passing
 - [x] Manual verification: language change works immediately, persists after refresh
 
-### Phase 7a — Stage Names i18n (recruitment stage names)
+### Step 7a — Stage Names i18n (recruitment stage names)
 
-> Discovered during manual verification of Phase 7. Stages in the "In Progress" column
+> Discovered during manual verification of Step 7. Stages in the "In Progress" column
 > did not translate on language change because they were stored as Polish strings in DB.
 
 #### Architecture
@@ -178,16 +178,16 @@ export const normalizeStageKey = (name: string | null | undefined): string => {
 }
 ```
 
-### Phase 8 — Comments & Tests EN
+### Step 8 — Comments & Tests EN
 - [x] Source code comments → English (`KanbanBoard.tsx`, `LoginPage.tsx`, `AuthCallbackPage.tsx`, `ProtectedRoute.tsx`)
 - [x] `it()` in Vitest tests → English (`App.test.tsx`, `BadgeWidget.test.tsx`)
 - [x] Comment in `cypress/support/e2e.ts` → English
 - [x] `it()` in `cypress/e2e/application-crud.cy.ts` → English
 - [x] `npm run test:run` passing
 
-### Phase 9 — Rename Enum Values to English + i18n Key Cleanup
+### Step 9 — Rename Enum Values to English + i18n Key Cleanup
 
-> **This phase is summary only.** Detailed step-by-step instructions, complete mappings
+> **This step is summary only.** Detailed step-by-step instructions, complete mappings
 > of old→new enum values, list of changed files per-step, and execution history
 > (with test results after each step) are in: `spec/i18n/enum-rename-plan.md`
 
@@ -253,7 +253,7 @@ src/
         badges.json
         tour.json
   components/
-    LanguageSwitcher.tsx      ← new component (Phase 7)
+    LanguageSwitcher.tsx      ← new component (Step 7)
 ```
 
 ---
@@ -302,16 +302,16 @@ export default i18n
 
 ---
 
-## Phase Execution Order
+## Step Execution Order
 
 ```
-Phase 2a (bugfix — skipped files)
+Step 2a (bugfix — skipped files)
     ↓
-Phase 7 (language detector + switcher)
+Step 7 (language detector + switcher)
     ↓
-Phase 8 (comments EN)
+Step 8 (comments EN)
     ↓
-Phase 5 (full E2E — to verify)
+Step 5 (full E2E — to verify)
 ```
 
 ---

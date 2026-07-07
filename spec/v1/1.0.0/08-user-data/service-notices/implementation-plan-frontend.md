@@ -1,6 +1,6 @@
 # Service Notices Implementation Plan — Frontend
 
-## Work Process (applicable to each phase)
+## Work Process (applicable to each step)
 
 1. **Implementation** — Claude makes code changes
 2. **Automatic verification** — `npm run build` + `npm run test:run`, both must be green
@@ -8,7 +8,7 @@
 4. **Update plans** — Claude updates checkboxes in this file
 5. **Commit suggestion** — Claude proposes commit message (format: `type(frontend): description`)
 6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next phase
+7. **Continue question** — Claude asks if we proceed to the next step
 
 ---
 
@@ -44,7 +44,7 @@ ServiceModal:
 
 ## Implementation Status
 
-### Phase 1 — Type and API Function
+### Step 1 — Type and API Function
 
 **File:** `src/types/domain.ts` (or equivalent with types)
 
@@ -79,7 +79,7 @@ exception.
 
 ---
 
-### Phase 2 — Hook `useServiceNotices`
+### Step 2 — Hook `useServiceNotices`
 
 **New file:** `src/hooks/useServiceNotices.ts`
 
@@ -97,7 +97,7 @@ export function useServiceNotices() {
 
 ---
 
-### Phase 3 — Component `ServiceBanner`
+### Step 3 — Component `ServiceBanner`
 
 **New file:** `src/components/notices/ServiceBanner.tsx`
 
@@ -136,7 +136,7 @@ This is intentional: service notifications are important and rare.
 
 ---
 
-### Phase 4 — Component `ServiceModal`
+### Step 4 — Component `ServiceModal`
 
 **New file:** `src/components/notices/ServiceModal.tsx`
 
@@ -196,7 +196,7 @@ On next visit: modal won't appear for this `id`.
 
 ---
 
-### Phase 5 — Integration in `DashboardPage`
+### Step 5 — Integration in `DashboardPage`
 
 **File:** `src/pages/DashboardPage.tsx` (or `AppContent.tsx` — check
 where main layout is mounted after login in project)
@@ -221,7 +221,7 @@ const modals  = notices.filter(n => n.type === 'MODAL');
 
 ---
 
-### Phase 6 — i18n Keys
+### Step 6 — i18n Keys
 
 **Files:** `src/i18n/locales/pl/common.json`, `src/i18n/locales/en/common.json`
 
@@ -245,7 +245,7 @@ const modals  = notices.filter(n => n.type === 'MODAL');
 
 ---
 
-### Phase 7 — Tests
+### Step 7 — Tests
 
 **New file:** `src/test/components/ServiceBanner.test.tsx`
 
@@ -265,7 +265,7 @@ const modals  = notices.filter(n => n.type === 'MODAL');
 
 ---
 
-### Phase 8 — Manual Verification
+### Step 8 — Manual Verification
 
 ```
 1. Backend: create notice via curl:

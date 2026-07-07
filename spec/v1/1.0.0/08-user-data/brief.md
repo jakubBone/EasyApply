@@ -1,12 +1,12 @@
-# Applikon — Phase 08: User Data & Service Notifications
+# Applikon — User Data & Service Notifications
 
 ## 1. Context
 
-Phase 07 closed minimum RODO compliance: consent flow, privacy policy,
+`07-privacy-rodo` closed minimum RODO compliance: consent flow, privacy policy,
 account deletion. Two features are missing that complete this layer:
 
 - **Data portability** — user can download everything we store about them.
-  RODO Art. 20 requirement, consciously omitted from phase 07 as "outside MVP".
+  RODO Art. 20 requirement, consciously omitted from 07-privacy-rodo as "outside MVP".
 - **Service notification system** — admin can display a message
   to all users (maintenance windows, regulatory changes, updates).
 
@@ -69,9 +69,9 @@ Notification types:
 
 ---
 
-## 6. Success Criteria (Definition of Done for phase)
+## 6. Success Criteria (Definition of Done)
 
-Phase 08 is closed when:
+`08-user-data` is closed when:
 
 1. ✅ Logged-in user can download `applikon-export.json` from `/settings`;
    file contains profile, all applications with notes and CV links
@@ -93,8 +93,8 @@ Phase 08 is closed when:
 
 ## 8. Related Documents
 
-- `spec/v1/as-built.md` — update after each thread
-- `spec/README.md` — add row for phase 08
+- `spec/v1/1.0.0/as-built.md` — update after each thread
+- `spec/README.md` — add row for 08-user-data
 - `spec/v1/1.0.0/08-user-data/data-export/` — backend and frontend plans
 - `spec/v1/1.0.0/08-user-data/service-notices/` — backend and frontend plans
 

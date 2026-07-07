@@ -1,13 +1,13 @@
 # Logging Implementation Plan — Applikon Backend
 
-## Work Process (applicable to each phase)
+## Work Process (applicable to each step)
 
 1. **Implementation** — Claude makes code changes
 2. **Manual verification** — user checks log output in console (optional)
 3. **Update plans** — Claude updates checkboxes in this file
 4. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
 5. **Commit** — user runs `git add` + `git commit`
-6. **Continue question** — Claude asks if we proceed to the next phase
+6. **Continue question** — Claude asks if we proceed to the next step
 
 ---
 
@@ -41,7 +41,7 @@ adds `userId` to every log line.
 
 ## Implementation Status
 
-### Phase 1 — `AdminKeyFilter`: warn on blocked admin access
+### Step 1 — `AdminKeyFilter`: warn on blocked admin access
 
 **File:** `applikon-backend/src/main/java/com/applikon/security/AdminKeyFilter.java`
 
@@ -59,7 +59,7 @@ WARN  [anonymous] c.e.s.AdminKeyFilter - Admin access denied: uri=/api/admin/use
 
 ---
 
-### Phase 2 — `AuthController`: warn on failed token refresh
+### Step 2 — `AuthController`: warn on failed token refresh
 
 **File:** `applikon-backend/src/main/java/com/applikon/controller/AuthController.java`
 
@@ -80,7 +80,7 @@ WARN  [anonymous] c.e.c.AuthController - Token refresh failed: Refresh token not
 
 ---
 
-### Phase 3 — `GlobalExceptionHandler`: warn on 404
+### Step 3 — `GlobalExceptionHandler`: warn on 404
 
 **File:** `applikon-backend/src/main/java/com/applikon/exception/GlobalExceptionHandler.java`
 
@@ -101,7 +101,7 @@ WARN  [userId=abc123] c.e.e.GlobalExceptionHandler - Entity not found: Applicati
 
 ---
 
-### Phase 4 — Dead code cleanup: remove unused Logger fields
+### Step 4 — Dead code cleanup: remove unused Logger fields
 
 **File 1:** `applikon-backend/src/main/java/com/applikon/service/NoteService.java`
 
@@ -117,7 +117,7 @@ WARN  [userId=abc123] c.e.e.GlobalExceptionHandler - Entity not found: Applicati
 
 ## Verification
 
-- [x] `./mvnw test` — 0 failed (run once after all phases)
+- [x] `./mvnw test` — 0 failed (run once after all steps)
 
 ---
 

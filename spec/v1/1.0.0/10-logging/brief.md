@@ -1,4 +1,4 @@
-# Applikon — Phase 10: Logging (production observability)
+# Applikon — Logging (production observability)
 
 ## 1. Context
 
@@ -117,9 +117,9 @@ Single thread: **`logging/`** — backend only (no frontend changes required).
 
 ---
 
-## 6. Success Criteria (Definition of Done for phase)
+## 6. Success Criteria (Definition of Done)
 
-Phase 10 is closed when:
+`10-logging` is closed when:
 
 1. ✅ A request to `/api/admin/**` with a wrong or missing key produces a
    `WARN` log line containing URI and remote IP.
@@ -135,20 +135,20 @@ Phase 10 is closed when:
 
 ## 7. Implementation Order
 
-Single thread, phases executed in order:
+Single thread, steps executed in order:
 
-1. **Phase 1** — `AdminKeyFilter`: security warn (most critical before deploy)
-2. **Phase 2** — `AuthController.refresh()`: catch block warn
-3. **Phase 3** — `GlobalExceptionHandler`: 404 warn
-4. **Phase 4** — Dead code cleanup: remove unused loggers
+1. **Step 1** — `AdminKeyFilter`: security warn (most critical before deploy)
+2. **Step 2** — `AuthController.refresh()`: catch block warn
+3. **Step 3** — `GlobalExceptionHandler`: 404 warn
+4. **Step 4** — Dead code cleanup: remove unused loggers
 
 ---
 
 ## 8. Related Documents
 
-- `spec/v1/as-built.md` — update after completion (logging coverage section)
+- `spec/v1/1.0.0/as-built.md` — update after completion (logging coverage section)
 - `spec/v1/1.0.0/10-logging/implementation-plan-backend.md` — detailed implementation plan
-- `spec/README.md` — add row for phase 10
+- `spec/README.md` — add row for 10-logging
 
 ---
 

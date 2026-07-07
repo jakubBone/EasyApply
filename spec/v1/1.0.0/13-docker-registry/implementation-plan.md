@@ -178,7 +178,7 @@ Add `image:` field to `backend` and `frontend` — keep all existing `build:` se
 - [x] `docker` CI job builds and pushes after every successful `backend` + `frontend` run
 - [x] Both images present in GHCR with `:latest` and `:<sha>` tags
 - [x] `docker-compose.yml` has `image:` fields pointing to GHCR
-- [x] `spec/README.md` updated with phase 13 row
+- [x] `spec/README.md` updated with 13-docker-registry row
 
 ---
 

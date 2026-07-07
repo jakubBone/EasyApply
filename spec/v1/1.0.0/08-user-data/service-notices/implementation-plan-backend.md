@@ -1,6 +1,6 @@
 # Service Notices Implementation Plan — Backend
 
-## Work Process (applicable to each phase)
+## Work Process (applicable to each step)
 
 1. **Implementation** — Claude makes code changes
 2. **Automatic verification** — `./mvnw test` must be green
@@ -8,7 +8,7 @@
 4. **Update plans** — Claude updates checkboxes in this file
 5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
 6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next phase
+7. **Continue question** — Claude asks if we proceed to the next step
 
 ---
 
@@ -69,7 +69,7 @@ Minimal and sufficient for project scale.
 
 ## Implementation Status
 
-### Phase 1 — Flyway migration V14
+### Step 1 — Flyway migration V14
 
 **New file:** `resources/db/migration/V14__service_notices.sql`
 
@@ -91,7 +91,7 @@ CREATE TABLE service_notices (
 
 ---
 
-### Phase 2 — Entity and Enum
+### Step 2 — Entity and Enum
 
 **New file:** `entity/ServiceNoticeType.java`
 
@@ -139,7 +139,7 @@ public class ServiceNotice {
 
 ---
 
-### Phase 3 — Repository and DTO
+### Step 3 — Repository and DTO
 
 **New file:** `repository/ServiceNoticeRepository.java`
 
@@ -185,7 +185,7 @@ public record ServiceNoticeRequest(
 
 ---
 
-### Phase 4 — Service
+### Step 4 — Service
 
 **New file:** `service/ServiceNoticeService.java`
 
@@ -233,7 +233,7 @@ public class ServiceNoticeService {
 
 ---
 
-### Phase 5 — GlobalExceptionHandler: Handle `DateTimeParseException`
+### Step 5 — GlobalExceptionHandler: Handle `DateTimeParseException`
 
 **File:** `exception/GlobalExceptionHandler.java`
 
@@ -251,7 +251,7 @@ public ResponseEntity<Map<String, String>> handleDateTimeParse(DateTimeParseExce
 
 ---
 
-### Phase 7 — Controllers
+### Step 7 — Controllers
 
 **New file:** `controller/SystemController.java`
 
@@ -303,7 +303,7 @@ public class AdminController {
 
 ---
 
-### Phase 8 — Admin Endpoint Security
+### Step 8 — Admin Endpoint Security
 
 **New file:** `security/AdminKeyFilter.java`
 
@@ -362,7 +362,7 @@ app.admin-key=${ADMIN_KEY}
 
 ---
 
-### Phase 9 — Tests
+### Step 9 — Tests
 
 **New file:** `test/controller/SystemControllerTest.java`
 

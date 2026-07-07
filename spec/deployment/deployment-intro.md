@@ -247,7 +247,7 @@ Free in monthly cost, but adds operational complexity:
 - ISP may block ports 80/443 for residential plans
 - You're responsible for hardware uptime
 
-Reasonable as a "phase 2" once the deployment is well understood. Not a good first
+Reasonable as a later second step once the deployment is well understood. Not a good first
 production environment.
 
 ---
@@ -261,7 +261,7 @@ the EU. For a hobby/portfolio project:
   charges for an equivalent droplet
 - **Location:** Helsinki and Falkenstein data centers are physically close to PL —
   good latency for users in Poland
-- **GDPR-friendly:** EU-based, EU data centers — relevant given the project's RODO phase
+- **GDPR-friendly:** EU-based, EU data centers — relevant given the project's RODO work (07-privacy-rodo)
 - **No per-egress charges:** unlike AWS, you don't get surprised by bandwidth bills
 
 **AWS / GCP / Azure** are overkill at this scale and have surprise-bill risk

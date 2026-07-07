@@ -1,4 +1,4 @@
-# Phase 14: Brand Rename to Applikon
+# Brand Rename to Applikon
 
 ## 1. Context
 
@@ -25,7 +25,7 @@ domain. The technical / English brand becomes Applikon.
 
 ## 3. Decision
 
-Full rename split into 4 commit-sized phases plus 1 external step.
+Full rename split into 4 commit-sized steps plus 1 external step.
 
 **Key choices:**
 
@@ -80,7 +80,7 @@ Full rename split into 4 commit-sized phases plus 1 external step.
 
 ## 6. Success Criteria
 
-Phase 14 is closed when:
+`14-rebrand-applikon` is closed when:
 
 1. ✅ Searching the repo for `easyapply` (case-insensitive) returns zero matches
    outside `.git/`, `node_modules/`, `target/`.
@@ -89,7 +89,7 @@ Phase 14 is closed when:
 4. ✅ `docker-compose up` starts services under the new names.
 5. ✅ `aplikujbezspiny.pl` loads with the new logo and title.
 6. ✅ GitHub repo renamed to `applikon`.
-7. ✅ `spec/README.md` and `spec/v1/as-built.md` updated.
+7. ✅ `spec/README.md` and `spec/v1/1.0.0/as-built.md` updated.
 
 ---
 
@@ -110,15 +110,15 @@ Five steps, ordered to keep the build green at each commit.
 5. **External (no commit)** — rename GitHub repo, deploy to Hetzner,
    verify `aplikujbezspiny.pl` end-to-end.
 
-Tests run once after Phase 4 (per project convention).
+Tests run once after Step 4 (per project convention).
 
 ---
 
 ## 8. Related Documents
 
 - `spec/v1/1.0.0/14-rebrand-applikon/implementation-plan.md` — step-by-step actions.
-- `spec/v1/as-built.md` — update after completion.
-- `spec/README.md` — add row for phase 14.
+- `spec/v1/1.0.0/as-built.md` — update after completion.
+- `spec/README.md` — add row for 14-rebrand-applikon.
 
 ---
 

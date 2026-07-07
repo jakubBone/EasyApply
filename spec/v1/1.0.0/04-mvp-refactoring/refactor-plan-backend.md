@@ -8,7 +8,7 @@ Backend was written with AI help — Jakub understands general architecture but 
 
 **Goal:** Better understand backend flow, fix code review problems, fill security gaps. Not learning from zero — explaining what needs clarification.
 
-**How sessions resume:** the `/mentor-refactor-backend` slash command loads this file plus `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` and `spec/v1/1.0.0/04-mvp-refactoring/learning/learning-notes-backend.md`, then continues from the current phase.
+**How sessions resume:** the `/mentor-refactor-backend` slash command loads this file plus `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` and `spec/v1/1.0.0/04-mvp-refactoring/learning/learning-notes-backend.md`, then continues from the current step.
 
 ---
 
@@ -122,15 +122,15 @@ service/
 2. **Interaction:** After explaining each topic ask if Jakub understands.
    Don't move forward without confirmation.
 
-3. **Control Questions:** After each phase 2-3 specific questions.
+3. **Control Questions:** After each step 2-3 specific questions.
    Concrete, referencing the project.
 
-4. **Notes After Each Phase:** Save summary to `spec/v1/1.0.0/04-mvp-refactoring/learning/learning-notes-backend.md`.
-   Format: phase heading, key concepts, important files, what was fixed.
+4. **Notes After Each Step:** Save summary to `spec/v1/1.0.0/04-mvp-refactoring/learning/learning-notes-backend.md`.
+   Format: step heading, key concepts, important files, what was fixed.
 
 5. **Always Show Code:** Discuss specific project files. Point to line.
 
-6. **CR Integrated With Learning:** When CR points to problem in current phase —
+6. **CR Integrated With Learning:** When CR points to problem in current step —
    first explain mechanism, then fix together with Jakub.
 
 7. **Ask for Confirmation:** Don't skip questions. If Jakub asks — answer.
@@ -156,22 +156,22 @@ Same as frontend. Each change goes through:
                   and add entry to "Session Notes"
 ```
 
-**End of phase (not after every fix):**
+**End of step (not after every fix):**
 - Run `mvn test` in `applikon-backend`. If broken — update tests, re-run until green.
 - Run `mvn compile` to confirm compilation.
-- Only then mark the phase complete.
+- Only then mark the step complete.
 
 **Important Rules:**
-- Don't run `mvn test` / `mvn compile` after each CR fix — batch them at the end of the phase.
+- Don't run `mvn test` / `mvn compile` after each CR fix — batch them at the end of the step.
 - New tests only when new logic appears (e.g., magic bytes validation) or existing tests don't cover the scenario (e.g., path traversal).
 - Step 5 (restart) is Jakub's task, not Claude's.
-- If end-of-phase tests don't pass — **don't close the phase** until green.
+- If end-of-step tests don't pass — **don't close the step** until green.
 
 ---
 
 ## Learning Progress
 
-| Phase | Topic | Learning | CR Fixed This Phase |
+| Step | Topic | Learning | CR Fixed This Step |
 |-------|-------|----------|-------------------|
 | 1 | Architecture Overview — flow and components | ✅ | — |
 | 2 | Security — OAuth2, JWT, cookies | ✅ | CR-5, CR-3 (backend) |
@@ -179,8 +179,8 @@ Same as frontend. Each change goes through:
 | 4 | Code Quality and Patterns | ✅ | CR-10, CR-B4, CR-B5, CR-B7, CR-B8, CR-B9, CR-B10 |
 | 5 | Testing — overview, completion, coverage | ✅ | — |
 
-After each phase Claude asks:
-> _"Should we mark Phase X as complete? I'll update table and notes."_
+After each step Claude asks:
+> _"Should we mark Step X as complete? I'll update table and notes."_
 
 ---
 
@@ -190,7 +190,7 @@ Source: `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` (reviewer: DR & AI)
 
 ### 🔴 Critical (security / correctness)
 
-| ID | Problem | File(s) | Phase | Status | Tested |
+| ID | Problem | File(s) | Step | Status | Tested |
 |----|---------|---------|-------|--------|--------|
 | CR-1 | Path traversal in CV upload | `CVService.java` | 3 | ✅ | ✅ |
 | CR-5 | Missing SameSite on refresh_token cookie | `OAuth2AuthenticationSuccessHandler.java` | 2 | ✅ | ✅ |
@@ -200,7 +200,7 @@ Source: `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` (reviewer: DR & AI)
 
 ### 🟡 Important (correctness / quality)
 
-| ID | Problem | File(s) | Phase | Status | Tested |
+| ID | Problem | File(s) | Step | Status | Tested |
 |----|---------|---------|-------|--------|--------|
 | CR-B2 | No @NotNull on status in StageUpdateRequest | `StageUpdateRequest.java` | 3 | ✅ | ✅ |
 | CR-10 | @Transactional on private method (AOP ignores) | `ApplicationService.java` | 4 | ✅ | ✅ |
@@ -209,7 +209,7 @@ Source: `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` (reviewer: DR & AI)
 
 ### 🟢 Nice to Have (code quality)
 
-| ID | Problem | File(s) | Phase | Status | Tested |
+| ID | Problem | File(s) | Step | Status | Tested |
 |----|---------|---------|-------|--------|--------|
 | CR-B4 | Object[] in statistics query → projection/DTO | `ApplicationRepository.java`, `StatisticsService.java` | 4 | ✅ | ✅ |
 | CR-B5 | 5 parallel arrays in StatisticsService → record Badge | `StatisticsService.java` | 4 | ✅ | ✅ |
@@ -222,11 +222,11 @@ Source: `spec/v1/1.0.0/03-mvp-review/mvp-code-review.md` (reviewer: DR & AI)
 
 ---
 
-## Detailed Phase Descriptions
+## Detailed Step Descriptions
 
 ---
 
-### Phase 1 — Architecture Overview — Flow and Components
+### Step 1 — Architecture Overview — Flow and Components
 
 **Goal:** Understand how request flows through backend from HTTP to database and back.
 Know what each layer does and how they connect. Not from zero — at level "I know where to look".
@@ -273,7 +273,7 @@ Know what each layer does and how they connect. Not from zero — at level "I kn
 
 ---
 
-### Phase 2 — Security — OAuth2, JWT, Cookies
+### Step 2 — Security — OAuth2, JWT, Cookies
 
 **Goal:** Understand complete login flow from backend side.
 Fix cookie and token contract issues.
@@ -322,14 +322,14 @@ Fix cookie and token contract issues.
 - **CR-5:** Add `SameSite=Lax` to refresh_token cookie. Explain CSRF, fix.
 - **CR-3 (backend part):** Fix key in response — `"token"` → `"accessToken"`.
 
-**Nice to Have at End of Phase:** none
+**Nice to Have at End of Step:** none
 
 ---
 
-### Phase 3 — Security — Data and File Validation
+### Step 3 — Security — Data and File Validation
 
 **Goal:** Fix critical security holes — path traversal, URL validation,
-file validation, DTO validation. Most important phase for security.
+file validation, DTO validation. Most important step for security.
 
 **What We Discuss:**
 
@@ -367,14 +367,14 @@ file validation, DTO validation. Most important phase for security.
 - **CR-B3:** Magic bytes — add file content validation in `CVService.java`
 - **CR-B2:** @NotNull on status in `StageUpdateRequest.java`
 
-**Nice to Have at End of Phase:** none (all important)
+**Nice to Have at End of Step:** none (all important)
 
 ---
 
-### Phase 4 — Code Quality and Patterns
+### Step 4 — Code Quality and Patterns
 
 **Goal:** Fix code quality, patterns, data integrity.
-Phase mixed — some fixes important (stage history, user_id NOT NULL),
+Step mixed — some fixes important (stage history, user_id NOT NULL),
 some nice-to-have (Object[] → projection).
 
 **What We Discuss:**
@@ -428,7 +428,7 @@ some nice-to-have (Object[] → projection).
 - **CR-B7:** New migration — NOT NULL on user_id
 - **CR-B9:** Validation errors as field map
 
-**Nice to Have at End of Phase:**
+**Nice to Have at End of Step:**
 - CR-B4: Object[] → projection/DTO
 - CR-B5: Parallel arrays → record Badge
 - CR-B8: Deprecated enums + migration
@@ -436,7 +436,7 @@ some nice-to-have (Object[] → projection).
 
 ---
 
-### Phase 5 — Testing — Overview, Completion, Coverage
+### Step 5 — Testing — Overview, Completion, Coverage
 
 **Goal:** Understand existing tests, run them, add tests for fixed items
 (path traversal, null status, magic bytes, URL validation).
@@ -474,7 +474,7 @@ some nice-to-have (Object[] → projection).
 - `src/test/java/com/applikon/controller/ApplicationControllerTest.java` — controller tests
 - `src/test/resources/application-test.properties` — test config
 
-**CR Related:** none new, add tests for fixes from phases 2-4.
+**CR Related:** none new, add tests for fixes from steps 2-4.
 
 ---
 

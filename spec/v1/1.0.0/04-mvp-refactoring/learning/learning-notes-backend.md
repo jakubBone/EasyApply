@@ -1,10 +1,10 @@
 # Backend Learning Notes — Applikon
 
-Reference file for learning progress. Each phase = key concepts, important files, fixed code reviews.
+Reference file for learning progress. Each step = key concepts, important files, fixed code reviews.
 
 ---
 
-## Phase 1 — Architecture Overview, Security, OAuth2, JWT
+## Step 1 — Architecture Overview, Security, OAuth2, JWT
 
 ### Request → Response Flow
 
@@ -294,7 +294,7 @@ Code → token exchange happens server-to-server (with `client_secret`). No inte
 
 ---
 
-## Phase 2 — Security: OAuth2, JWT, Cookies
+## Step 2 — Security: OAuth2, JWT, Cookies
 
 ### Access Token vs Refresh Token — Flow
 
@@ -369,7 +369,7 @@ Fixed: `Map.of("accessToken", newAccessToken)` in `AuthController.java:72`.
 **CR-5** — missing `SameSite` on cookie → CSRF vulnerability.
 Fixed: `refreshCookie.setAttribute("SameSite", "Strict")` in `OAuth2AuthenticationSuccessHandler.java:80`.
 
-### Key Files for This Phase
+### Key Files for This Step
 
 | File | What It Does |
 |------|---------|
@@ -379,7 +379,7 @@ Fixed: `refreshCookie.setAttribute("SameSite", "Strict")` in `OAuth2Authenticati
 
 ---
 
-## Phase 3 — Security: Data Validation and Files
+## Step 3 — Security: Data Validation and Files
 
 ### CR-1 — Path Traversal
 
@@ -431,7 +431,7 @@ Principle: validation at system boundary (DTO/API), not inside service.
 
 ---
 
-## Phase 4 — Code Quality and Patterns
+## Step 4 — Code Quality and Patterns
 
 ### Spring AOP and Proxy
 
@@ -508,7 +508,7 @@ Code comments always in **English**.
 
 ---
 
-## Phase 5 — Testing: Overview, Completion, Coverage
+## Step 5 — Testing: Overview, Completion, Coverage
 
 ### Two Test Levels
 

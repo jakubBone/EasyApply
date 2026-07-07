@@ -1,6 +1,6 @@
 # RODO Minimum Implementation Plan — Applikon Backend
 
-## Work Process (applicable to each phase)
+## Work Process (applicable to each step)
 
 1. **Implementation** — Claude makes code changes
 2. **Automatic verification** — `./mvnw test` must be green
@@ -8,7 +8,7 @@
 4. **Update plans** — Claude updates checkboxes in this file
 5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
 6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next phase
+7. **Continue question** — Claude asks if we proceed to the next step
 
 ---
 
@@ -64,7 +64,7 @@ means "user mid-registration". On account deletion we remove the same way.
 
 ## Implementation Status
 
-### Phase 1 — Schema Migration: `privacy_policy_accepted_at` Field
+### Step 1 — Schema Migration: `privacy_policy_accepted_at` Field
 
 **Entity file:** `entity/User.java`
 
@@ -89,7 +89,7 @@ public void acceptPrivacyPolicy() {
 
 ---
 
-### Phase 2 — `UserResponse` Exposes Consent Status
+### Step 2 — `UserResponse` Exposes Consent Status
 
 **File:** `dto/UserResponse.java`
 
@@ -99,7 +99,7 @@ public void acceptPrivacyPolicy() {
 
 ---
 
-### Phase 3 — Endpoint `POST /api/auth/consent`
+### Step 3 — Endpoint `POST /api/auth/consent`
 
 **File:** `controller/AuthController.java`
 
@@ -135,7 +135,7 @@ public void acceptPrivacyPolicy(UUID userId) {
 
 ---
 
-### Phase 4 — Consent Enforcing Guard
+### Step 4 — Consent Enforcing Guard
 
 **New file:** `security/ConsentRequiredFilter.java` (or `HandlerInterceptor`)
 
@@ -156,7 +156,7 @@ public void acceptPrivacyPolicy(UUID userId) {
 
 ---
 
-### Phase 5 — Endpoint `DELETE /api/auth/me`
+### Step 5 — Endpoint `DELETE /api/auth/me`
 
 **File:** `controller/AuthController.java`
 
@@ -223,7 +223,7 @@ easier to debug, guarantees disk files are cleaned up before records are removed
 
 ---
 
-### Phase 6 — Page `/privacy` (static content via backend?)
+### Step 6 — Page `/privacy` (static content via backend?)
 
 **Design decision:** Do we serve the policy page from frontend (React
 route) or from backend (REST endpoint returning markdown/HTML)?
@@ -236,7 +236,7 @@ fully handled in frontend plan.
 
 ---
 
-### Phase 7 — Tests
+### Step 7 — Tests
 
 **File:** `test/controller/AuthControllerTest.java` (and possibly new files)
 
@@ -270,7 +270,7 @@ fully handled in frontend plan.
 ## Out of Scope
 
 - **Endpoint `GET /api/auth/me/export`** — GDPR right to data portability;
-  optional, considered after phase 07
+  optional, considered after 07-privacy-rodo
 - **Privacy policy versioning** — field will only be `privacy_policy_accepted_at` (timestamp),
   not `privacy_policy_version`. If we change policy and need to enforce
   re-acceptance — we'll add versioning then

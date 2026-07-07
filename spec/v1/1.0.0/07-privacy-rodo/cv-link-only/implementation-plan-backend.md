@@ -1,6 +1,6 @@
 # CV Link-Only Implementation Plan — Applikon Backend
 
-## Work Process (applicable to each phase)
+## Work Process (applicable to each step)
 
 1. **Implementation** — Claude makes code changes
 2. **Automatic verification** — `./mvnw test` must be green
@@ -8,7 +8,7 @@
 4. **Update plans** — Claude updates checkboxes in this file
 5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
 6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next phase
+7. **Continue question** — Claude asks if we proceed to the next step
 
 ---
 
@@ -37,7 +37,7 @@ don't break users who already uploaded files.
 
 ## Implementation Status
 
-### Phase 1 — Block `POST /api/cv/upload` Endpoint
+### Step 1 — Block `POST /api/cv/upload` Endpoint
 
 **File:** `applikon-backend/src/main/java/com/applikon/controller/CVController.java`
 
@@ -46,7 +46,7 @@ don't break users who already uploaded files.
 - [x] Message: i18n key `error.cv.uploadDisabled` (resolved by
       `MessageSource` to handle PL/EN like other errors)
 - [x] Add inject `MessageSource` to controller (if not already there)
-- [x] `./mvnw test` — green after completing Phases 2 & 3 (done together)
+- [x] `./mvnw test` — green after completing Steps 2 & 3 (done together)
 
 **Schemat zmiany:**
 
@@ -68,7 +68,7 @@ public ResponseEntity<CVResponse> uploadCV(
 
 ---
 
-### Phase 2 — i18n Key for Error Message
+### Step 2 — i18n Key for Error Message
 
 **Files:** `applikon-backend/src/main/resources/messages.properties`,
 `messages_pl.properties` (and optionally `messages_en.properties` — per project convention)
@@ -77,11 +77,11 @@ public ResponseEntity<CVResponse> uploadCV(
 - [x] Add key `error.cv.uploadDisabled`:
   - PL: `"Upload plików CV jest chwilowo niedostępny. Użyj opcji linku zewnętrznego."`
   - EN: `"CV file upload is temporarily unavailable. Please use the external link option."`
-- [x] `./mvnw test` — green after completing Phase 3
+- [x] `./mvnw test` — green after completing Step 3
 
 ---
 
-### Phase 3 — Update Tests
+### Step 3 — Update Tests
 
 **File:** `applikon-backend/src/test/java/com/applikon/controller/CVControllerTest.java`
 

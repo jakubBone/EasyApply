@@ -16,16 +16,16 @@ com.applikon/
   ApplikonApplication.java        — main class, @SpringBootApplication, @EnableJpaAuditing, @EnableScheduling
   config/
     I18nConfig.java                — MessageSource (i18n/messages), AcceptHeaderLocaleResolver (default: en)
-    OpenApiConfig.java             — @OpenAPIDefinition (title/description/version/contact) + @SecurityScheme (JWT Bearer) (phase 11)
+    OpenApiConfig.java             — @OpenAPIDefinition (title/description/version/contact) + @SecurityScheme (JWT Bearer) (11-swagger)
     SecurityConfig.java            — Spring Security, OAuth2, JWT encoder/decoder, CORS
   controller/
     ApplicationController.java     — /api/applications
     AuthController.java            — /api/auth
-    AdminController.java           — /api/admin (phase 08)
+    AdminController.java           — /api/admin (08-user-data)
     CVController.java              — /api/cv
     NoteController.java            — /api (nested under /applications and /notes)
     StatisticsController.java      — /api/statistics
-    SystemController.java          — /api/system (phase 08)
+    SystemController.java          — /api/system (08-user-data)
   dto/
     ApplicationRequest.java        — record (company, position, link, salary*, currency, salaryType, contractType, salarySource, source, jobDescription, agency)
     ApplicationResponse.java       — record (all Application fields + cv info flattened: cvId, cvFileName, cvType, cvExternalUrl)
@@ -34,17 +34,17 @@ com.applikon/
     BadgeStatsResponse.java        — record (rejectionBadge, ghostingBadge, sweetRevengeUnlocked, totals)
     NoteRequest.java               — record (content, category)
     NoteResponse.java              — record (id, content, category, applicationId, createdAt)
-    ServiceNoticeRequest.java      — record (type, messagePl, messageEn, expiresAt) with @NotBlank @Pattern on type (phase 08)
-    ServiceNoticeResponse.java     — record (id, type, messagePl, messageEn, expiresAt) (phase 08)
+    ServiceNoticeRequest.java      — record (type, messagePl, messageEn, expiresAt) with @NotBlank @Pattern on type (08-user-data)
+    ServiceNoticeResponse.java     — record (id, type, messagePl, messageEn, expiresAt) (08-user-data)
     StageUpdateRequest.java        — record (status, currentStage, rejectionReason, rejectionDetails)
     StatusUpdateRequest.java       — record (status)
-    UserResponse.java              — record (id, email, name, privacyPolicyAcceptedAt) (phase 07)
+    UserResponse.java              — record (id, email, name, privacyPolicyAcceptedAt) (07-privacy-rodo)
   entity/
     Application.java               — @Entity, table: applications
     CV.java                        — @Entity, table: cvs
     Note.java                      — @Entity, table: notes
-    ServiceNotice.java             — @Entity, table: service_notices (phase 08)
-    ServiceNoticeType.java         — enum: BANNER, MODAL (phase 08)
+    ServiceNotice.java             — @Entity, table: service_notices (08-user-data)
+    ServiceNoticeType.java         — enum: BANNER, MODAL (08-user-data)
     User.java                      — @Entity, table: users
     ApplicationStatus.java         — enum: SENT, IN_PROGRESS, OFFER, REJECTED
     ContractType.java              — enum: B2B, EMPLOYMENT, MANDATE, OTHER
@@ -54,29 +54,29 @@ com.applikon/
     SalarySource.java              — enum: FROM_POSTING, MY_PROPOSAL
     SalaryType.java                — enum: GROSS, NET
   exception/
-    GlobalExceptionHandler.java    — @RestControllerAdvice, handles validation / EntityNotFoundException (WARN log, phase 10) / DateTimeParseException (phase 08) / fallback (ERROR log)
+    GlobalExceptionHandler.java    — @RestControllerAdvice, handles validation / EntityNotFoundException (WARN log, 10-logging) / DateTimeParseException (08-user-data) / fallback (ERROR log)
   observability/
     MdcUserFilter.java             — OncePerRequestFilter; puts authenticated userId (UUID) into SLF4J MDC under key `userId` for log correlation; runs after Spring Security chain via Spring Boot auto-registration
   repository/
     ApplicationRepository.java     — JpaRepository; custom queries: findByUserId, findByIdAndUserId, existsByIdAndUserId, findByUserIdAndCompanyIgnoreCaseAndPositionIgnoreCase, getApplicationStats, clearCVReferences
     CVRepository.java              — JpaRepository
     NoteRepository.java            — JpaRepository; findByApplicationIdAndApplicationUserIdOrderByCreatedAtDesc, findByIdAndApplicationUserId, etc.
-    ServiceNoticeRepository.java   — JpaRepository; JPQL findActive(@Param("now") LocalDateTime now) — WHERE active=true AND (expiresAt IS NULL OR expiresAt > :now) (phase 08)
-    UserRepository.java            — JpaRepository; findByGoogleId, findByRefreshToken, findInactiveUsers(threshold) (phase 07)
+    ServiceNoticeRepository.java   — JpaRepository; JPQL findActive(@Param("now") LocalDateTime now) — WHERE active=true AND (expiresAt IS NULL OR expiresAt > :now) (08-user-data)
+    UserRepository.java            — JpaRepository; findByGoogleId, findByRefreshToken, findInactiveUsers(threshold) (07-privacy-rodo)
   security/
-    AdminKeyFilter.java            — OncePerRequestFilter; checks X-Admin-Key header against app.admin-key; returns 403 if missing/wrong (phase 08); logs WARN with URI + IP on every denial (phase 10)
+    AdminKeyFilter.java            — OncePerRequestFilter; checks X-Admin-Key header against app.admin-key; returns 403 if missing/wrong (08-user-data); logs WARN with URI + IP on every denial (10-logging)
     AuthenticatedUser.java         — record (id: UUID) — principal injected by JwtAuthenticationConverter
     CustomOAuth2UserService.java   — loads/creates user from Google OAuth2 attributes
     JwtAuthenticationConverter.java — extracts AuthenticatedUser from JWT sub claim
     JwtService.java                — generates access token (RS256, 15 min) and refresh token (UUID)
     OAuth2AuthenticationSuccessHandler.java — on OAuth2 success: issues JWT + refresh token, redirects to frontend
-    TokenHasher.java               — HMAC-SHA256 util (server-side secret via `app.token.hmac-secret` / `APP_TOKEN_HMAC_SECRET`); used to hash refresh tokens before storing in DB (phase 07, hardened to HMAC in phase 09)
+    TokenHasher.java               — HMAC-SHA256 util (server-side secret via `app.token.hmac-secret` / `APP_TOKEN_HMAC_SECRET`); used to hash refresh tokens before storing in DB (07-privacy-rodo, hardened to HMAC in 09-security-review)
   service/
-    AccountRetentionService.java   — @Scheduled(cron daily 3:00): deletes accounts inactive > 12 months via UserService.deleteAccount; threshold from app.retention.inactive-months (phase 07)
+    AccountRetentionService.java   — @Scheduled(cron daily 3:00): deletes accounts inactive > 12 months via UserService.deleteAccount; threshold from app.retention.inactive-months (07-privacy-rodo)
     ApplicationService.java        — create, findAllByUserId, findById, updateStatus, updateStage, addStage, findDuplicates, delete, update
     CVService.java                 — uploadCV, findAllByUserId, findById, downloadCV, deleteCV, createCV, updateCV, assignCVToApplication, removeCVFromApplication
     NoteService.java               — create, findByApplicationId, findById, update, delete, deleteByApplicationId, createSalaryChangeNote (⚠️ dead code — never called)
-    ServiceNoticeService.java      — findActive(), create(ServiceNoticeRequest) (phase 08)
+    ServiceNoticeService.java      — findActive(), create(ServiceNoticeRequest) (08-user-data)
     StatisticsService.java         — getBadgeStats: computes rejection/ghosting badges + sweet revenge unlock
     UserService.java               — findOrCreateUser (calls recordLogin), getById, getByGoogleId, saveRefreshToken (hashes token via TokenHasher), clearRefreshToken, findByValidRefreshToken (hashes + bumps lastLoginAt), acceptPrivacyPolicy, deleteAccount + createDemoApplication (new user only)
 ```
@@ -103,11 +103,11 @@ com.applikon/
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/auth/me` | Get current user profile (requires JWT) |
-| `GET` | `/api/auth/me/export` | Export all user data as JSON blob (RODO Art. 20, phase 08) |
+| `GET` | `/api/auth/me/export` | Export all user data as JSON blob (RODO Art. 20, 08-user-data) |
 | `POST` | `/api/auth/refresh` | Issue new access token from refresh token cookie |
 | `POST` | `/api/auth/logout` | Clear refresh token in DB + remove cookie |
-| `POST` | `/api/auth/consent` | Accept privacy policy (phase 07) |
-| `DELETE` | `/api/auth/me` | Delete user account + cascade all user data (phase 07) |
+| `POST` | `/api/auth/consent` | Accept privacy policy (07-privacy-rodo) |
+| `DELETE` | `/api/auth/me` | Delete user account + cascade all user data (07-privacy-rodo) |
 
 **CVController — `/api/cv`**
 
@@ -151,13 +151,13 @@ com.applikon/
 | `GET` | `/api/applications/{applicationId}/screening-answers` | List "About the company" answers for one application |
 | `PUT` | `/api/applications/{applicationId}/screening-answers` | Replace-all save, scoped to that application (ownership verified) |
 
-**SystemController — `/api/system`** (phase 08)
+**SystemController — `/api/system`** (08-user-data)
 
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/system/notices/active` | List active notices (public, no auth required) |
 
-**AdminController — `/api/admin`** (phase 08, secured by `X-Admin-Key` header via `AdminKeyFilter`)
+**AdminController — `/api/admin`** (08-user-data, secured by `X-Admin-Key` header via `AdminKeyFilter`)
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -185,7 +185,7 @@ com.applikon/
 | `h2` | In-memory DB for tests |
 | `flyway-core` + `flyway-database-postgresql` | DB migrations |
 | `spring-dotenv` | `.env` file support |
-| `springdoc-openapi-starter-webmvc-ui 2.8.8` | Swagger UI + OpenAPI 3 spec generation (phase 11) |
+| `springdoc-openapi-starter-webmvc-ui 2.8.8` | Swagger UI + OpenAPI 3 spec generation (11-swagger) |
 | No Lombok | All getters/setters written manually |
 
 ---
@@ -208,14 +208,14 @@ com.applikon/
 | V10 | `V10__fix_column_defaults.sql` | column defaults: WYSLANE→SENT, INNE→OTHER |
 | V11 | `V11__user_id_not_null.sql` | user_id NOT NULL on applications + cvs |
 | V12 | `V12__drop_stage_history.sql` | DROP TABLE stage_history |
-| V13 | `V13__user_privacy_policy_accepted_at.sql` | Add privacy_policy_accepted_at column (phase 07) |
-| V14 | `V14__service_notices.sql` | Create service_notices table (phase 08) |
-| V15 | `V15__user_last_login_at.sql` | Add last_login_at column to users (phase 07) |
+| V13 | `V13__user_privacy_policy_accepted_at.sql` | Add privacy_policy_accepted_at column (07-privacy-rodo) |
+| V14 | `V14__service_notices.sql` | Create service_notices table (08-user-data) |
+| V15 | `V15__user_last_login_at.sql` | Add last_login_at column to users (07-privacy-rodo) |
 | V16 | `V16__add_salary_field.sql` | Add flat `salary` column to `applications` (pre-v2; distinct from the existing `salary_min`/`salary_max` range) |
-| V17 | `V17__screening_answers.sql` | Create `screening_answers` table — global per-user "General" template (v2 Phase 1) |
-| V18 | `V18__application_company_research.sql` | Add `applications.company_research` TEXT (v2 Phase 3) — **dropped in V20** |
-| V19 | `V19__screening_answers_application_scope.sql` | Add nullable `screening_answers.application_id` FK — scopes rows to one application for "About the company" (v2 Phase 6) |
-| V20 | `V20__drop_application_company_research.sql` | Drop `applications.company_research` — superseded by V19 (v2 Phase 6) |
+| V17 | `V17__screening_answers.sql` | Create `screening_answers` table — global per-user "General" template (v2 01-screening-companion, Step 1) |
+| V18 | `V18__application_company_research.sql` | Add `applications.company_research` TEXT (v2 01-screening-companion, Step 3) — **dropped in V20** |
+| V19 | `V19__screening_answers_application_scope.sql` | Add nullable `screening_answers.application_id` FK — scopes rows to one application for "About the company" (v2 02-cheat-sheet-consolidation, Step 2) |
+| V20 | `V20__drop_application_company_research.sql` | Drop `applications.company_research` — superseded by V19 (v2 02-cheat-sheet-consolidation, Step 2) |
 
 ### Current tables
 
@@ -227,11 +227,11 @@ com.applikon/
 | email | VARCHAR(255) | NOT NULL, UNIQUE |
 | name | VARCHAR(255) | NOT NULL |
 | google_id | VARCHAR(255) | NOT NULL, UNIQUE |
-| refresh_token | VARCHAR(255) | nullable — stores HMAC-SHA256 hash of the token (server-side secret, phase 09), not plaintext |
+| refresh_token | VARCHAR(255) | nullable — stores HMAC-SHA256 hash of the token (server-side secret, 09-security-review), not plaintext |
 | refresh_token_expiry | TIMESTAMP | nullable |
 | created_at | TIMESTAMP | NOT NULL |
-| privacy_policy_accepted_at | TIMESTAMP | nullable (phase 07) |
-| last_login_at | TIMESTAMP | nullable; updated on every login and token refresh (phase 07) |
+| privacy_policy_accepted_at | TIMESTAMP | nullable (07-privacy-rodo) |
+| last_login_at | TIMESTAMP | nullable; updated on every login and token refresh (07-privacy-rodo) |
 
 **`applications`**
 
@@ -283,7 +283,7 @@ com.applikon/
 | category | VARCHAR(255) | default 'OTHER' (QUESTIONS/FEEDBACK/OTHER) |
 | created_at | TIMESTAMP | NOT NULL |
 
-**`service_notices`** (phase 08)
+**`service_notices`** (08-user-data)
 
 | Column | Type | Constraints |
 |--------|------|-------------|
@@ -315,7 +315,7 @@ com.applikon/
 **`applications.company_research`** (v2) — TEXT column added V18, held the per-application
 "About the company" free-text note before custom questions existed. DROPPED (V20) once
 superseded by `screening_answers.application_id` (V19) — see
-`spec/v2/as-built.md` §2.
+`spec/v2/2.0.0/as-built.md`.
 
 ### Relations
 
@@ -337,9 +337,9 @@ superseded by `screening_answers.application_id` (V19) — see
 |------|-----------|-----------|
 | `/login` | LoginPage | No |
 | `/auth/callback` | AuthCallbackPage | No |
-| `/privacy` | PrivacyPolicy | No (public) — phase 07 |
-| `/dashboard` | DashboardPage → AppContent → ConsentGate | Yes (ProtectedRoute) — phase 07 |
-| `/settings` | Settings | Yes (ProtectedRoute) — phase 07 |
+| `/privacy` | PrivacyPolicy | No (public) — 07-privacy-rodo |
+| `/dashboard` | DashboardPage → AppContent → ConsentGate | Yes (ProtectedRoute) — 07-privacy-rodo |
+| `/settings` | Settings | Yes (ProtectedRoute) — 07-privacy-rodo |
 | `/` | Redirect to /dashboard | — |
 | `*` | Redirect to /dashboard | — |
 
@@ -351,7 +351,7 @@ superseded by `screening_answers.application_id` (V19) — see
 | `list` | ApplicationTable | Sortable table with bulk delete |
 | `cv` | CVManager | Upload/manage CVs, assign to applications |
 | `details` | ApplicationDetails | Full application view with notes, CV, stage |
-| `answers` | CheatSheet | (v2) Cheat-sheet hub — company picker + "About the company" / "General" prep; view key unchanged from Phase 2, tab relabeled "Cheat sheet" in Phase 5 |
+| `answers` | CheatSheet | (v2) Cheat-sheet hub — company picker + "About the company" / "General" prep; view key unchanged from 01-screening-companion Step 2, tab relabeled "Cheat sheet" in 02-cheat-sheet-consolidation Step 1 |
 
 ### Component tree
 
@@ -364,17 +364,17 @@ App.tsx
         /login   → LoginPage
                    LanguageSwitcher (before login)
         /auth/callback → AuthCallbackPage  — exchanges code for JWT
-        /privacy → PrivacyPolicy (public route, phase 07)
-        /settings → ProtectedRoute → Settings (delete account UI, phase 07)
-        /dashboard → ProtectedRoute → ConsentGate (phase 07)
+        /privacy → PrivacyPolicy (public route, 07-privacy-rodo)
+        /settings → ProtectedRoute → Settings (delete account UI, 07-privacy-rodo)
+        /dashboard → ProtectedRoute → ConsentGate (07-privacy-rodo)
                                       ↓
                                     DashboardPage → AppContent
-          ServiceBanner × N    — red danger banners for BANNER-type notices (phase 08)
-          ServiceModal × N     — modal popups for MODAL-type notices; dismissed per session via sessionStorage (phase 08)
+          ServiceBanner × N    — red danger banners for BANNER-type notices (08-user-data)
+          ServiceModal × N     — modal popups for MODAL-type notices; dismissed per session via sessionStorage (08-user-data)
           header
             BadgeWidget        — gamification badges
             LanguageSwitcher   — PL / EN toggle
-            settings-btn       — link to /settings (phase 07)
+            settings-btn       — link to /settings (07-privacy-rodo)
             logout-btn         — calls POST /api/auth/logout
           TourGuide            — onboarding tour
           toolbar
@@ -393,9 +393,9 @@ App.tsx
               EndModal      — OFFER / REJECTED modal (rejection reason)
               StageModal    — select/add currentStage
             ApplicationTable
-            CVManager        — disabled file upload (phase 07)
+            CVManager        — disabled file upload (07-privacy-rodo)
             ApplicationDetails
-              CollapsibleSection × 4 — accordion: Cheat sheet / Information / Job description / Notes (v2, Phase 5)
+              CollapsibleSection × 4 — accordion: Cheat sheet / Information / Job description / Notes (v2, 02-cheat-sheet-consolidation Step 1)
                 PrepReadonly   — same read-only Q&A used by the CheatSheet tab (v2)
               NotesList
             CheatSheet         — (v2) company picker + collapsible "About the company" / "General"
@@ -403,19 +403,19 @@ App.tsx
                 PrepReadonly
               GlobalAnswersModal      — edit "General" (v2)
               CompanyQuestionsModal   — edit "About the company" (v2)
-          Footer             — privacy policy link + contact email (phase 07)
+          Footer             — privacy policy link + contact email (07-privacy-rodo)
 ```
 
-### New components (phase 07)
+### New components (07-privacy-rodo)
 
 | Component | File | Purpose |
 |-----------|------|---------|
 | `ConsentGate` | `components/auth/ConsentGate.tsx` | Fullscreen overlay blocking UI for users without accepted privacy policy |
 | `PrivacyPolicy` | `pages/PrivacyPolicy.tsx` | Public page rendering privacy policy in PL/EN with markdown |
-| `Settings` | `pages/Settings.tsx` | Protected user settings page with account deletion and data export (phase 08) |
+| `Settings` | `pages/Settings.tsx` | Protected user settings page with account deletion and data export (08-user-data) |
 | `Footer` | `components/layout/Footer.tsx` | Footer with privacy policy link and contact email |
 
-### New components (phase 08)
+### New components (08-user-data)
 
 | Component | File | Purpose |
 |-----------|------|---------|
@@ -446,7 +446,7 @@ App.tsx
 | `useNotes` | hooks/useNotes.ts | fetch, create, update, delete notes |
 | `useCV` | hooks/useCV.ts | fetch, upload, create, update, delete, assignCV |
 | `useBadgeStats` | hooks/useBadgeStats.ts | fetch badge statistics |
-| `useServiceNotices` | hooks/useServiceNotices.ts | fetch active notices; staleTime 5 min; returns `[]` on error (phase 08) |
+| `useServiceNotices` | hooks/useServiceNotices.ts | fetch active notices; staleTime 5 min; returns `[]` on error (08-user-data) |
 | `useScreeningAnswers` / `useSaveScreeningAnswers` | hooks/useScreeningAnswers.ts | (v2) fetch/save the global "General" set |
 | `useApplicationScreeningAnswers` / `useSaveApplicationScreeningAnswers` | hooks/useScreeningAnswers.ts | (v2) fetch/save "About the company" for one application |
 
@@ -479,8 +479,8 @@ App.tsx
 | `updateNote` | PUT | `/api/notes/{id}` |
 | `deleteNote` | DELETE | `/api/notes/{id}` |
 | `fetchBadgeStats` | GET | `/api/statistics/badges` |
-| `fetchActiveNotices` | GET | `/api/system/notices/active` — returns `[]` on error, never breaks app (phase 08) |
-| `exportMyData` | GET | `/api/auth/me/export` — triggers blob download as `applikon-export.json` (phase 08) |
+| `fetchActiveNotices` | GET | `/api/system/notices/active` — returns `[]` on error, never breaks app (08-user-data) |
+| `exportMyData` | GET | `/api/auth/me/export` — triggers blob download as `applikon-export.json` (08-user-data) |
 | `fetchScreeningAnswers` | GET | `/api/screening-answers` (v2) |
 | `saveScreeningAnswers` | PUT | `/api/screening-answers` (v2) |
 | `fetchApplicationScreeningAnswers` | GET | `/api/applications/{id}/screening-answers` (v2) |
@@ -510,7 +510,7 @@ App.tsx
 | react-i18next | ^16.6.6 | React bindings for i18next |
 | i18next-browser-languagedetector | ^8.2.1 | Detects browser language |
 | tailwindcss | ^4.2.0 | CSS utility framework |
-| react-markdown | ^9.* | Markdown rendering (phase 07) |
+| react-markdown | ^9.* | Markdown rendering (07-privacy-rodo) |
 | vite | ^7.2.4 | Build tool |
 | vitest | ^1.3.0 | Unit tests |
 | cypress | ^15.9.0 | E2E tests |

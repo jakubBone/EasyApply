@@ -2,10 +2,10 @@
 
 ## Work Process
 
-1. **Phase-by-phase commits** — Claude executes each phase, proposes commit
+1. **Step-by-step commits** — Claude executes each step, proposes commit
    message, user runs `git add` + `git commit`.
 2. **Tests at the end** — `./mvnw test` and the frontend build run **once after
-   Phase 4** (per project convention).
+   Step 4** (per project convention).
 3. **Live verification** — after deploy, user opens `aplikujbezspiny.pl` and
    confirms the new branding renders.
 
@@ -43,7 +43,7 @@ application functionally identical.
 
 ## Implementation
 
-### Phase 1 — Backend
+### Step 1 — Backend
 
 `refactor(backend): rename module and package to applikon`
 
@@ -68,7 +68,7 @@ application functionally identical.
 9. **Tests** — update any test that asserts on app name (e.g.
    `SystemControllerTest`, `WithMockAuthenticatedUser`).
 
-### Phase 2 — Frontend
+### Step 2 — Frontend
 
 `refactor(frontend): rename module to applikon`
 
@@ -110,13 +110,13 @@ application functionally identical.
    `ConsentGate.test.tsx`.
 9. **Cypress** — `cypress/support/e2e.ts`.
 
-### Phase 3 — Infra
+### Step 3 — Infra
 
 `chore(infra): rename services and paths to applikon`
 
 1. **`docker-compose.yml`** — service names (`easyapply-backend` →
    `applikon-backend`, same for frontend), `container_name` if set, network
-   aliases, image references in phase-13 docker-registry plan.
+   aliases, image references in the 13-docker-registry plan.
 2. **`.env.example`** — variable names, comments.
 3. **`.github/workflows/ci.yml`** — `working-directory: easyapply-backend` →
    `applikon-backend`, same for frontend. Update GHCR image names if already
@@ -128,7 +128,7 @@ application functionally identical.
 6. **`applikon-frontend/.claude/settings.local.json`** — relocated by folder
    rename; verify internal paths.
 
-### Phase 4 — Documentation
+### Step 4 — Documentation
 
 `docs(spec): rebrand from EasyApply to Applikon`
 
@@ -138,11 +138,11 @@ application functionally identical.
 2. **`CLAUDE.md`** — first line `# EasyApply — CLAUDE.md` →
    `# Applikon — CLAUDE.md`. Update folder paths in commands table.
 3. **`SECURITY.md`** — brand references.
-4. **`spec/README.md`** — add row for phase 14, update brand references.
+4. **`spec/README.md`** — add row for 14-rebrand-applikon, update brand references.
 5. **`spec/v1/architecture.md`**, **`security.md`**, **`as-built.md`** —
-   replace in titles + body. Add as-built entry for phase 14.
+   replace in titles + body. Add as-built entry for 14-rebrand-applikon.
 6. **`spec/v1/1.0.0/01-vision/brief.md`** — replace.
-7. **All phase docs** (`02-` through `13-`) — replace in titles, headers, body
+7. **All topic docs** (`02-` through `13-`) — replace in titles, headers, body
    text. Existing learning notes in `04-mvp-refactoring/learning/*` and
    `05-additional-features/i18n/learning/*` get the brand replaced too.
 8. **`spec/v2/vision.md`** — replace.
@@ -150,7 +150,7 @@ application functionally identical.
    **`deployment/deployment-hetzner.md`** — replace, including hostnames and
    container references.
 
-### Phase 5 — External (no commit)
+### Step 5 — External (no commit)
 
 1. **GitHub** — Settings → General → Rename repository `EasyApply` → `applikon`.
 2. **Verify auto-redirect** — `github.com/jakubBone/EasyApply` should resolve to
@@ -165,7 +165,7 @@ application functionally identical.
 
 ---
 
-## Verification (after Phase 4)
+## Verification (after Step 4)
 
 ```bash
 # Inventory check — should print no results
@@ -192,8 +192,8 @@ cd .. && docker-compose up --build
 - ✅ Frontend lint, tests, and build green.
 - ✅ `docker-compose up` brings up `applikon-backend` and `applikon-frontend`.
 - ✅ GitHub repo renamed to `applikon`.
-- ✅ `spec/README.md` updated with phase 14 row.
-- ✅ `spec/v1/as-built.md` updated.
+- ✅ `spec/README.md` updated with 14-rebrand-applikon row.
+- ✅ `spec/v1/1.0.0/as-built.md` updated.
 
 ---
 

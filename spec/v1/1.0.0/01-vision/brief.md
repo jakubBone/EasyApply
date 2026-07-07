@@ -2,7 +2,7 @@
 
 > *Note: this is the **original product vision**, written at the start of the
 > project when it was named **EasyApply**. The product was renamed to
-> **Applikon** in [Phase 14](../14-rebrand-applikon/brief.md) (May 2026) — see
+> **Applikon** in [14-rebrand-applikon](../14-rebrand-applikon/brief.md) (May 2026) — see
 > that brief for the rationale. The brand name in this document has been
 > updated for consistency, but the vision, problem statement, MVP scope, and
 > tech choices remain as originally written.*
@@ -206,7 +206,7 @@ Job candidates actively seeking work, applying to 10-20 offers per month, primar
 
 # 8. Future
 
-| Phase | Scope |
+| Step | Scope |
 |------|--------|
 | **v1.1** | AI features – interview preparation, CV vs job posting analysis |
 | **v2.0** | Architecture (optional, educational) – event-driven, microservices |

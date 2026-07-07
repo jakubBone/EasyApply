@@ -1,8 +1,8 @@
-# Applikon — Phase 13: Docker Registry (GHCR)
+# Applikon — Docker Registry (GHCR)
 
 ## 1. Context
 
-Phase 12 added CI: every push to `master` runs tests and verifies the build.
+`12-ci` added CI: every push to `master` runs tests and verifies the build.
 The application is ready for production deployment on a Hetzner VPS.
 Currently `docker-compose.yml` uses `build:` — the server would need to build
 images locally from source, requiring Maven, Node.js, and JDK on the VPS.
@@ -66,7 +66,7 @@ No backend or frontend source code changes.
 
 ## 6. Success Criteria (Definition of Done)
 
-Phase 13 is closed when:
+`13-docker-registry` is closed when:
 
 1. [ ] Push to `master` triggers the `docker` CI job after `backend` and `frontend` jobs pass
 2. [ ] Two packages appear in GitHub → Packages: `applikon-backend` and `applikon-frontend`
@@ -88,10 +88,10 @@ Phase 13 is closed when:
 
 ## 8. Related Documents
 
-- `spec/v1/1.0.0/12-ci/brief.md` — previous phase, CI pipeline foundation
+- `spec/v1/1.0.0/12-ci/brief.md` — previous topic, CI pipeline foundation
 - `spec/v1/1.0.0/13-docker-registry/implementation-plan.md` — exact file changes
 - `spec/deployment/deployment-hetzner.md` — server setup and deploy commands
-- `spec/README.md` — phase index
+- `spec/README.md` — spec index
 
 ---
 

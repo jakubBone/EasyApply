@@ -1,6 +1,6 @@
 # i18n Implementation Plan — Applikon Backend
 
-## Work Process (applicable to each phase)
+## Work Process (applicable to each step)
 
 1. **Implementation** — Claude makes code changes
 2. **Automatic verification** — `mvn test` must be green
@@ -8,13 +8,13 @@
 4. **Update plans** — Claude updates checkboxes in this file
 5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
 6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next phase
+7. **Continue question** — Claude asks if we proceed to the next step
 
 ---
 
 ## Implementation Status
 
-### Phase 0 — Setup
+### Step 0 — Setup
 - [x] Create `src/main/resources/i18n/` directory
 - [x] `i18n/messages.properties` (English — fallback)
 - [x] `i18n/messages_pl.properties` (Polish)
@@ -22,7 +22,7 @@
 - [x] `LocaleResolver` bean (`AcceptHeaderLocaleResolver`, default `en`)
 - [x] `mvn test` passing
 
-### Phase 1 — Validation Messages
+### Step 1 — Validation Messages
 - [x] `dto/ApplicationRequest.java` → keys `{validation.*}`
 - [x] `dto/NoteRequest.java` → keys `{validation.*}`
 - [x] `dto/StatusUpdateRequest.java` → keys `{validation.*}`
@@ -32,7 +32,7 @@
 - [x] `entity/Note.java` → keys
 - [x] `mvn test` passing
 
-### Phase 2 — Service Exceptions
+### Step 2 — Service Exceptions
 - [x] `service/ApplicationService.java` — `EntityNotFoundException`
 - [x] `service/CVService.java` — `EntityNotFoundException`, `IllegalArgumentException`
 - [x] `service/NoteService.java` — `EntityNotFoundException`
@@ -40,24 +40,24 @@
 - [x] `service/UserService.java` — `EntityNotFoundException`, `IllegalStateException`
 - [x] `mvn test` passing
 
-### Phase 3 — HTTP Responses
+### Step 3 — HTTP Responses
 - [x] `exception/GlobalExceptionHandler.java` — `setTitle(...)`, error messages
 - [x] `controller/AuthController.java` — `Map.of("error", "...")`
 - [x] `mvn test` passing
 
-### Phase 4 — Demo Data & Enum Labels
+### Step 4 — Demo Data & Enum Labels
 - [x] `service/UserService.java` — demo application: translate job description to English (plain string, not runtime i18n)
 - [x] `entity/RejectionReason.java` — enum labels removed, frontend translates based on enum code (see decision below)
 - [x] `mvn test` passing
 
-### Phase 5 — Comments & Tests
+### Step 5 — Comments & Tests
 - [x] Translate Polish comments and Javadoc in all `.java` files to English
 - [x] Translate `@DisplayName` (44 methods) and test comments to English
 - [x] `mvn test` passing
 
-### Phase 6 — Rename Enum Values to English
+### Step 6 — Rename Enum Values to English
 
-> **This phase is summary only.** Detailed step-by-step instructions, complete mappings
+> **This step is summary only.** Detailed step-by-step instructions, complete mappings
 > of old→new enum values, SQL contents, and execution history (with test results after each step)
 > are in: `spec/i18n/enum-rename-plan.md`
 
@@ -103,13 +103,13 @@ Frontend translates via `REJECTION_REASONS` in `kanban/types.ts` → `"Brak odpo
 
 **Why:** Backend returns data, frontend decides how to display it. Zero changes to API contract.
 
-> Enum codes renamed to English in Phase 6 (were: `BRAK_ODPOWIEDZI`, `ODMOWA_MAILOWA` etc.)
+> Enum codes renamed to English in Step 6 (were: `BRAK_ODPOWIEDZI`, `ODMOWA_MAILOWA` etc.)
 
 ### Default Language
 `AcceptHeaderLocaleResolver` with `defaultLocale: en`.
 - If frontend sends `Accept-Language: pl` → responses in Polish
 - If frontend sends `Accept-Language: en` or no header → responses in English
-- Frontend sends header automatically (see `frontend-plan.md` Phase 7)
+- Frontend sends header automatically (see `frontend-plan.md` Step 7)
 
 ---
 

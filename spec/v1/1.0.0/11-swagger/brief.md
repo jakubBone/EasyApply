@@ -1,4 +1,4 @@
-# Applikon — Phase 11: Swagger / OpenAPI
+# Applikon — Swagger / OpenAPI
 
 ## 1. Context
 
@@ -79,7 +79,7 @@ Backend only. No frontend changes.
 
 ## 6. Success Criteria (Definition of Done)
 
-Phase 11 is closed when:
+`11-swagger` is closed when:
 
 1. ✅ `/swagger-ui.html` loads and shows all controllers grouped by tag
 2. ✅ "Authorize" button accepts a JWT Bearer token
@@ -93,17 +93,17 @@ Phase 11 is closed when:
 
 ## 7. Implementation Order
 
-1. **Phase 1** — dependency + properties + security permit
-2. **Phase 2** — global API info + JWT security scheme
-3. **Phase 3** — controller `@Tag` and `@Operation` annotations
+1. **Step 1** — dependency + properties + security permit
+2. **Step 2** — global API info + JWT security scheme
+3. **Step 3** — controller `@Tag` and `@Operation` annotations
 
 ---
 
 ## 8. Related Documents
 
-- `spec/v1/as-built.md` — update after completion
+- `spec/v1/1.0.0/as-built.md` — update after completion
 - `spec/v1/1.0.0/11-swagger/implementation-plan-backend.md` — detailed plan
-- `spec/README.md` — add row for phase 11
+- `spec/README.md` — add row for 11-swagger
 
 ---
 

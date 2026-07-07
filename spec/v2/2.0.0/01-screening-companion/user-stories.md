@@ -1,6 +1,6 @@
-# Applikon v2 — User Stories
+# Applikon 2.0.0 — User Stories
 
-> Stories, edge cases, and acceptance criteria for v2 (Screening Companion).
+> Stories, edge cases, and acceptance criteria for the Screening Companion (2.0.0).
 > Source of features: [`brief.md`](brief.md). Decisions taken with the user
 > are recorded inline as acceptance criteria.
 

@@ -2,7 +2,7 @@
 
 > **Status:** Accepted (2026-07-06) · **Scope:** release 2.1.0 (company brief) ·
 > First ADR in the repo — earlier releases made no genuinely contested
-> architectural decision; their rationale lives in the phase briefs and
+> architectural decision; their rationale lives in the topic briefs and
 > `as-built.md`.
 
 ## Context

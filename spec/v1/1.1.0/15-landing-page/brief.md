@@ -1,4 +1,4 @@
-clac# Applikon — Phase 15: Landing Page
+# Applikon — Landing Page
 
 ## 1. Context
 
@@ -84,13 +84,13 @@ All text on the landing page translated PL + EN, consistent with existing
 - **A/B testing** — single layout
 - **Analytics / tracking** — not adding new tracking pixels
 - **Removing `/login` route** — kept as-is, separate decision
-- **`LoginPage.tsx` changes** — untouched in this phase
+- **`LoginPage.tsx` changes** — untouched in this topic
 
 ---
 
 ## 6. Success Criteria (Definition of Done)
 
-Phase 15 is closed when:
+`15-landing-page` is closed when:
 
 1. ✅ Unauthenticated user visiting `/` sees the landing page (not a login form)
 2. ✅ Authenticated user visiting `/` is redirected to `/dashboard`
@@ -101,7 +101,7 @@ Phase 15 is closed when:
 7. ✅ All text available in PL and EN, language switcher works
 8. ✅ `npm run build` passes without TypeScript errors
 9. ✅ `npm run test:run` — 0 failed tests (routing tests updated)
-10. ✅ `spec/v1/as-built.md` updated: new route, new component
+10. ✅ `spec/v1/1.1.0/as-built.md` updated: new route, new component
 
 ---
 
@@ -115,8 +115,8 @@ Single feature, frontend only — one implementation plan:
 
 ## 8. Related Documents
 
-- `spec/v1/as-built.md` — update after completion
-- `spec/README.md` — add row for phase 15
+- `spec/v1/1.1.0/as-built.md` — update after completion
+- `spec/README.md` — add row for 15-landing-page
 - `spec/v1/1.1.0/15-landing-page/implementation-plan-frontend.md` — step-by-step plan
 
 ---

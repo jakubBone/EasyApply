@@ -1,4 +1,4 @@
-# Applikon v2/2.1.0 — User Stories
+# Applikon 2.1.0 — User Stories
 
 > Stories, edge cases, and acceptance criteria for the company brief.
 > Source of the feature: [`brief.md`](brief.md). Decisions taken with the user
@@ -20,7 +20,7 @@ minutes before a call.
 - Generated **only on the user's click** — a **"Generate brief"** button in the
   **"About the company" section header, next to the existing "Add/Edit"**
   action; nothing fires automatically. The button is **visually distinctive as
-  the AI action** (exact look in [`plan.md`](plan.md)).
+  the AI action** (exact look in [`implementation-plan.md`](implementation-plan.md)).
 - The button is available on **every application without a brief** — including
   applications created before 2.1.0.
 - Generation runs **in the background**; the rest of the app is never slowed
@@ -73,11 +73,11 @@ so all company prep stays on one screen.
   the application's "About the company" section as editable entries** — the
   same shape and edit modal as the existing per-application questions.
   (Implementation: displayed from the cache + per-application edit overrides —
-  nothing is physically copied; see [`plan.md`](plan.md) Phase 7.)
+  nothing is physically copied; see [`implementation-plan.md`](implementation-plan.md) Step 1.)
 - The user's edits are **per application** (stored as overrides); the cached
   raw brief is never modified by them.
 - The layout must stay **intuitive and very readable** — the section is the
-  recruiter-call fast path; the exact visual design lands in [`plan.md`](plan.md).
+  recruiter-call fast path; the exact visual design lands in [`implementation-plan.md`](implementation-plan.md).
 
 **Edge cases**
 - Deleting an application removes its copied entries; the **(user, company)

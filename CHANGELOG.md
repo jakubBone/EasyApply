@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-05-29
 
 ### Added
-- Public landing page for unauthenticated users with rotating job portal animation, feature cards, and Google login CTA (phase 15)
+- Public landing page for unauthenticated users with rotating job portal animation, feature cards, and Google login CTA (15-landing-page)
 
 ### Fixed
 - Force full page reload on logout to prevent stale JS bundle after deploy

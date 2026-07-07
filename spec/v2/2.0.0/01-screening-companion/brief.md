@@ -1,4 +1,4 @@
-# Applikon v2 — Screening Companion 
+# Applikon 2.0.0 — Screening Companion
 
 > **Status:** Vision. Pending.
 > **Process & artifacts for this version:** [`../PROCESS.md`](../PROCESS.md).
@@ -81,7 +81,7 @@ Deliberately excluded — v2 is the smallest release that delivers real value:
 - **Any new dependency, module split, or infrastructure.** v2 builds on the v1
   monolith as-is.
 - **No separate `architecture.md`:** the only new resource ("My answers") is fully
-  specified in [`plan.md`](plan.md), and v2 adds no new technology — there is
+  specified in [`implementation-plan.md`](implementation-plan.md), and v2 adds no new technology — there is
   nothing left to design.
 
 ---

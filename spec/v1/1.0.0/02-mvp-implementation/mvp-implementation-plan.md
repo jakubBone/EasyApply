@@ -2,7 +2,7 @@
 
 ---
 
-## PHASE 1: Backend API
+## STEP 1: Backend API
 
 **Goal:** Working REST API returning and saving applications to PostgreSQL with support for salary ranges, contract types, and job posting content.
 
@@ -153,7 +153,7 @@ curl "http://localhost:8080/api/applications/check-duplicate?company=Google&posi
 
 ---
 
-## PHASE 2: Frontend - Form and List
+## STEP 2: Frontend - Form and List
 
 **Goal:** React UI displaying application list, form for adding with salary ranges and duplicate warning.
 
@@ -236,7 +236,7 @@ npm run dev
 
 ---
 
-## PHASE 3: Kanban Board with Flexible Stages
+## STEP 3: Kanban Board with Flexible Stages
 
 **Goal:** Kanban board with 3 columns, drag & drop with stage selection and completion modals.
 
@@ -319,7 +319,7 @@ npm run dev
 
 ---
 
-## PHASE 4: CV Management (3 Types)
+## STEP 4: CV Management (3 Types)
 
 **Goal:** CV management with 3 types: PDF file, external link, note. Assign CV to applications.
 
@@ -424,7 +424,7 @@ curl http://localhost:8080/api/cv/1/download --output downloaded.pdf
 
 ---
 
-## PHASE 5: Notes with Categories
+## STEP 5: Notes with Categories
 
 **Goal:** Add text notes to applications with categories (Questions, Feedback, Other). Edit and delete notes.
 
@@ -519,7 +519,7 @@ curl -X POST http://localhost:8080/api/applications/1/notes \
 
 ---
 
-## PHASE 6: Table View
+## STEP 6: Table View
 
 **Goal:** Alternative list view of applications in table form with sorting, filtering, and bulk deletion.
 
@@ -566,7 +566,7 @@ curl -X POST http://localhost:8080/api/applications/1/notes \
 
 ---
 
-## PHASE 7: Gamification (Badges)
+## STEP 7: Gamification (Badges)
 
 **Goal:** Motivation badge system for rejections and ghosting. Widget displaying progress.
 

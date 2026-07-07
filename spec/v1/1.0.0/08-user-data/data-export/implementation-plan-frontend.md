@@ -1,6 +1,6 @@
 # Data Export Implementation Plan — Frontend
 
-## Work Process (applicable to each phase)
+## Work Process (applicable to each step)
 
 1. **Implementation** — Claude makes code changes
 2. **Automatic verification** — `npm run build` + `npm run test:run`, both must be green
@@ -8,7 +8,7 @@
 4. **Update plans** — Claude updates checkboxes in this file
 5. **Commit suggestion** — Claude proposes commit message (format: `type(frontend): description`)
 6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next phase
+7. **Continue question** — Claude asks if we proceed to the next step
 
 ---
 
@@ -21,7 +21,7 @@ Add "Download my data" button in `/settings` that downloads
 
 ## Implementation Status
 
-### Phase 1 — API Function `exportMyData`
+### Step 1 — API Function `exportMyData`
 
 **File:** `src/services/api.ts` (or file with auth API calls in project)
 
@@ -53,7 +53,7 @@ export async function exportMyData(): Promise<void> {
 
 ---
 
-### Phase 2 — Export Section in `Settings.tsx`
+### Step 2 — Export Section in `Settings.tsx`
 
 **File:** `src/pages/Settings.tsx`
 
@@ -99,7 +99,7 @@ Use existing CSS classes / Button components from project.
 
 ---
 
-### Phase 3 — i18n Keys
+### Step 3 — i18n Keys
 
 **Files:** `src/i18n/locales/pl/common.json`, `src/i18n/locales/en/common.json`
 
@@ -132,7 +132,7 @@ Use existing CSS classes / Button components from project.
 
 ---
 
-### Phase 4 — Tests
+### Step 4 — Tests
 
 **File:** `src/test/pages/Settings.test.tsx` (or equivalent in project)
 
@@ -145,7 +145,7 @@ Use existing CSS classes / Button components from project.
 
 ---
 
-### Phase 5 — Manual Verification
+### Step 5 — Manual Verification
 
 ```
 1. npm run dev
