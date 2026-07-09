@@ -26,6 +26,12 @@ from them:
 | Expensive, repeatable result shared across applications to the same company | **Cache-aside per (user, company)** | a dedicated cache table, dedup on a unique key |
 | What the user wrote ≠ what the model generated | **Split "derived cache" from "user-authored overrides"** | a second table; only it goes to the GDPR export |
 
+**Language is data, not schema:** generated text is stored **one row per (field,
+language)**, never in fixed `*_pl`/`*_en` columns. Adding a locale is a new `lang`
+value + a prompt line — never a migration. The set of languages tracks the i18n
+UI (today **PL + EN**); the prompt generates exactly the locales the UI supports,
+read from the i18n locale list, not hard-coded.
+
 The rest is standard hygiene: **idempotent trigger** (a double click never fires
 two AI calls), **data egress minimization** (only company name + job-ad link ever
 leave the system), **graceful degradation** (a provider error ends as a terminal
@@ -39,12 +45,14 @@ leave the system), **graceful degradation** (a provider error ends as a terminal
 ```
 db/migration/V21__company_briefs.sql
 entity/CompanyBrief.java              entity/BriefStatus.java
+entity/CompanyBriefField.java (one row per field × language)
 entity/ApplicationBriefAnswer.java
-repository/CompanyBriefRepository.java
+repository/CompanyBriefRepository.java   (fields ride along via the aggregate)
 repository/ApplicationBriefAnswerRepository.java
 service/BriefService.java            service/BriefGenerationWorker.java
 service/ai/BriefChatModel.java (port) service/ai/FakeBriefChatModel.java
-service/ai/GeneratedBrief.java (record, 8 fields; null = insufficient)
+service/ai/GeneratedBrief.java (record: list of {fieldKey, lang, text}; null text = insufficient)
+service/ai/BriefLocales.java (field keys + active locales, one source of truth)
 config/AsyncConfig.java
 controller/BriefController.java
 dto/BriefResponse.java  dto/BriefFieldDto.java  dto/BriefAnswersRequest.java
@@ -68,18 +76,23 @@ the swappability proof).
 
 ### 1.1 Migration `V21__company_briefs.sql`
 ```sql
-CREATE TABLE company_briefs (
+CREATE TABLE company_briefs (                       -- cache aggregate: metadata + status only
     id             BIGSERIAL PRIMARY KEY,
     user_id        UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     company_name   VARCHAR(255) NOT NULL,
     status         VARCHAR(16)  NOT NULL,          -- PENDING | READY | FAILED
-    industry_pl          TEXT, industry_en          TEXT,
-    product_customers_pl TEXT, product_customers_en TEXT,
-    tech_stack_pl        TEXT, tech_stack_en        TEXT,
-    size_stage_pl        TEXT, size_stage_en        TEXT,
     created_at     TIMESTAMP NOT NULL,
     updated_at     TIMESTAMP,
     CONSTRAINT uq_company_brief UNIQUE (user_id, company_name)
+);
+
+CREATE TABLE company_brief_fields (                 -- one row per field × language
+    id         BIGSERIAL PRIMARY KEY,
+    brief_id   BIGINT      NOT NULL REFERENCES company_briefs(id) ON DELETE CASCADE,
+    field_key  VARCHAR(32) NOT NULL,               -- industry|product_customers|tech_stack|size_stage
+    lang       VARCHAR(8)  NOT NULL,               -- 'pl' | 'en' | … (whatever the UI supports)
+    text       TEXT,                               -- NULL = "not enough public info"
+    CONSTRAINT uq_brief_field UNIQUE (brief_id, field_key, lang)
 );
 
 CREATE TABLE application_brief_answers (
@@ -91,15 +104,21 @@ CREATE TABLE application_brief_answers (
 );
 ```
 `UNIQUE (user_id, company_name)` serves two roles: the cache key **and** the
-dedup lock behind the idempotent trigger. `application_brief_answers` is
-single-language on purpose — an edit wins in both languages (user-stories §4).
+dedup lock behind the idempotent trigger. Generated content lives in
+`company_brief_fields`, keyed by `(brief_id, field_key, lang)` — **the language is
+a row value, so a new locale needs no schema change**. `application_brief_answers`
+is single-language on purpose — an edit wins in every language (user-stories §4).
 
 ### 1.2 Entities (`ScreeningAnswer` pattern — Lombok + `AuditingEntityListener` + `@OnDelete`)
 - `BriefStatus` enum: `PENDING, READY, FAILED`.
-- `CompanyBrief`: `@ManyToOne User user` (`@OnDelete CASCADE`), `String companyName`,
-  `@Enumerated(STRING) BriefStatus status`, 8 `@Column(columnDefinition="TEXT")`
-  fields, `@CreatedDate`/`@LastModifiedDate`. **NULL in a field = "not enough
-  public info"** — shown, never hidden, never a guess.
+- `CompanyBrief` (aggregate root): `@ManyToOne User user` (`@OnDelete CASCADE`),
+  `String companyName`, `@Enumerated(STRING) BriefStatus status`,
+  `@CreatedDate`/`@LastModifiedDate`, and
+  `@OneToMany(mappedBy="brief", cascade=ALL, orphanRemoval=true) List<CompanyBriefField> fields`.
+  Fields are persisted **through the aggregate** — no separate repository.
+- `CompanyBriefField`: `@ManyToOne CompanyBrief brief` (`@OnDelete CASCADE`),
+  `String fieldKey`, `String lang`, `@Column(columnDefinition="TEXT") String text`.
+  **NULL `text` = "not enough public info"** — shown, never hidden, never a guess.
 - `ApplicationBriefAnswer`: `@ManyToOne Application application` (`@OnDelete CASCADE`),
   `String fieldKey`, `@Column(columnDefinition="TEXT") String answer`.
 
@@ -117,13 +136,22 @@ interface ApplicationBriefAnswerRepository extends JpaRepository<ApplicationBrie
 ### 1.4 Provider port + fake
 ```java
 public interface BriefChatModel {                 // service/ai
-    GeneratedBrief generate(String companyName, String jobAdLink);   // 8 fields, null = insufficient
+    GeneratedBrief generate(String companyName, String jobAdLink);
+}
+// one entry per field × locale; text == null = insufficient
+public record GeneratedBrief(List<Field> fields) {
+    public record Field(String fieldKey, String lang, String text) {}
 }
 ```
-`FakeBriefChatModel` (`@Profile("test")` / dev): a deterministic result for a
-known name, one `null` field for the "insufficient" case, and a configurable
-throw (for the `FAILED` test). The Gemini adapter arrives in Step 2 — **the
-domain never sees it**.
+`BriefLocales` (single source of truth): `FIELD_KEYS = [industry,
+product_customers, tech_stack, size_stage]` and `LOCALES` = the active UI locales
+(today `pl`, `en`). Both the prompt and the persistence iterate these — **adding a
+locale touches only this list**, never the schema or the entity.
+
+`FakeBriefChatModel` (`@Profile("test")` / dev): deterministic entries for every
+`FIELD_KEYS × LOCALES` pair for a known name, one `null`-text entry for the
+"insufficient" case, and a configurable throw (for the `FAILED` test). The Gemini
+adapter arrives in Step 2 — **the domain never sees it**.
 
 ### 1.5 `BriefService` (`@Transactional`)
 ```java
@@ -142,9 +170,9 @@ void saveAnswers(UUID userId, Long applicationId, BriefAnswersRequest req);  // 
 3. For a fresh `PENDING`/retry: `worker.generate(brief.getId(), company, application.getLink())`
    — in the background.
 
-`get`: status + `List<BriefFieldDto>` — per field: `override` from
-`application_brief_answers`, `pl`/`en` from the cache. Merge here; the cache is
-**never** modified.
+`get`: status + `List<BriefFieldDto>` — per `FIELD_KEYS` entry: `override` from
+`application_brief_answers`, and a `texts` map `{lang → text}` assembled from the
+`company_brief_fields` rows. Merge here; the cache is **never** modified.
 `saveAnswers`: replace-all per application (like `saveForApplication`) —
 `deleteByApplicationId` + insert non-blank rows.
 
@@ -154,7 +182,7 @@ void saveAnswers(UUID userId, Long applicationId, BriefAnswersRequest req);  // 
 public void generate(Long briefId, String companyName, String jobAdLink) {
     try {
         GeneratedBrief f = briefChatModel.generate(companyName, jobAdLink);  // the port
-        markReady(briefId, f);                          // 8 setters, blank -> null
+        markReady(briefId, f);        // replace the brief's fields with one row per {fieldKey, lang}, blank -> null
     } catch (Exception e) {
         markFailed(briefId);                            // never a partial write
     }
@@ -201,7 +229,7 @@ All ownership-scoped through `user.id()` (UUID) before any work happens.
 ### 1.9 DTOs (records)
 ```java
 record BriefResponse(String status, List<BriefFieldDto> fields) {}
-record BriefFieldDto(String key, String pl, String en, String override) {}
+record BriefFieldDto(String key, Map<String, String> texts, String override) {}  // texts: lang -> text
 record BriefAnswersRequest(List<Answer> answers) { record Answer(String fieldKey, String answer) {} }
 ```
 
@@ -210,8 +238,8 @@ record BriefAnswersRequest(List<Answer> answers) { record Answer(String fieldKey
   (via `ApplicationBriefAnswerRepository.findByApplicationId`). The
   `company_briefs` cache is **not** exported (derived public data).
 - Deletion: FK cascades already cover it — deleting an application clears
-  `application_brief_answers`; deleting an account clears **both** tables
-  (`ON DELETE CASCADE` on `user_id` / `application_id`).
+  `application_brief_answers`; deleting an account clears the cache too, chaining
+  `users → company_briefs → company_brief_fields` (`ON DELETE CASCADE` all the way).
 
 ### 1.11 i18n
 `messages_pl.properties` + `messages_en.properties`: status/validation keys
@@ -219,22 +247,26 @@ record BriefAnswersRequest(List<Answer> answers) { record Answer(String fieldKey
 frontend-only (Step 3).
 
 ### 1.12 Tests (fake `BriefChatModel`, zero network) — `BriefServiceTest` + `BriefControllerTest`
-- trigger → `PENDING` → after execution `READY`, both languages stored;
-- a `null` field survives to `BriefResponse` (insufficient marker);
+- trigger → `PENDING` → after execution `READY`, one `company_brief_fields` row
+  per `FIELD_KEYS × LOCALES` stored;
+- a `null`-text entry survives to `BriefResponse` (insufficient marker);
+- the response `texts` map carries every active locale, driven by `BriefLocales`
+  (no hard-coded `pl`/`en` assertions in the service);
 - **cache reuse:** a second application to the same company → fake called
   **once** (assert via a call counter in the fake), status `READY` immediately;
 - fake throws → `FAILED`; retry allowed only from `FAILED`, no-op on `READY`/`PENDING`;
 - foreign application → `EntityNotFoundException` (404) before anything is written;
 - override save/read → override wins, cache untouched;
 - export contains overrides, **not** the cache;
-- deleting an application clears answers; deleting an account clears both tables.
+- deleting an application clears answers; deleting an account clears the cache
+  (both `company_briefs` and `company_brief_fields`).
 
 **DoD** — full brief lifecycle works and is fully tested with **zero network /
 zero API keys**; `./mvnw test` green on the dev machine.
 
 **Checklist**
-- [ ] `V21`: `company_briefs` + `application_brief_answers` (FKs, unique keys)
-- [ ] Entities/repos; `BriefChatModel` port + `FakeBriefChatModel`
+- [ ] `V21`: `company_briefs` + `company_brief_fields` (row per field × lang) + `application_brief_answers` (FKs, unique keys)
+- [ ] Entities/repos; `CompanyBriefField` via the aggregate; `BriefLocales` (field keys + locales); `BriefChatModel` port + `FakeBriefChatModel`
 - [ ] `BriefService`: cache-aside reuse, idempotent trigger, retry-from-`FAILED` only
 - [ ] `BriefGenerationWorker` `@Async("briefExecutor")` + `AsyncConfig` (own `@Configuration`, not on the main class)
 - [ ] `POST`/`GET /api/applications/{id}/brief` + `PUT .../brief/answers` (ownership-scoped)
@@ -251,14 +283,15 @@ Swap the fake for the real provider — config and prompt only, no domain change
 **Build**
 - `pom.xml`: Spring AI BOM + Gemini (2.5 Flash) starter.
 - `GeminiBriefChatModel implements BriefChatModel` (`@Profile("!test")`): builds
-  the prompt, **Google Search grounding enabled**, structured output (one JSON of
-  8 fields), a sensible call timeout, defensive parse (tolerate a markdown fence —
-  extract the outermost `{...}`); any provider error / partial / unparseable
-  response → exception → `FAILED` (never a partial brief, ADR-001 §3).
-- Prompt: instruct "only verifiable public info; if insufficient → set **both**
-  language variants to `null`, never guess". Input is **company name + job-ad link
-  when present** (link as a priority hint, not a hard restriction) — nothing else,
-  ever.
+  the prompt from `BriefLocales` (asks for each field in each active locale in one
+  request), **Google Search grounding enabled**, a sensible call timeout, defensive
+  parse (tolerate a markdown fence — extract the outermost `{...}`) into
+  `GeneratedBrief` entries; any provider error / partial / unparseable response →
+  exception → `FAILED` (never a partial brief, ADR-001 §3).
+- Prompt: instruct "only verifiable public info; if insufficient → set that
+  field to `null` in **every** requested language, never guess". Input is
+  **company name + job-ad link when present** (link as a priority hint, not a hard
+  restriction) — nothing else, ever.
 - Config via env vars only: key name added to **`.env.example`** (never `.env`);
   **separate dev / prod keys (separate Google projects)** — verify the actual
   free-tier RPD in Google AI Studio for each.
@@ -273,7 +306,7 @@ offline; cost 0.
 
 **Checklist**
 - [ ] Spring AI + `GeminiBriefChatModel` (grounding, timeout, error → `FAILED`)
-- [ ] Structured bilingual output with per-field insufficient markers
+- [ ] Structured output covering each field × active locale, with per-field insufficient markers
 - [ ] Prompt sends company name + link only; link = priority hint
 - [ ] `.env.example` updated; separate dev/prod keys; RPD verified in AI Studio
 - [ ] Manual verification pass (known company / obscure company / dead key)
@@ -284,8 +317,9 @@ offline; cost 0.
 ## Step 3 — Frontend: generate button, states, editing
 
 **Build**
-- `types/domain.ts`: `BriefStatus`, `BriefField { key; pl; en; override }`,
-  `BriefResponse`.
+- `types/domain.ts`: `BriefStatus`, `BriefField { key; texts: Record<string, string>; override }`,
+  `BriefResponse`. The field is picked as `override ?? texts[currentLang]` — the
+  component reads the current i18n locale, no `pl`/`en` hard-coding.
 - `services/api.ts`: `triggerBrief(id)`, `fetchBrief(id)`, `saveBriefAnswers(id, answers)`.
 - `hooks/useBrief.ts` (React Query): `useBrief(id)` polls while `PENDING` via
   `refetchInterval: q => q.state.data?.status === 'PENDING' ? 2000 : false`
