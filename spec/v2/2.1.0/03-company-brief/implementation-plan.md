@@ -16,15 +16,15 @@ in-session), its checklist below is ticked, and
 
 ## 0. Shape — the market patterns this feature maps to
 
-The feature is a composition of four well-known patterns; the whole plan follows
-from them:
+The feature is a composition of well-known patterns; the whole plan follows from
+them:
 
 | Aspect | Pattern | Design consequence |
 |---|---|---|
 | Slow, unreliable external call (LLM) while the UI must show "generating…" | **Asynchronous Request-Reply** (`POST` → 202 + status, `GET` to poll) | three endpoints, `status` in the DB, the frontend polls |
 | Dependency on an AI provider that must be swappable and testable offline | **Ports & Adapters** (port `BriefChatModel`, Gemini adapter, Fake adapter) | the whole backend is built and tested against a fake — no keys to test |
-| Expensive, repeatable result shared across applications to the same company | **Cache-aside per (user, company)** | a dedicated cache table, dedup on a unique key |
-| What the user wrote ≠ what the model generated | **Split "derived cache" from "user-authored overrides"** | a second table; only it goes to the GDPR export |
+| Expensive, repeatable result shared across applications to the same company | **Cache-aside per (user, company)** | one brief per company, reused across applications, dedup on a unique key |
+| The user can correct a field on the company's brief | **Edit in place** (the edit updates the brief; an `edited` row flag marks user text) | two tables; the flag keeps the GDPR export honest |
 
 **Language is data, not schema:** generated text is stored **one row per (field,
 language)**, never in fixed `*_pl`/`*_en` columns. Adding a locale is a new `lang`
@@ -45,20 +45,18 @@ leave the system), **graceful degradation** (a provider error ends as a terminal
 ```
 db/migration/V21__company_briefs.sql
 entity/CompanyBrief.java              entity/BriefStatus.java
-entity/CompanyBriefField.java (one row per field × language)
-entity/ApplicationBriefAnswer.java
+entity/CompanyBriefField.java (one row per field × language; `edited` flag)
 repository/CompanyBriefRepository.java   (fields ride along via the aggregate)
-repository/ApplicationBriefAnswerRepository.java
 service/BriefService.java            service/BriefGenerationWorker.java
 service/ai/BriefChatModel.java (port) service/ai/FakeBriefChatModel.java
 service/ai/GeneratedBrief.java (record: list of {fieldKey, lang, text}; null text = insufficient)
 service/ai/BriefLocales.java (field keys + active locales, one source of truth)
 config/AsyncConfig.java
 controller/BriefController.java
-dto/BriefResponse.java  dto/BriefFieldDto.java  dto/BriefAnswersRequest.java
+dto/BriefResponse.java  dto/BriefFieldDto.java  dto/BriefEditRequest.java
 ```
-**Backend — changed:** `UserExportService.java` (+ overrides),
-`dto/UserExportResponse.java` (+ `BriefAnswerExport`), `messages_pl/en.properties`,
+**Backend — changed:** `UserExportService.java` (+ edited brief fields),
+`dto/UserExportResponse.java` (+ `BriefFieldExport`), `messages_pl/en.properties`,
 `pom.xml` (Spring AI — Step 2).
 
 **Frontend — new:** `hooks/useBrief.ts`, `components/prep/BriefSection.tsx`,
@@ -74,9 +72,9 @@ The whole resource, testable without any live AI: generation runs through the
 `BriefChatModel` port and every test runs against a fake (ADR-001 §6 — this *is*
 the swappability proof).
 
-### 1.1 Migration `V21__company_briefs.sql`
+### 1.1 Migration `V21__company_briefs.sql` — two tables
 ```sql
-CREATE TABLE company_briefs (                       -- cache aggregate: metadata + status only
+CREATE TABLE company_briefs (                       -- cache aggregate: metadata + status
     id             BIGSERIAL PRIMARY KEY,
     user_id        UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     company_name   VARCHAR(255) NOT NULL,
@@ -92,22 +90,16 @@ CREATE TABLE company_brief_fields (                 -- one row per field × lang
     field_key  VARCHAR(32) NOT NULL,               -- industry|product_customers|tech_stack|size_stage
     lang       VARCHAR(8)  NOT NULL,               -- 'pl' | 'en' | … (whatever the UI supports)
     text       TEXT,                               -- NULL = "not enough public info"
+    edited     BOOLEAN     NOT NULL DEFAULT FALSE, -- TRUE once the user overwrote it
     CONSTRAINT uq_brief_field UNIQUE (brief_id, field_key, lang)
 );
-
-CREATE TABLE application_brief_answers (
-    id             BIGSERIAL PRIMARY KEY,
-    application_id BIGINT NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
-    field_key      VARCHAR(32) NOT NULL,           -- industry|product_customers|tech_stack|size_stage
-    answer         TEXT,
-    CONSTRAINT uq_brief_answer UNIQUE (application_id, field_key)
-);
 ```
-`UNIQUE (user_id, company_name)` serves two roles: the cache key **and** the
-dedup lock behind the idempotent trigger. Generated content lives in
-`company_brief_fields`, keyed by `(brief_id, field_key, lang)` — **the language is
-a row value, so a new locale needs no schema change**. `application_brief_answers`
-is single-language on purpose — an edit wins in every language (user-stories §4).
+`UNIQUE (user_id, company_name)` serves two roles: the cache key **and** the dedup
+lock behind the idempotent trigger. All content — generated and edited — lives in
+`company_brief_fields`, keyed by `(brief_id, field_key, lang)`; **the language is a
+row value, so a new locale needs no schema change, and a new field is a new
+`field_key`, not a migration**. `edited` separates the user's own text from derived
+public data (see GDPR, §1.10).
 
 ### 1.2 Entities (`ScreeningAnswer` pattern — Lombok + `AuditingEntityListener` + `@OnDelete`)
 - `BriefStatus` enum: `PENDING, READY, FAILED`.
@@ -115,23 +107,21 @@ is single-language on purpose — an edit wins in every language (user-stories �
   `String companyName`, `@Enumerated(STRING) BriefStatus status`,
   `@CreatedDate`/`@LastModifiedDate`, and
   `@OneToMany(mappedBy="brief", cascade=ALL, orphanRemoval=true) List<CompanyBriefField> fields`.
-  Fields are persisted **through the aggregate** — no separate repository.
+  Fields are persisted **through the aggregate** — so the feature needs **one
+  repository**, not two.
 - `CompanyBriefField`: `@ManyToOne CompanyBrief brief` (`@OnDelete CASCADE`),
-  `String fieldKey`, `String lang`, `@Column(columnDefinition="TEXT") String text`.
-  **NULL `text` = "not enough public info"** — shown, never hidden, never a guess.
-- `ApplicationBriefAnswer`: `@ManyToOne Application application` (`@OnDelete CASCADE`),
-  `String fieldKey`, `@Column(columnDefinition="TEXT") String answer`.
+  `String fieldKey`, `String lang`, `@Column(columnDefinition="TEXT") String text`,
+  `boolean edited`. **NULL `text` (and `edited=false`) = "not enough public
+  info"** — shown, never hidden, never a guess.
 
-### 1.3 Repositories
+### 1.3 Repository
 ```java
 interface CompanyBriefRepository extends JpaRepository<CompanyBrief, Long> {
     Optional<CompanyBrief> findByUserIdAndCompanyName(UUID userId, String companyName);
 }
-interface ApplicationBriefAnswerRepository extends JpaRepository<ApplicationBriefAnswer, Long> {
-    List<ApplicationBriefAnswer> findByApplicationId(Long applicationId);
-    void deleteByApplicationId(Long applicationId);
-}
 ```
+`company_brief_fields` has no own repository — rows are created, replaced and read
+through the `CompanyBrief` aggregate (`fields` collection).
 
 ### 1.4 Provider port + fake
 ```java
@@ -157,7 +147,7 @@ adapter arrives in Step 2 — **the domain never sees it**.
 ```java
 BriefResponse trigger(UUID userId, Long applicationId);      // POST
 BriefResponse get(UUID userId, Long applicationId);          // GET
-void saveAnswers(UUID userId, Long applicationId, BriefAnswersRequest req);  // PUT
+void editFields(UUID userId, Long applicationId, BriefEditRequest req);  // PUT
 ```
 `trigger`:
 1. `requireOwnedApplication(applicationId, userId)` — as in `ScreeningAnswerService`
@@ -170,11 +160,15 @@ void saveAnswers(UUID userId, Long applicationId, BriefAnswersRequest req);  // 
 3. For a fresh `PENDING`/retry: `worker.generate(brief.getId(), company, application.getLink())`
    — in the background.
 
-`get`: status + `List<BriefFieldDto>` — per `FIELD_KEYS` entry: `override` from
-`application_brief_answers`, and a `texts` map `{lang → text}` assembled from the
-`company_brief_fields` rows. Merge here; the cache is **never** modified.
-`saveAnswers`: replace-all per application (like `saveForApplication`) —
-`deleteByApplicationId` + insert non-blank rows.
+`get`: resolves the application's company → its `CompanyBrief`. Returns `status` +
+`List<BriefFieldDto>` — per `FIELD_KEYS` entry a `texts` map `{lang → text}`
+assembled from the `company_brief_fields` rows, plus `edited`.
+
+`editFields`: resolves application → company → owned brief, then for each field in
+the request writes the user's text to **all `LOCALES` rows** of that
+`(brief, field_key)` and sets `edited=true`. One user text shows in every language
+(user-stories §4). The edit updates the company's brief, so the correction shows on
+every application to that company.
 
 ### 1.6 `BriefGenerationWorker` (a separate bean — `@Async` only works through the proxy)
 ```java
@@ -182,14 +176,15 @@ void saveAnswers(UUID userId, Long applicationId, BriefAnswersRequest req);  // 
 public void generate(Long briefId, String companyName, String jobAdLink) {
     try {
         GeneratedBrief f = briefChatModel.generate(companyName, jobAdLink);  // the port
-        markReady(briefId, f);        // replace the brief's fields with one row per {fieldKey, lang}, blank -> null
+        markReady(briefId, f);        // fill the brief's fields: one row per {fieldKey, lang}, edited=false, blank -> null
     } catch (Exception e) {
         markFailed(briefId);                            // never a partial write
     }
 }
 ```
-A separate bean from `BriefService` on purpose: an `@Async` self-invocation
-inside the service would run synchronously.
+A separate bean from `BriefService` on purpose: an `@Async` self-invocation inside
+the service would run synchronously. Generation only ever writes `edited=false`
+rows; it never runs again for a `READY` brief, so it cannot clobber a user edit.
 
 ### 1.7 `AsyncConfig` — background execution wiring
 ```java
@@ -210,9 +205,9 @@ executor (`@Async("briefExecutor")`) — **never** on `ApplikonApplication` next
 the web/security config. The advising bean-post-processor that `@EnableAsync`
 registers forces premature bean initialization when it sits on the main
 configuration, which breaks `@AuthenticationPrincipal` resolution across **all**
-controllers (the principal is injected as `null`). Isolating it — plus an
-explicit executor rather than the default `SimpleAsyncTaskExecutor` — is the
-standard, production-correct wiring and keeps the request unblocked.
+controllers (the principal is injected as `null`). Isolating it — plus an explicit
+executor rather than the default `SimpleAsyncTaskExecutor` — is the standard,
+production-correct wiring and keeps the request unblocked.
 
 ### 1.8 `BriefController` (`ScreeningAnswerController` pattern)
 ```java
@@ -221,34 +216,39 @@ ResponseEntity<BriefResponse> trigger(@AuthenticationPrincipal AuthenticatedUser
                                       @PathVariable Long id)      // 202 Accepted, body = status
 @GetMapping("/api/applications/{id}/brief")
 ResponseEntity<BriefResponse> get(...)                           // 200
-@PutMapping("/api/applications/{id}/brief/answers")
-ResponseEntity<Void> saveAnswers(..., @Valid @RequestBody BriefAnswersRequest req)   // 200
+@PutMapping("/api/applications/{id}/brief")
+ResponseEntity<Void> editFields(..., @Valid @RequestBody BriefEditRequest req)   // 200
 ```
-All ownership-scoped through `user.id()` (UUID) before any work happens.
+Edits are addressed via the application the user is looking at (`{id}`) for UX, but
+resolve to the company brief and write globally. All ownership-scoped through
+`user.id()` (UUID) before any work happens.
 
 ### 1.9 DTOs (records)
 ```java
 record BriefResponse(String status, List<BriefFieldDto> fields) {}
-record BriefFieldDto(String key, Map<String, String> texts, String override) {}  // texts: lang -> text
-record BriefAnswersRequest(List<Answer> answers) { record Answer(String fieldKey, String answer) {} }
+record BriefFieldDto(String key, Map<String, String> texts, boolean edited) {}  // texts: lang -> text
+record BriefEditRequest(List<Field> fields) { record Field(String fieldKey, String text) {} }
 ```
 
 ### 1.10 GDPR
-- `UserExportService.buildExport`: add `List<BriefAnswerExport>` per application
-  (via `ApplicationBriefAnswerRepository.findByApplicationId`). The
-  `company_briefs` cache is **not** exported (derived public data).
-- Deletion: FK cascades already cover it — deleting an application clears
-  `application_brief_answers`; deleting an account clears the cache too, chaining
-  `users → company_briefs → company_brief_fields` (`ON DELETE CASCADE` all the way).
+- `UserExportService.buildExport`: add the user's **edited** brief fields
+  (`company_brief_fields` where `edited=true`, one per `(company, field)` since all
+  locales carry the same user text) as `List<BriefFieldExport>`. Generated
+  (`edited=false`) text is derived public data → **not** exported. The `edited`
+  flag is exactly what makes this separable without a second table.
+- Deletion: FK cascades cover it — deleting an account chains
+  `users → company_briefs → company_brief_fields` (`ON DELETE CASCADE` all the
+  way). A brief is kept per company, so deleting a single application does **not**
+  remove it or its edits.
 
 ### 1.11 i18n
 `messages_pl.properties` + `messages_en.properties`: status/validation keys
-(e.g. `validation.brief.answer.tooLong`). The "insufficient info" marker is
+(e.g. `validation.brief.field.tooLong`). The "insufficient info" marker is
 frontend-only (Step 3).
 
 ### 1.12 Tests (fake `BriefChatModel`, zero network) — `BriefServiceTest` + `BriefControllerTest`
 - trigger → `PENDING` → after execution `READY`, one `company_brief_fields` row
-  per `FIELD_KEYS × LOCALES` stored;
+  per `FIELD_KEYS × LOCALES` stored, all `edited=false`;
 - a `null`-text entry survives to `BriefResponse` (insufficient marker);
 - the response `texts` map carries every active locale, driven by `BriefLocales`
   (no hard-coded `pl`/`en` assertions in the service);
@@ -256,21 +256,22 @@ frontend-only (Step 3).
   **once** (assert via a call counter in the fake), status `READY` immediately;
 - fake throws → `FAILED`; retry allowed only from `FAILED`, no-op on `READY`/`PENDING`;
 - foreign application → `EntityNotFoundException` (404) before anything is written;
-- override save/read → override wins, cache untouched;
-- export contains overrides, **not** the cache;
-- deleting an application clears answers; deleting an account clears the cache
-  (both `company_briefs` and `company_brief_fields`).
+- **global edit:** `editFields` sets the user's text on every locale row and
+  `edited=true`; the same edit is visible from a second application to that company;
+- export contains **edited** fields only, not generated text;
+- deleting an account clears both tables; deleting one application leaves the
+  brief (and edits) intact.
 
 **DoD** — full brief lifecycle works and is fully tested with **zero network /
 zero API keys**; `./mvnw test` green on the dev machine.
 
 **Checklist**
-- [ ] `V21`: `company_briefs` + `company_brief_fields` (row per field × lang) + `application_brief_answers` (FKs, unique keys)
-- [ ] Entities/repos; `CompanyBriefField` via the aggregate; `BriefLocales` (field keys + locales); `BriefChatModel` port + `FakeBriefChatModel`
-- [ ] `BriefService`: cache-aside reuse, idempotent trigger, retry-from-`FAILED` only
+- [ ] `V21`: `company_briefs` + `company_brief_fields` (row per field × lang, `edited` flag; FKs, unique keys)
+- [ ] Entities + single repo; `CompanyBriefField` via the aggregate; `BriefLocales`; `BriefChatModel` port + `FakeBriefChatModel`
+- [ ] `BriefService`: cache-aside reuse, idempotent trigger, retry-from-`FAILED` only, global `editFields`
 - [ ] `BriefGenerationWorker` `@Async("briefExecutor")` + `AsyncConfig` (own `@Configuration`, not on the main class)
-- [ ] `POST`/`GET /api/applications/{id}/brief` + `PUT .../brief/answers` (ownership-scoped)
-- [ ] GDPR: overrides in export + cascade; cache cascades, not exported
+- [ ] `POST`/`GET`/`PUT /api/applications/{id}/brief` (ownership-scoped)
+- [ ] GDPR: edited fields in export; cascade on account delete; edits survive single-application delete
 - [ ] Fake-`BriefChatModel` test suite (list above) — `./mvnw test` green (dev machine)
 - [ ] as-built updated · checklist ticked
 
@@ -288,10 +289,10 @@ Swap the fake for the real provider — config and prompt only, no domain change
   parse (tolerate a markdown fence — extract the outermost `{...}`) into
   `GeneratedBrief` entries; any provider error / partial / unparseable response →
   exception → `FAILED` (never a partial brief, ADR-001 §3).
-- Prompt: instruct "only verifiable public info; if insufficient → set that
-  field to `null` in **every** requested language, never guess". Input is
-  **company name + job-ad link when present** (link as a priority hint, not a hard
-  restriction) — nothing else, ever.
+- Prompt: instruct "only verifiable public info; if insufficient → set that field
+  to `null` in **every** requested language, never guess". Input is **company name
+  + job-ad link when present** (link as a priority hint, not a hard restriction) —
+  nothing else, ever.
 - Config via env vars only: key name added to **`.env.example`** (never `.env`);
   **separate dev / prod keys (separate Google projects)** — verify the actual
   free-tier RPD in Google AI Studio for each.
@@ -317,14 +318,14 @@ offline; cost 0.
 ## Step 3 — Frontend: generate button, states, editing
 
 **Build**
-- `types/domain.ts`: `BriefStatus`, `BriefField { key; texts: Record<string, string>; override }`,
-  `BriefResponse`. The field is picked as `override ?? texts[currentLang]` — the
-  component reads the current i18n locale, no `pl`/`en` hard-coding.
-- `services/api.ts`: `triggerBrief(id)`, `fetchBrief(id)`, `saveBriefAnswers(id, answers)`.
+- `types/domain.ts`: `BriefStatus`, `BriefField { key; texts: Record<string, string>; edited }`,
+  `BriefResponse`. The field is picked as `texts[currentLang]` — the component
+  reads the current i18n locale, no `pl`/`en` hard-coding.
+- `services/api.ts`: `triggerBrief(id)`, `fetchBrief(id)`, `editBrief(id, fields)`.
 - `hooks/useBrief.ts` (React Query): `useBrief(id)` polls while `PENDING` via
   `refetchInterval: q => q.state.data?.status === 'PENDING' ? 2000 : false`
   (stops on a terminal state and on unmount); `useGenerateBrief` (POST);
-  `useSaveBriefAnswers` (PUT).
+  `useEditBrief` (PUT).
 - **"About the company" section header** gets a **✨ "Generate brief"** button next
   to "Add/Edit" (the header-action slot `CollapsibleSection` already provides) —
   visually distinctive as *the* AI action (accent/gradient). Shown on **every
@@ -334,17 +335,19 @@ offline; cost 0.
   Q&A-style rows **above** "What do you know about us?". **No regenerate control
   ever appears for a ready brief.**
 - Editing: the section's existing edit modal gains the 4 brief fields; saving
-  writes overrides. A field shows its override when present, else the cached text
-  for the **current app language** (switching PL/EN switches instantly; edited
-  fields show the same user text in both).
-- "Not enough public info" fields render the explicit i18n marker, not `-`.
+  writes them (`PUT`). A field shows the text for the **current app language**
+  (switching PL/EN switches instantly; an edited field shows the same user text in
+  both). An edit updates the company's brief, so it shows on every application to
+  that company.
+- "Not enough public info" fields (`texts[lang]` null and not `edited`) render the
+  explicit i18n marker, not `-`.
 - i18n PL + EN for everything (field labels, button, states, marker).
 
 **Tests (vitest)** — button renders when no brief (incl. old applications); click
 → generating state; `READY` renders 4 fields in the current language and switches
-with it; `FAILED` shows try-again which re-triggers; edit saves an override and it
-wins in both languages; insufficient field shows the marker; no regenerate control
-when `READY`.
+with it; `FAILED` shows try-again which re-triggers; edit saves and the text shows
+in both languages; insufficient field shows the marker; no regenerate control when
+`READY`.
 
 **DoD** — full flow clickable against the backend; `npm run test:run` + `lint` +
 `build` green (verified in-session).
@@ -353,7 +356,7 @@ when `READY`.
 - [ ] Hooks/api wired to the three endpoints (poll while `PENDING`)
 - [ ] ✨ Generate button in the section header next to Add/Edit, on every brief-less application
 - [ ] Section states: button / generating / failed+try-again / 4 Q&A rows; no regenerate when ready
-- [ ] Edit modal extended; overrides win in both languages; language switch instant
+- [ ] Edit modal extended; global edit; edited text shows in both languages; language switch instant
 - [ ] Insufficient-info marker + full i18n PL/EN
 - [ ] vitest + lint + build green (in-session) · as-built updated · checklist ticked
 
