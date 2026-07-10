@@ -8,7 +8,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 /**
  * One field of a {@link CompanyBrief} in one language — the normalized "row per (field × language)"
- * unit (table {@code company_fields}). The language is a row value, so a new locale is a new row,
+ * unit (table {@code company_brief_fields}). The language is a row value, so a new locale is a new row,
  * never a schema change; a new field is a new {@code fieldKey}, never a migration.
  *
  * A {@code null} {@code text} with {@code edited = false} means "not enough public info" — shown
@@ -19,7 +19,7 @@ import org.hibernate.annotations.OnDeleteAction;
 @Getter
 @Setter
 @Entity
-@Table(name = "company_fields")
+@Table(name = "company_brief_fields")
 public class CompanyBriefField {
 
     @Id
