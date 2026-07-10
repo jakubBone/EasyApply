@@ -31,19 +31,16 @@ public class CompanyBriefField {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private CompanyBrief brief;
 
-    /** One of {@code BriefLocales.FIELD_KEYS} (industry|product_customers|tech_stack|size_stage). */
     @Column(name = "field_key", nullable = false, length = 32)
     private String fieldKey;
 
-    /** UI locale this text is written in (e.g. "pl", "en"). */
     @Column(nullable = false, length = 8)
     private String lang;
 
-    /** Generated or user-edited text; {@code null} = "not enough public info". */
+    // null = "not enough public info"
     @Column(columnDefinition = "TEXT")
     private String text;
 
-    /** {@code true} once the user overwrote the generated value. */
     @Column(nullable = false)
     private boolean edited;
 }
