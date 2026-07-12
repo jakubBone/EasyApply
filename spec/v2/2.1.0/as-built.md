@@ -23,7 +23,8 @@
   row is committed. The `@Async` worker runs on another thread in its own transaction, so an inline
   call could start before the commit and not find the row. `BriefGenerationWorker` reaches its own
   `@Transactional markReady`/`markFailed` through a self proxy for the same reason `@Async` needs a
-  separate bean.
+  separate bean. The in-process `@Async` execution model — and why no broker/poller/events — is
+  [`../../adr/ADR-003-in-process-async-brief-generation.md`](../../adr/ADR-003-in-process-async-brief-generation.md).
 - **Naming/routing touch-ups vs the plan sketch:** the field DTO is `BriefFieldResponse` (plan §1.9
   wrote `BriefFieldDto`); the controller path is `/api/applications/{applicationId}/brief` (plan §1.8
   wrote `{id}`), matching `ApplicationScreeningAnswerController`.
