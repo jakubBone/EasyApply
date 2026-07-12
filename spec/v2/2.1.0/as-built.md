@@ -17,3 +17,17 @@
   (migration `V21`), constraints `uq_company_brief` / `uq_brief_field`.
 - **`FakeBriefChatModel` lives in `src/test`** (`@Profile("test")`), mirroring `TestSecurityConfig`,
   rather than `src/main` as the plan's file map listed — test doubles stay out of the production jar.
+- **Generation is scheduled after commit, not called inline.** Plan §1.5 (trigger, step 3) called
+  `worker.generate(...)` directly. Built so `BriefService.trigger` registers an `afterCommit`
+  synchronization (`TransactionSynchronizationManager`) that fires generation only once the `PENDING`
+  row is committed. The `@Async` worker runs on another thread in its own transaction, so an inline
+  call could start before the commit and not find the row. `BriefGenerationWorker` reaches its own
+  `@Transactional markReady`/`markFailed` through a self proxy for the same reason `@Async` needs a
+  separate bean.
+- **Naming/routing touch-ups vs the plan sketch:** the field DTO is `BriefFieldResponse` (plan §1.9
+  wrote `BriefFieldDto`); the controller path is `/api/applications/{applicationId}/brief` (plan §1.8
+  wrote `{id}`), matching `ApplicationScreeningAnswerController`.
+- **GDPR export shape.** Edited brief fields ship as `UserExportResponse.briefFields`
+  (`BriefFieldExport{company, fieldKey, text}`), one entry per `(company, field)` since every locale
+  carries the same user text; generated (`edited=false`) fields are excluded. Account deletion needs
+  no export code — the `V21` FK cascade (`users → company_briefs → company_brief_fields`) covers it.

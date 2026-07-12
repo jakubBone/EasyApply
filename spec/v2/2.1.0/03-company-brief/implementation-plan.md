@@ -266,14 +266,14 @@ frontend-only (Step 3).
 zero API keys**; `./mvnw test` green on the dev machine.
 
 **Checklist**
-- [ ] `V21`: `company_briefs` + `company_brief_fields` (row per field × lang, `edited` flag; FKs, unique keys)
-- [ ] Entities + single repo; `CompanyBriefField` via the aggregate; `BriefLocales`; `BriefChatModel` port + `FakeBriefChatModel`
-- [ ] `BriefService`: cache-aside reuse, idempotent trigger, retry-from-`FAILED` only, global `editFields`
-- [ ] `BriefGenerationWorker` `@Async("briefExecutor")` + `AsyncConfig` (own `@Configuration`, not on the main class)
-- [ ] `POST`/`GET`/`PUT /api/applications/{id}/brief` (ownership-scoped)
-- [ ] GDPR: edited fields in export; cascade on account delete; edits survive single-application delete
-- [ ] Fake-`BriefChatModel` test suite (list above) — `./mvnw test` green (dev machine)
-- [ ] as-built updated · checklist ticked
+- [x] `V21`: `company_briefs` + `company_brief_fields` (row per field × lang, `edited` flag; FKs, unique keys)
+- [x] Entities + single repo; `CompanyBriefField` via the aggregate; `BriefLocales`; `BriefChatModel` port + `FakeBriefChatModel`
+- [x] `BriefService`: cache-aside reuse, idempotent trigger, retry-from-`FAILED` only, global `editFields`
+- [x] `BriefGenerationWorker` `@Async("briefExecutor")` + `AsyncConfig` (own `@Configuration`, not on the main class)
+- [x] `POST`/`GET`/`PUT /api/applications/{id}/brief` (ownership-scoped)
+- [x] GDPR: edited fields in export; cascade on account delete; edits survive single-application delete
+- [x] Fake-`BriefChatModel` test suite (list above) — `./mvnw test` green (dev machine)
+- [x] as-built updated · checklist ticked
 
 ---
 

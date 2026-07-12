@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -169,6 +170,29 @@ class BriefControllerTest {
 
         mockMvc.perform(post(url(foreignAppId))).andExpect(status().isNotFound());
         mockMvc.perform(get(url(foreignAppId))).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Data export includes edited brief fields only, not generated text (RODO)")
+    void export_includesEditedBriefFieldsOnly() throws Exception {
+        Long appId = saveApplication(testUser).getId();
+        mockMvc.perform(post(url(appId))).andExpect(status().isAccepted());
+        awaitStatus(appId, "READY");
+
+        // Edit one field; the other three stay generated (derived public data).
+        Map<String, Object> body = Map.of("fields", List.of(
+                Map.of("fieldKey", "industry", "text", "My correction")));
+        mockMvc.perform(put(url(appId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/auth/me/export"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.briefFields", hasSize(1)))   // only the edited field, not generated ones
+                .andExpect(jsonPath("$.briefFields[0].company").value(COMPANY))
+                .andExpect(jsonPath("$.briefFields[0].fieldKey").value("industry"))
+                .andExpect(jsonPath("$.briefFields[0].text").value("My correction"));
     }
 
     // ==================== Helpers ====================
