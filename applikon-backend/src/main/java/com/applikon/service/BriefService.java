@@ -107,7 +107,7 @@ public class BriefService {
     }
 
     // Fire generation only oted, so the background worker can read it.
-    private void generateAfterCommit(Long briefId, nce the PENDING row is commitString company, String jobAdLink) {
+    private void generateAfterCommit(Long briefId, String company, String jobAdLink) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
