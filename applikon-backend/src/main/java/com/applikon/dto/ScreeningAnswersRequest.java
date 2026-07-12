@@ -4,10 +4,7 @@ import jakarta.validation.Valid;
 
 import java.util.List;
 
-/**
- * Replace-all save request for a user's global "My answers" set.
- * {@code @Valid} cascades validation to each {@link ScreeningAnswerRequest}.
- */
+// Replace-all save for a user's "My answers" set
 public record ScreeningAnswersRequest(
         @Valid List<ScreeningAnswerRequest> answers) {
 

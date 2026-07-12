@@ -6,16 +6,10 @@ import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-/**
- * One field of a {@link CompanyBrief} in one language — the normalized "row per (field × language)"
- * unit (table {@code company_brief_fields}). The language is a row value, so a new locale is a new row,
- * never a schema change; a new field is a new {@code fieldKey}, never a migration.
- *
- * A {@code null} {@code text} with {@code edited = false} means "not enough public info" — shown
- * to the user as an explicit marker, never hidden and never a guess. {@code edited = true} marks
- * text the user wrote over the generated value; it is exactly what separates the user's own data
- * from derived public data for the GDPR export.
- */
+// One brief field in one language (row per field × language), so a new locale or field is just a new
+// row, never a migration. text = null means "not enough public info", shown as an explicit marker
+// rather than a guess. edited = true means the user overwrote the generated value — which marks it as
+// the user's own data for the GDPR export.
 @Getter
 @Setter
 @Entity

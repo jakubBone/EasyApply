@@ -12,15 +12,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-/**
- * A single screening-question answer belonging to a user's global "My answers" set.
- *
- * Fixed template questions carry a stable {@code questionKey} (e.g. "about-me") and no label;
- * custom questions carry a user-provided {@code label} and {@code custom = true}.
- *
- * A null {@code application} means the answer belongs to the user's global "My answers"
- * set; a non-null {@code application} scopes it to one application ("About the company").
- */
+// One screening-question answer. Fixed template questions have a stable questionKey and no label;
+// custom questions have a user-provided label and custom = true. application = null means a global
+// "My answers" row; a non-null application scopes the answer to that one application.
 @Getter
 @Setter
 @Entity
@@ -37,18 +31,17 @@ public class ScreeningAnswer {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
-    /** When set, scopes this answer to one application ("About the company" prep);
-     *  null for a global "My answers" row. */
+    // Set = scoped to one application ("About the company"); null = global "My answers" row.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "application_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Application application;
 
-    /** Stable key for a fixed template question; null for custom questions. */
+    // Stable key for a fixed template question; null for custom questions.
     @Column(name = "question_key", length = 64)
     private String questionKey;
 
-    /** User-provided label for a custom question; null for fixed questions. */
+    // User-provided label for a custom question; null for fixed questions.
     @Column(length = 255)
     private String label;
 

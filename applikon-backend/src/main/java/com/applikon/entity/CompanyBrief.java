@@ -11,14 +11,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-/**
- * A cached "company brief" — a small AI-generated dossier about a company, reused across
- * every application the user has to that company (cache-aside per {@code (user, company)}).
- *
- * The metadata + lifecycle root: {@code status} drives the async request-reply flow. Its content
- * lives in {@link CompanyBriefField} rows, one per (field × language), fetched and written through
- * their own repository (the codebase's child-side convention, as with Note and ScreeningAnswer).
- */
+// AI-generated dossier about a company, cached per (user, company) and reused across all the user's
+// applications to that company. Holds the status that drives the async generation flow; the actual
+// content lives in CompanyBriefField rows, one per (field × language).
 @Getter
 @Setter
 @Entity
