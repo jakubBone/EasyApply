@@ -12,9 +12,8 @@ import com.applikon.repository.CompanyBriefFieldRepository;
 import com.applikon.repository.CompanyBriefRepository;
 import com.applikon.repository.UserRepository;
 import com.applikon.service.ai.BriefLocales;
+import com.applikon.service.ai.GeneratedBrief;
 import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,21 +22,21 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,29 +45,20 @@ class BriefServiceTest {
 
     private static final UUID USER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final Long APP_ID = 1L;
+    private static final Long BRIEF_ID = 7L;
     private static final String COMPANY = "Acme";
 
     @Mock private CompanyBriefRepository briefRepository;
     @Mock private CompanyBriefFieldRepository fieldRepository;
     @Mock private ApplicationRepository applicationRepository;
     @Mock private UserRepository userRepository;
-    @Mock private BriefGenerationWorker worker;
+    @Mock private ApplicationEventPublisher eventPublisher;
     @Mock private MessageSource messageSource;
 
     @InjectMocks private BriefService service;
 
     @Captor private ArgumentCaptor<List<CompanyBriefField>> savedFields;
-
-    @BeforeEach
-    void setUp() {
-        // trigger() registers an afterCommit synchronization; a real one must be active in the test.
-        TransactionSynchronizationManager.initSynchronization();
-    }
-
-    @AfterEach
-    void tearDown() {
-        TransactionSynchronizationManager.clearSynchronization();
-    }
+    @Captor private ArgumentCaptor<BriefGenerationRequested> publishedEvent;
 
     @Test
     void trigger_returnsCachedBrief_withoutGenerating_whenReady() {
@@ -81,7 +71,7 @@ class BriefServiceTest {
 
         assertEquals("READY", response.status());
         verify(briefRepository, never()).save(any());
-        verify(worker, never()).generate(any(), any(), any());
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -95,7 +85,7 @@ class BriefServiceTest {
 
         assertEquals("PENDING", response.status());
         verify(briefRepository, never()).save(any());
-        verify(worker, never()).generate(any(), any(), any());
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -113,10 +103,11 @@ class BriefServiceTest {
         verify(briefRepository).save(saved.capture());
         assertEquals(BriefStatus.PENDING, saved.getValue().getStatus());
 
-        // Generation is scheduled only after the transaction commits.
-        verify(worker, never()).generate(any(), any(), any());
-        fireAfterCommit();
-        verify(worker).generate(any(), eq(COMPANY), eq("http://job"));
+        // The service only publishes the request; after-commit delivery is the listener's contract,
+        // covered end-to-end in BriefControllerTest.
+        verify(eventPublisher).publishEvent(publishedEvent.capture());
+        assertEquals(COMPANY, publishedEvent.getValue().companyName());
+        assertEquals("http://job", publishedEvent.getValue().jobAdLink());
     }
 
     @Test
@@ -132,8 +123,8 @@ class BriefServiceTest {
         ArgumentCaptor<CompanyBrief> saved = ArgumentCaptor.forClass(CompanyBrief.class);
         verify(briefRepository).save(saved.capture());
         assertEquals(BriefStatus.PENDING, saved.getValue().getStatus());
-        fireAfterCommit();
-        verify(worker).generate(any(), eq(COMPANY), eq("http://job"));
+        verify(eventPublisher).publishEvent(publishedEvent.capture());
+        assertEquals(COMPANY, publishedEvent.getValue().companyName());
     }
 
     @Test
@@ -142,6 +133,7 @@ class BriefServiceTest {
 
         assertThrows(EntityNotFoundException.class, () -> service.trigger(USER_ID, APP_ID));
         verify(briefRepository, never()).save(any());
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -161,6 +153,47 @@ class BriefServiceTest {
         assertTrue(saved.stream().allMatch(f -> f.isEdited() && "My own text".equals(f.getText())));
     }
 
+    @Test
+    void markReady_replacesFields_andSetsReady() {
+        CompanyBrief brief = brief(BriefStatus.PENDING);
+        when(briefRepository.findById(BRIEF_ID)).thenReturn(Optional.of(brief));
+
+        String key = BriefLocales.FIELD_KEYS.get(0);
+        service.markReady(BRIEF_ID, new GeneratedBrief(List.of(
+                new GeneratedBrief.Field(key, "pl", "text pl"),
+                new GeneratedBrief.Field(key, "en", "   "))));     // blank = insufficient info
+
+        verify(fieldRepository).deleteByBriefId(BRIEF_ID);
+        verify(fieldRepository).saveAll(savedFields.capture());
+        List<CompanyBriefField> saved = savedFields.getValue();
+        assertEquals(2, saved.size());
+        assertTrue(saved.stream().noneMatch(CompanyBriefField::isEdited));
+        assertEquals("text pl", saved.get(0).getText());
+        assertNull(saved.get(1).getText());                        // blank is stored as NULL, not ""
+        assertEquals(BriefStatus.READY, brief.getStatus());
+        verify(briefRepository).save(brief);
+    }
+
+    @Test
+    void markFailed_setsFailed() {
+        CompanyBrief brief = brief(BriefStatus.PENDING);
+        when(briefRepository.findById(BRIEF_ID)).thenReturn(Optional.of(brief));
+
+        service.markFailed(BRIEF_ID);
+
+        assertEquals(BriefStatus.FAILED, brief.getStatus());
+        verify(briefRepository).save(brief);
+    }
+
+    @Test
+    void markFailed_isSilent_whenBriefIsGone() {
+        when(briefRepository.findById(BRIEF_ID)).thenReturn(Optional.empty());
+
+        service.markFailed(BRIEF_ID);                              // no throw
+
+        verify(briefRepository, never()).save(any());
+    }
+
     private void givenOwnedApplication() {
         Application application = new Application();
         application.setCompany(COMPANY);
@@ -172,9 +205,5 @@ class BriefServiceTest {
         CompanyBrief brief = new CompanyBrief();
         brief.setStatus(status);
         return brief;
-    }
-
-    private void fireAfterCommit() {
-        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
     }
 }

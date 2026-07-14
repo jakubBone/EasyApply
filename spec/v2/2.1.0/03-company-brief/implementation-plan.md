@@ -279,23 +279,57 @@ zero API keys**; `./mvnw test` green on the dev machine.
 
 ## Step 2 — Live Gemini behind the same port
 
+> Re-cut 2026-07-14, **before build**: the first Step 2 attempt landed the dependency
+> and the adapter at once, tests broke, and the failure could not be attributed — the
+> whole change was rolled back. Split into 2a (the dependency alone, prove the
+> classpath is safe) and 2b (the adapter). The original single-step shape is in git
+> history; execution-model context in
+> [`../../../adr/ADR-004-transactional-event-brief-generation.md`](../../../adr/ADR-004-transactional-event-brief-generation.md).
+
 Swap the fake for the real provider — config and prompt only, no domain change.
 
-**Build**
-- `pom.xml`: Spring AI BOM + Gemini (2.5 Flash) starter.
+### Step 2a — the dependency alone (prove the classpath is safe)
+
+- `pom.xml`: Spring AI BOM (1.1.x) + `spring-ai-starter-model-google-genai` — the
+  starter that takes the free-tier **API key** (ADR-001, cost 0). Not
+  `vertex-ai-gemini`: that one authenticates via GCP ADC and fails without a GCP
+  project — in tests too.
+- `src/test/resources/application-test.properties`: `spring.ai.model.chat=none`.
+  The model auto-configuration activates from the classpath alone, in **every**
+  profile — `@Profile("!test")` on our adapter does not turn it off; without a key
+  its client bean fails context startup, and spring-dotenv reads `.env` in tests,
+  so a dev key would otherwise leak in silently.
+- `.env.example`: the key's variable name (never `.env`).
+
+**DoD** — `./mvnw test` green **with no other change**; tests still offline and
+keyless (verify once with `.env` temporarily renamed). If anything fails in this
+step, the dependency — not our code — is the cause.
+
+**Checklist**
+- [ ] Spring AI BOM + `spring-ai-starter-model-google-genai` in `pom.xml`
+- [ ] `spring.ai.model.chat=none` in the test profile (+ why-comment)
+- [ ] `.env.example` updated
+- [ ] `./mvnw test` green, offline, `.env`-independent
+- [ ] as-built updated · checklist ticked
+
+### Step 2b — the Gemini adapter behind the port
+
 - `GeminiBriefChatModel implements BriefChatModel` (`@Profile("!test")`): builds
   the prompt from `BriefLocales` (asks for each field in each active locale in one
-  request), **Google Search grounding enabled**, a sensible call timeout, defensive
-  parse (tolerate a markdown fence — extract the outermost `{...}`) into
-  `GeneratedBrief` entries; any provider error / partial / unparseable response →
-  exception → `FAILED` (never a partial brief, ADR-001 §3).
+  request), **Google Search grounding enabled**, defensive parse (tolerate a
+  markdown fence — extract the outermost `{...}`) into `GeneratedBrief` entries;
+  any provider error / partial / unparseable response → exception → `FAILED`
+  (never a partial brief, ADR-001 §3).
+- **Timeout and retry only via client options / Spring AI's `RetryTemplate` — no
+  `@EnableRetry`, `@TimeLimiter` or any other annotation-driven AOP.** Advising
+  bean-post-processors are the door the Step-1 `@AuthenticationPrincipal` bug came
+  through (ADR-004); the app now adds none.
 - Prompt: instruct "only verifiable public info; if insufficient → set that field
   to `null` in **every** requested language, never guess". Input is **company name
   + job-ad link when present** (link as a priority hint, not a hard restriction) —
   nothing else, ever.
-- Config via env vars only: key name added to **`.env.example`** (never `.env`);
-  **separate dev / prod keys (separate Google projects)** — verify the actual
-  free-tier RPD in Google AI Studio for each.
+- Config via env vars only; **separate dev / prod keys (separate Google projects)**
+  — verify the actual free-tier RPD in Google AI Studio for each.
 - Unit tests keep running on the fake — **no network in tests**.
 
 **Manual verification (dev machine, dev key)** — a well-known company → 4 sensible
@@ -306,10 +340,11 @@ hallucination; provider key removed/invalid → `FAILED`, core app unaffected.
 offline; cost 0.
 
 **Checklist**
-- [ ] Spring AI + `GeminiBriefChatModel` (grounding, timeout, error → `FAILED`)
+- [ ] `GeminiBriefChatModel` (grounding, client-side timeout, error → `FAILED`)
 - [ ] Structured output covering each field × active locale, with per-field insufficient markers
 - [ ] Prompt sends company name + link only; link = priority hint
-- [ ] `.env.example` updated; separate dev/prod keys; RPD verified in AI Studio
+- [ ] No annotation-driven AOP added (timeout/retry in client config)
+- [ ] Separate dev/prod keys; RPD verified in AI Studio
 - [ ] Manual verification pass (known company / obscure company / dead key)
 - [ ] as-built updated · checklist ticked
 

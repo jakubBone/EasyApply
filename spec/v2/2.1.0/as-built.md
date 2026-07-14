@@ -32,3 +32,14 @@
   (`BriefFieldExport{company, fieldKey, text}`), one entry per `(company, field)` since every locale
   carries the same user text; generated (`edited=false`) fields are excluded. Account deletion needs
   no export code — the `V21` FK cascade (`users → company_briefs → company_brief_fields`) covers it.
+- **Post-step refactor (2026-07-14): the `@Async` machinery was replaced by a transactional event.**
+  Step 1 first shipped as planned (§1.6–1.7: `@Async("briefExecutor")` worker, `AsyncConfig`, a manual
+  `afterCommit` synchronization, a self-proxy for the transactional writes), then was reworked:
+  `BriefService.trigger` now publishes `BriefGenerationRequested`, `BriefGenerationWorker` consumes it
+  via `@TransactionalEventListener(AFTER_COMMIT)` and hands the model call to Boot's
+  `applicationTaskExecutor`, and `markReady`/`markFailed` live on `BriefService` as plain
+  `@Transactional` methods. `AsyncConfig` is deleted; the app no longer uses `@EnableAsync`/`@Async`.
+  Behavior is unchanged — `BriefControllerTest` passed untouched; `BriefServiceTest` was adapted (it
+  white-box-tested the old wiring) and gained `markReady`/`markFailed` unit tests. Rationale and
+  alternatives:
+  [`../../adr/ADR-004-transactional-event-brief-generation.md`](../../adr/ADR-004-transactional-event-brief-generation.md).

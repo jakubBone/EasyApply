@@ -1,6 +1,8 @@
 # ADR-003 — In-process `@Async` brief generation, no durable job machinery
 
-> **Status:** Accepted (2026-07-12) · **Scope:** release 2.1.0 (company brief) ·
+> **Status:** Accepted (2026-07-12) · execution mechanism superseded by
+> [ADR-004](ADR-004-transactional-event-brief-generation.md) (2026-07-14) — the
+> no-broker / durability decision stands · **Scope:** release 2.1.0 (company brief) ·
 > Formalizes the execution model behind
 > [`../v2/2.1.0/03-company-brief/implementation-plan.md`](../v2/2.1.0/03-company-brief/implementation-plan.md)
 > §1.6–1.7 and the cross-cutting DoD constraint "no queue, no scheduler, no new deployable".

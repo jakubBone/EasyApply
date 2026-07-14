@@ -12,13 +12,13 @@ import com.applikon.repository.CompanyBriefFieldRepository;
 import com.applikon.repository.CompanyBriefRepository;
 import com.applikon.repository.UserRepository;
 import com.applikon.service.ai.BriefLocales;
+import com.applikon.service.ai.GeneratedBrief;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -36,20 +36,20 @@ public class BriefService {
     private final CompanyBriefFieldRepository fieldRepository;
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
-    private final BriefGenerationWorker worker;
+    private final ApplicationEventPublisher eventPublisher;
     private final MessageSource messageSource;
 
     public BriefService(CompanyBriefRepository briefRepository,
                         CompanyBriefFieldRepository fieldRepository,
                         ApplicationRepository applicationRepository,
                         UserRepository userRepository,
-                        BriefGenerationWorker worker,
+                        ApplicationEventPublisher eventPublisher,
                         MessageSource messageSource) {
         this.briefRepository = briefRepository;
         this.fieldRepository = fieldRepository;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
-        this.worker = worker;
+        this.eventPublisher = eventPublisher;
         this.messageSource = messageSource;
     }
 
@@ -69,7 +69,7 @@ public class BriefService {
         }
         brief.setStatus(BriefStatus.PENDING);            // fresh or retry-from-FAILED
         brief = briefRepository.save(brief);
-        generateAfterCommit(brief.getId(), company, application.getLink());
+        eventPublisher.publishEvent(new BriefGenerationRequested(brief.getId(), company, application.getLink()));
         return buildResponse(brief);
     }
 
@@ -106,14 +106,35 @@ public class BriefService {
         fieldRepository.saveAll(toSave);
     }
 
-    // Fire generation only oted, so the background worker can read it.
-    private void generateAfterCommit(Long briefId, String company, String jobAdLink) {
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                worker.generate(briefId, company, jobAdLink);
-            }
+    // Called from the background thread; replaces the brief's rows in one transaction, so a brief is
+    // never visible half-written. Only writes edited=false rows and never runs for a READY brief,
+    // so it cannot overwrite a user edit.
+    @Transactional
+    public void markReady(Long briefId, GeneratedBrief generated) {
+        CompanyBrief brief = briefRepository.findById(briefId).orElseThrow(EntityNotFoundException::new);
+        fieldRepository.deleteByBriefId(briefId);
+        List<CompanyBriefField> fields = new ArrayList<>();
+        for (GeneratedBrief.Field entry : generated.fields()) {
+            CompanyBriefField field = newField(brief, entry.fieldKey(), entry.lang());
+            field.setText(blankToNull(entry.text()));
+            field.setEdited(false);
+            fields.add(field);
+        }
+        fieldRepository.saveAll(fields);
+        brief.setStatus(BriefStatus.READY);
+        briefRepository.save(brief);
+    }
+
+    @Transactional
+    public void markFailed(Long briefId) {
+        briefRepository.findById(briefId).ifPresent(brief -> {
+            brief.setStatus(BriefStatus.FAILED);
+            briefRepository.save(brief);
         });
+    }
+
+    private static String blankToNull(String text) {
+        return (text == null || text.isBlank()) ? null : text;
     }
 
     private CompanyBriefField newField(CompanyBrief brief, String fieldKey, String lang) {
