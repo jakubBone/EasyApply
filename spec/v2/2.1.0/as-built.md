@@ -43,3 +43,26 @@
   white-box-tested the old wiring) and gained `markReady`/`markFailed` unit tests. Rationale and
   alternatives:
   [`../../adr/ADR-004-transactional-event-brief-generation.md`](../../adr/ADR-004-transactional-event-brief-generation.md).
+
+## Step 2a — Spring AI dependency
+
+- **BOM pinned to 1.1.8** — the latest 1.1.x patch at build time (plan said "1.1.x"); the
+  starter's own version is BOM-managed.
+- **Classpath side effect: reactor-core re-broke `@AuthenticationPrincipal` in controller tests
+  (69 failures, every secured endpoint 500).** The plan's predicted failure mode (chat client
+  bean failing context startup without a key) was covered by `spring.ai.model.chat=none`; the
+  actual breakage came elsewhere. `spring-ai-model` brings `reactor-core`, whose presence
+  activates spring-security-test's `ReactorContextTestExecutionListener` (a no-op until then).
+  That listener runs before `@BeforeEach` and touches `TestSecurityContextHolder`, which caches
+  the then-empty context instance — so the tests' manual `SecurityContextHolder.setContext(...)`
+  became invisible to MockMvc's `testSecurityContext()` post-processor and the principal arrived
+  as `null`. Fixed test-side only: the nine controller test classes now set/clear the principal
+  via `TestSecurityContextHolder` (the spring-security-test API that writes both holders). No
+  production code changed.
+- **`.env`-independence verified by inspection, not the planned rename run:**
+  `application-test.properties` overrides every no-default placeholder in
+  `application.properties`, and `spring.ai.model.chat=none` keeps the only new
+  auto-configuration off in tests.
+- **Known gap until Step 2b:** with the starter on the classpath and no key wired, a local
+  `spring-boot:run` may fail at startup — the chat auto-configuration is disabled only in the
+  test profile.

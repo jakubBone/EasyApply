@@ -306,11 +306,11 @@ keyless (verify once with `.env` temporarily renamed). If anything fails in this
 step, the dependency — not our code — is the cause.
 
 **Checklist**
-- [ ] Spring AI BOM + `spring-ai-starter-model-google-genai` in `pom.xml`
-- [ ] `spring.ai.model.chat=none` in the test profile (+ why-comment)
-- [ ] `.env.example` updated
-- [ ] `./mvnw test` green, offline, `.env`-independent
-- [ ] as-built updated · checklist ticked
+- [x] Spring AI BOM + `spring-ai-starter-model-google-genai` in `pom.xml`
+- [x] `spring.ai.model.chat=none` in the test profile (+ why-comment)
+- [x] `.env.example` updated
+- [x] `./mvnw test` green, offline, `.env`-independent
+- [x] as-built updated · checklist ticked
 
 ### Step 2b — the Gemini adapter behind the port
 
