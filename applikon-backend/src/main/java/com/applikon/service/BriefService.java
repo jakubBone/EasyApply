@@ -26,9 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-// Cache-aside briefs, keys (user, company). Triggering is idempotent: a PENDING or READY brief is
-// never regenerated, only a FAILED one retries. Generation runs in the background; an edit is saved to
-// every locale of the shared brief, so a correction shows on every application to that company.
+// Triggering is idempotent: a PENDING or READY brief is never regenerated.
+// Only a FAILED one retries. Generation runs in the background.
+// Shown every application to the company
 @Service
 public class BriefService {
 

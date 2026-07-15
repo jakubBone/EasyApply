@@ -8,8 +8,9 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 // Runs generation off the request thread. Spring delivers the event only after the trigger
-// transaction commits, so the background thread always finds the PENDING row. Persistence goes
-// through BriefService, whose @Transactional methods give the writes their own transactions.
+// transaction commits, so the background thread always finds the PENDING row; an event published
+// outside a transaction is silently dropped, so publishers must be @Transactional. Persistence
+// goes through BriefService, whose @Transactional methods give the writes their own transactions.
 @Service
 public class BriefGenerationWorker {
 
