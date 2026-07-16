@@ -25,7 +25,8 @@
       "Bash(./mvnw test *)",
       "Bash(docker-compose --version)",
       "Read(//mnt/**)",
-      "Bash(./mvnw -q test)"
+      "Bash(./mvnw -q test)",
+      "WebFetch(domain:ai.google.dev)"
     ],
     "deny": [
       "Bash(rm -rf *)",

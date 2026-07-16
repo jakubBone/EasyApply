@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.TestSecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -57,12 +58,12 @@ class AuthControllerTest {
         SecurityContext ctx = SecurityContextHolder.createEmptyContext();
         ctx.setAuthentication(new UsernamePasswordAuthenticationToken(
                 principal, null, Collections.emptyList()));
-        SecurityContextHolder.setContext(ctx);
+        TestSecurityContextHolder.setContext(ctx);
     }
 
     @AfterEach
     void tearDown() {
-        SecurityContextHolder.clearContext();
+        TestSecurityContextHolder.clearContext();
     }
 
     @Test
@@ -79,7 +80,7 @@ class AuthControllerTest {
         SecurityContext ctx = SecurityContextHolder.createEmptyContext();
         ctx.setAuthentication(new UsernamePasswordAuthenticationToken(
                 principal, null, Collections.emptyList()));
-        SecurityContextHolder.setContext(ctx);
+        TestSecurityContextHolder.setContext(ctx);
 
         // Act
         mockMvc.perform(post("/api/auth/consent"))
