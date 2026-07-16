@@ -340,13 +340,13 @@ hallucination; provider key removed/invalid → `FAILED`, core app unaffected.
 offline; cost 0.
 
 **Checklist**
-- [ ] `GeminiBriefChatModel` (grounding, client-side timeout, error → `FAILED`)
-- [ ] Structured output covering each field × active locale, with per-field insufficient markers
-- [ ] Prompt sends company name + link only; link = priority hint
-- [ ] No annotation-driven AOP added (timeout/retry in client config)
+- [x] `GeminiBriefChatModel` (grounding, client-side timeout, error → `FAILED`)
+- [x] Structured output covering each field × active locale, with per-field insufficient markers
+- [x] Prompt sends company name + link only; link = priority hint
+- [x] No annotation-driven AOP added (timeout/retry in client config)
 - [ ] Separate dev/prod keys; RPD verified in AI Studio
 - [ ] Manual verification pass (known company / obscure company / dead key)
-- [ ] as-built updated · checklist ticked
+- [x] as-built updated · checklist ticked
 
 ---
 

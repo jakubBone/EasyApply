@@ -66,3 +66,37 @@
 - **Known gap until Step 2b:** with the starter on the classpath and no key wired, a local
   `spring-boot:run` may fail at startup — the chat auto-configuration is disabled only in the
   test profile.
+
+## Step 2b — Gemini adapter, then the provider switch to Groq
+
+- **The adapter shipped as planned** (`GeminiBriefChatModel` behind the port: one grounded
+  request for all fields × locales, defensive parse, any error → `FAILED`), plus
+  `GeminiClientConfig` replacing Spring AI's auto-configured client for two things it cannot
+  do: a hard 60 s per-request HTTP timeout and tolerating a blank key at startup. No
+  annotation-driven AOP, per plan and ADR-004.
+- **Framework bug found in manual verification: Spring AI 1.1.8 builds the Gemini client too
+  early.** Its `CachedContentServiceCondition` calls `getBean(GoogleGenAiChatModel.class)`
+  *during configuration parsing* — before Spring registers placeholder resolution — so
+  `@Value` handed the client the literal string `${spring.ai.google.genai.api-key:}` (34
+  chars) as the API key, and Google answered `400 API key not valid`. Boot-log tell:
+  `Cannot enhance @Configuration bean definition 'geminiClientConfig' ... created too early`.
+  Diagnosed via the config's key-length/prefix log line (the key itself never reaches logs).
+  Fix: `spring.ai.google.genai.chat.enable-cached-content=false` pinned in
+  `application.properties` — the property condition short-circuits first, so the buggy
+  condition never runs. The pin must survive Spring AI upgrades until fixed upstream.
+- **Product finding: free-tier grounding no longer exists for new Gemini users.** With the
+  key fixed, every grounded call returned `429` — grounded requests draw from a separate
+  quota pool that is empty on the free tier for all Gemini 3.x models (grounding billing
+  started 2026-01-05), and the only free-grounding models (2.5-flash / 2.5-flash-lite,
+  500 RPD) return `404 no longer available to new users`. ADR-001's cost-0 + grounded
+  constraints became unsatisfiable on Gemini; its designated fallback fired.
+- **Provider switched to Groq `groq/compound-mini`** (server-side web search, OpenAI-compatible
+  API via the Spring AI OpenAI starter). Both adapters stay behind the `BriefChatModel` port,
+  selected by `brief.provider` (+ `spring.ai.model.chat` — exactly one chat auto-configuration
+  active); the Gemini adapter is dormant, kept as the documented return path. Rationale and
+  rejected alternatives: [`../../adr/ADR-005-groq-compound-brief-provider.md`](../../adr/ADR-005-groq-compound-brief-provider.md).
+- **Verified end-to-end on dev with the Groq key**: real brief generated (PENDING → READY),
+  `./mvnw test` green offline (test profile pins `spring.ai.model.chat=none`; both adapters
+  are `@Profile("!test")`, so tests still run on the fake). Cost 0.
+- **Plan checklist item "RPD verified in AI Studio" is moot for Gemini** (provider dormant);
+  the operative limits are Groq's — visible in the Groq console per key.
