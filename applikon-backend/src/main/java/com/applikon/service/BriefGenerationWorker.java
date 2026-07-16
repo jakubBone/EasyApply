@@ -1,6 +1,8 @@
 package com.applikon.service;
 
 import com.applikon.service.ai.BriefChatModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
 // goes through BriefService, whose @Transactional methods give the writes their own transactions.
 @Service
 public class BriefGenerationWorker {
+
+    private static final Logger log = LoggerFactory.getLogger(BriefGenerationWorker.class);
 
     private final BriefChatModel briefChatModel;
     private final BriefService briefService;
@@ -35,6 +39,7 @@ public class BriefGenerationWorker {
                 briefService.markReady(event.briefId(),
                         briefChatModel.generate(event.companyName(), event.jobAdLink()));
             } catch (Exception e) {
+                log.warn("Brief generation failed for brief {}", event.briefId(), e);
                 briefService.markFailed(event.briefId());
             }
         });
