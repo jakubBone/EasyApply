@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -16,16 +16,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// Gemini adapter behind the BriefChatModel port (ADR-001): one Google-Search-grounded request
-// asks for every field in every active locale. Only the company name and the job-ad link ever
-// enter the prompt. Anything malformed or incomplete in the reply throws, which the worker turns
-// into a terminal FAILED — a partial brief is never stored.
-// Inactive since ADR-005 (brief.provider switch): Gemini grounding went paid-tier-only for new
-// users, so Groq compound took over. Kept as the documented return path.
+// Groq adapter behind the BriefChatModel port - the active brief provider (ADR-005). Groq's
+// compound system runs web search server side, replacing Gemini grounding after Google closed
+// it to free-tier users (the fallback ADR-001 designated). Deliberately self-contained: prompt
+// and parsing mirror GeminiBriefChatModel; consolidate only if a third provider ever appears.
 @Component
 @Profile("!test")
-@ConditionalOnProperty(name = "brief.provider", havingValue = "gemini", matchIfMissing = true)
-public class GeminiBriefChatModel implements BriefChatModel {
+@ConditionalOnProperty(name = "brief.provider", havingValue = "groq")
+public class GroqBriefChatModel implements BriefChatModel {
 
     // What each BriefLocales.FIELD_KEYS entry means, spelled out for the model
     private static final Map<String, String> FIELD_HINTS = Map.of(
@@ -37,20 +35,21 @@ public class GeminiBriefChatModel implements BriefChatModel {
     private final ChatModel chatModel;
     private final ObjectMapper objectMapper;
 
-    public GeminiBriefChatModel(ChatModel chatModel, ObjectMapper objectMapper) {
+    public GroqBriefChatModel(ChatModel chatModel, ObjectMapper objectMapper) {
         this.chatModel = chatModel;
         this.objectMapper = objectMapper;
     }
 
     @Override
     public GeneratedBrief generate(String companyName, String jobAdLink) {
-        GoogleGenAiChatOptions options = GoogleGenAiChatOptions.builder()
-                .googleSearchRetrieval(true)
+        // No tool flag needed: compound decides server side when to search; the prompt's
+        // explicit "search the web" instruction is what triggers it
+        OpenAiChatOptions options = OpenAiChatOptions.builder()
                 .temperature(0.2)
                 .build();
         Generation result = chatModel.call(new Prompt(buildPrompt(companyName, jobAdLink), options)).getResult();
         if (result == null || result.getOutput().getText() == null) {
-            throw new IllegalStateException("Empty Gemini response");
+            throw new IllegalStateException("Empty Groq response");
         }
         return parse(result.getOutput().getText());
     }
@@ -68,7 +67,7 @@ public class GeminiBriefChatModel implements BriefChatModel {
         String linkHint = jobAdLink == null || jobAdLink.isBlank() ? ""
                 : "Prioritize information from the job ad at %s when relevant.\n".formatted(jobAdLink);
         return """
-                You research companies for job applicants. Using Google Search, find verifiable \
+                You research companies for job applicants. Search the web for verifiable \
                 public information about the company "%s".
                 %sReply with ONLY one JSON object, no prose and no markdown, exactly in this shape:
                 %s
@@ -85,18 +84,18 @@ public class GeminiBriefChatModel implements BriefChatModel {
         try {
             root = objectMapper.readTree(extractJsonObject(answer));
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Gemini response is not valid JSON", e);
+            throw new IllegalStateException("Groq response is not valid JSON", e);
         }
         List<GeneratedBrief.Field> fields = new ArrayList<>();
         for (String key : BriefLocales.FIELD_KEYS) {
             JsonNode byLang = root.get(key);
             if (byLang == null || !byLang.isObject()) {
-                throw new IllegalStateException("Gemini response lacks field " + key);
+                throw new IllegalStateException("Groq response lacks field " + key);
             }
             for (String lang : BriefLocales.LOCALES) {
                 JsonNode value = byLang.get(lang);
                 if (value == null || !(value.isNull() || value.isTextual())) {
-                    throw new IllegalStateException("Gemini response lacks entry " + key + "/" + lang);
+                    throw new IllegalStateException("Groq response lacks entry " + key + "/" + lang);
                 }
                 String text = value.isTextual() && !value.asText().isBlank() ? value.asText() : null;
                 fields.add(new GeneratedBrief.Field(key, lang, text));
@@ -110,7 +109,7 @@ public class GeminiBriefChatModel implements BriefChatModel {
         int start = answer.indexOf('{');
         int end = answer.lastIndexOf('}');
         if (start < 0 || end < start) {
-            throw new IllegalStateException("Gemini response contains no JSON object");
+            throw new IllegalStateException("Groq response contains no JSON object");
         }
         return answer.substring(start, end + 1);
     }

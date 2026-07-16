@@ -113,6 +113,11 @@
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-starter-model-google-genai</artifactId>
 		</dependency>
+		<!-- Spring AI - OpenAI-compatible client, points at Groq for the compound spike -->
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-starter-model-openai</artifactId>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
