@@ -100,3 +100,70 @@
   are `@Profile("!test")`, so tests still run on the fake). Cost 0.
 - **Plan checklist item "RPD verified in AI Studio" is moot for Gemini** (provider dormant);
   the operative limits are Groq's — visible in the Groq console per key.
+
+## Step 3 — Frontend
+
+- **"No brief yet" is a 404, not an empty body.** `BriefService.get` throws
+  `EntityNotFoundException` when the company has no brief, so `fetchBrief` maps 404 → `null`
+  and every other non-OK status still throws. `null` is what makes the section show the
+  generate button; the plan's DTO sketch did not cover the not-generated case.
+- **The section renders in two places, so the ✨ button was built as its own export.**
+  `BriefSection.tsx` exports `GenerateBriefButton` (header action) and `BriefFields` (the
+  states + rows) rather than one component: the cheat-sheet page puts the button in
+  `CollapsibleSection`'s `action` slot, while the application-details page has the company prep
+  as a *sub-block* whose head carries the Add/Edit link. Both read the same React Query cache,
+  so they stay in step. The plan (§Step 3) described only the `CollapsibleSection` slot.
+- **Only *changed* brief fields are sent on save.** The edit modal snapshots the brief's texts
+  when it opens and diffs against that snapshot, so saving after touching one field flags only
+  that field `edited=true`. Submitting all four would mark untouched generated text as the
+  user's own — and `edited=true` is exactly what puts a field in the GDPR export (§1.10).
+- **Brief fields sit between the salary row and "What do you know about us?"**, inside
+  `CompanyPrepReadonly`, so both pages get them from one place. The rows reuse `.prep-qa` with
+  a violet left border to separate generated content from the user's own answers.
+- **Language fallback beyond the plan:** a field shows `texts[currentLang]`, but falls back to
+  any other non-empty locale before declaring "not enough public info", so a provider that
+  returns only one language still renders. Empty-in-every-locale is the insufficient marker.
+- **Test-suite fix: `pool: 'threads'` in `vite.config.ts`.** Adding an 18th test file made the
+  suite fail intermittently (~1 run in 5) with `does not provide an export named 'parse'`
+  (cookie) / `'getConfig'` (@testing-library/dom) — a different file each time, always passing
+  in isolation and serially. Vitest's default `forks` pool resolves externalized CJS deps
+  natively per process, and that interop raced; threads share one process's resolution.
+  Verified with 12 consecutive full-suite runs. Unrelated to the brief itself — the extra file
+  only crossed the threshold that exposed it.
+- **Verified in-session:** `npm run test:run` 130 tests / 18 files green, `npm run lint` and
+  `npm run build` clean. `BriefSection.test.tsx` covers the plan's list (button on a brief-less
+  application, generating state, four fields, language switch, insufficient marker, retry from
+  `FAILED`, no regenerate control when `READY`) plus the changed-fields-only save.
+  `CheatSheet.test.tsx` gained a `useBrief` mock — the company section now reads that hook and
+  the spec renders without a `QueryClientProvider`.
+- **Not done in this step:** the Cypress E2E happy path is Step 4, as planned.
+
+### Fixed after the first manual verification pass
+
+- **A cleared field no longer claims "not enough public info".** The marker was shown for any
+  empty text, conflating "the model found nothing" (`edited=false`) with "the user deleted
+  their own answer" (`edited=true`). Only an untouched field can make that claim; a cleared one
+  falls back to `cheatSheet.empty` (`-`), the same empty state every other prep row uses.
+- **An unanswered "What do you know about us?" is hidden once a brief is `READY`** — in the
+  read-only rows and, decided at open, in the edit modal. With four brief rows above it, an
+  empty fixed question is only noise. It is a **display rule, not a data change**: the answer
+  stays in `screening_answers` and in the GDPR export, the row stays in the save payload, and
+  a filled answer is never hidden — hiding the user's own text would put it out of reach.
+  Clearing an answer therefore hides its row (next open, for the modal) and writing one brings
+  it back. The modal freezes the decision at open so the field cannot vanish mid-typing.
+  US-3.1 places the brief "next to" this question; that still holds whenever it has content.
+
+### Raised in verification, deliberately not done
+
+- **Regenerating a ready brief (whole or per-field)** — contradicts US-2.1 and ADR-001 §5
+  ("a ready brief is final"). The quota argument behind that rule weakened with the move to
+  Groq, so it is revisitable, but naive regeneration also destroys user edits: `markReady`
+  deletes and rewrites every field, and edited fields are personal data in the export. Needs
+  its own ADR settling the edit-collision policy first.
+- **Removing "What do you know about us?" outright** — US-3.1 keeps it, and the field holds
+  user-written text from v1 that must stay reachable. The empty-row rule above covers the
+  actual complaint without touching data.
+- **Dropping the job-ad link from the prompt** — US-1.1 mandates sending it, but it anchors
+  nothing (the company name is the prompt's subject, so a link to a different company changes
+  no output) while widening data egress and the injection surface ADR-001 §4 describes.
+  Proposed for Step 4 as ADR-006, together with parking per-offer generation in `spec/post/`.

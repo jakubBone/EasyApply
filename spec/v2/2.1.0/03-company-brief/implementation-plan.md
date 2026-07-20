@@ -388,12 +388,12 @@ in both languages; insufficient field shows the marker; no regenerate control wh
 `build` green (verified in-session).
 
 **Checklist**
-- [ ] Hooks/api wired to the three endpoints (poll while `PENDING`)
-- [ ] ✨ Generate button in the section header next to Add/Edit, on every brief-less application
-- [ ] Section states: button / generating / failed+try-again / 4 Q&A rows; no regenerate when ready
-- [ ] Edit modal extended; global edit; edited text shows in both languages; language switch instant
-- [ ] Insufficient-info marker + full i18n PL/EN
-- [ ] vitest + lint + build green (in-session) · as-built updated · checklist ticked
+- [x] Hooks/api wired to the three endpoints (poll while `PENDING`)
+- [x] ✨ Generate button in the section header next to Add/Edit, on every brief-less application
+- [x] Section states: button / generating / failed+try-again / 4 Q&A rows; no regenerate when ready
+- [x] Edit modal extended; global edit; edited text shows in both languages; language switch instant
+- [x] Insufficient-info marker + full i18n PL/EN
+- [x] vitest + lint + build green (in-session) · as-built updated · checklist ticked
 
 ---
 
