@@ -410,6 +410,28 @@ in both languages; insufficient field shows the marker; no regenerate control wh
 - Deploy per `spec/deployment/deployment-hetzner.md` (prod API key configured as
   an env var on the server, never committed; dev-key quota untouched).
 
+### Carried in from Step 3 verification (not foreseen when this plan was written)
+
+- **A blank Groq key must stop briefs, not the app.** `GeminiClientConfig` replaces
+  Spring AI's auto-configured client precisely so a missing key fails the single
+  generation call (terminal `FAILED`) instead of startup — but the switch to Groq
+  (ADR-005) never got the equivalent. The Groq path runs on
+  `OpenAiChatAutoConfiguration`, which asserts a non-blank key while building the
+  bean, so a missing or rotated key takes the **whole application** down, contrary
+  to §0's graceful-degradation goal. Needs an own `OpenAiApi`/chat-model bean
+  carrying the same hard per-request timeout the auto-configuration also lacks.
+  Found when the stack first ran in Docker with an empty key.
+- **Drop the job-ad link from the prompt (ADR-006).** §1.4 / US-1.1 send company
+  name + link, the link as a priority hint. In practice it anchors nothing — the
+  company name is the prompt's subject, so a link to a *different* company changes
+  no output (verified with an EPAM application carrying a Samsung link) — while
+  widening both data egress and the injection surface of ADR-001 §4. The ADR
+  supersedes that half of US-1.1; the port drops to `generate(companyName)`.
+- **Park per-offer generation in `spec/post/`.** Generating against the specific
+  offer (project, stack, duties) is a different object from a company brief: the
+  brief is cached per `(user, company)`, an offer is per application. Own topic,
+  own data model — not a variation of this one.
+
 **DoD** — working deploy with the brief live on prod; CHANGELOG/versions
 consistent; `npm run e2e` green locally.
 
@@ -419,6 +441,9 @@ consistent; `npm run e2e` green locally.
 - [ ] CHANGELOG `2.1.0` + version bumps
 - [ ] Deployed; prod key separate from dev; verified live
 - [ ] LinkedIn post (per release ritual)
+- [ ] Groq client bean: blank key fails generation only, hard per-request timeout
+- [ ] ADR-006 + prompt/port drop the job-ad link
+- [ ] Per-offer generation staged in `spec/post/`
 
 ---
 
