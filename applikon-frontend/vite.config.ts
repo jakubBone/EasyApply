@@ -10,5 +10,10 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     css: true,
+    // Threads, not the default forks. Each fork resolves externalized CJS deps natively and
+    // on its own, and that interop intermittently lost named exports ("does not provide an
+    // export named 'parse'/'getConfig'" from cookie / @testing-library/dom) — which file hit
+    // it varied per run. Threads share one process's resolution, so the suite is stable.
+    pool: 'threads',
   },
 })
