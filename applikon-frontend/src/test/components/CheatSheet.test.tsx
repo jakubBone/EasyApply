@@ -8,9 +8,13 @@ import {
   useApplicationScreeningAnswers,
   useSaveApplicationScreeningAnswers,
 } from '../../hooks/useScreeningAnswers'
+import { useBrief, useGenerateBrief, useEditBrief } from '../../hooks/useBrief'
 import type { Application } from '../../types/domain'
 
 vi.mock('../../hooks/useScreeningAnswers')
+// The company section also reads the AI brief; this spec is about the prep hub, so it
+// runs with no brief. The brief's own behaviour is covered by BriefSection.test.tsx.
+vi.mock('../../hooks/useBrief')
 // The app form is heavy and only used for salary editing — stub it out here.
 vi.mock('../../components/applications/ApplicationForm', () => ({
   ApplicationForm: () => <div data-testid="app-form" />,
@@ -42,6 +46,9 @@ describe('CheatSheet hub', () => {
     vi.mocked(useSaveScreeningAnswers).mockReturnValue({ mutate: vi.fn(), isPending: false } as never)
     vi.mocked(useApplicationScreeningAnswers).mockReturnValue({ data: [], isLoading: false } as never)
     vi.mocked(useSaveApplicationScreeningAnswers).mockReturnValue({ mutate: vi.fn(), isPending: false } as never)
+    vi.mocked(useBrief).mockReturnValue({ data: null, isLoading: false } as never)
+    vi.mocked(useGenerateBrief).mockReturnValue({ mutate: vi.fn(), isPending: false } as never)
+    vi.mocked(useEditBrief).mockReturnValue({ mutate: vi.fn(), isPending: false } as never)
   })
 
   it('shows a hint when there are no applications', () => {
