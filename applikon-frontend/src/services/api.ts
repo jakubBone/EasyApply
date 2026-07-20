@@ -2,6 +2,8 @@ import type {
   Application,
   ApplicationRequest,
   BadgeStats,
+  BriefFieldEdit,
+  BriefResponse,
   CV,
   Note,
   NoteCategory,
@@ -171,6 +173,38 @@ export const saveApplicationScreeningAnswers = async (
   })
   if (!response.ok) throw new Error('api.saveApplicationScreeningAnswers')
   return response.json() as Promise<ScreeningAnswer[]>
+}
+
+// ============================================================
+// Company brief (AI)
+// ============================================================
+
+/** Starts generation (or returns the cached brief). Always 202 — the body carries the status. */
+export const triggerBrief = async (applicationId: number): Promise<BriefResponse> => {
+  const response = await apiFetch(`${API_URL}/applications/${applicationId}/brief`, {
+    method: 'POST',
+    headers: getHeaders(),
+  })
+  if (!response.ok) throw new Error('api.triggerBrief')
+  return response.json() as Promise<BriefResponse>
+}
+
+/** The application's company brief, or `null` when none was ever generated (backend answers 404). */
+export const fetchBrief = async (applicationId: number): Promise<BriefResponse | null> => {
+  const response = await apiFetch(`${API_URL}/applications/${applicationId}/brief`, { headers: getHeaders() })
+  if (response.status === 404) return null
+  if (!response.ok) throw new Error('api.fetchBrief')
+  return response.json() as Promise<BriefResponse>
+}
+
+/** Writes the user's own text to the company's brief — every locale, on every application to it. */
+export const editBrief = async (applicationId: number, fields: BriefFieldEdit[]): Promise<void> => {
+  const response = await apiFetch(`${API_URL}/applications/${applicationId}/brief`, {
+    method: 'PUT',
+    headers: getHeaders('application/json'),
+    body: JSON.stringify({ fields }),
+  })
+  if (!response.ok) throw new Error('api.editBrief')
 }
 
 export const addStage = async (id: number, stageName: string): Promise<Application> => {

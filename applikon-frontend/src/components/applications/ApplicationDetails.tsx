@@ -4,6 +4,7 @@ import { NotesList } from '../notes/NotesList'
 import { ApplicationForm } from './ApplicationForm'
 import { StageModal } from '../kanban/StageModal'
 import { EndModal } from '../kanban/EndModal'
+import { GenerateBriefButton } from '../prep/BriefSection'
 import { CollapsibleSection } from '../prep/CollapsibleSection'
 import { CompanyPrepReadonly, GlobalAnswersReadonly } from '../prep/PrepReadonly'
 import { CompanyQuestionsModal } from '../prep/CompanyQuestionsModal'
@@ -261,7 +262,10 @@ export function ApplicationDetails({ application, onBack, onDelete, onStageChang
           <div className="prep-subblock" style={{ '--section-accent': ACCENT_CHEAT } as unknown as CSSProperties}>
             <div className="prep-subblock-head">
               <span style={{ color: ACCENT_CHEAT }}>🏢 {t('cheatSheet.companySection')}</span>
-              <button className="prep-edit-link" onClick={() => setEditNote(true)}>{t('cheatSheet.edit')}</button>
+              <span className="prep-subblock-actions">
+                <GenerateBriefButton applicationId={application.id} />
+                <button className="prep-edit-link" onClick={() => setEditNote(true)}>{t('cheatSheet.edit')}</button>
+              </span>
             </div>
             <CompanyPrepReadonly application={application} salary={salary} />
           </div>

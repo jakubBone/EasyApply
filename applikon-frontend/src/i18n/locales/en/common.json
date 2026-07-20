@@ -42,6 +42,20 @@
     "editGlobalTitle": "General questions",
     "empty": "-"
   },
+  "brief": {
+    "generate": "Generate brief",
+    "generating": "Generating the brief...",
+    "failed": "Could not generate the brief. Try again in a moment.",
+    "retry": "Try again",
+    "insufficient": "Not enough public info",
+    "editTitle": "Company brief",
+    "fields": {
+      "industry": "Industry / what the company does",
+      "product_customers": "Product and customers",
+      "tech_stack": "Tech stack",
+      "size_stage": "Size / stage"
+    }
+  },
   "stale": {
     "banner": "Applications with no response for over 60 days: {{n}}. Consider archiving.",
     "cardBadge": "No response >60 days",

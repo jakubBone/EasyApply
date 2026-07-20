@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { GenerateBriefButton } from '../prep/BriefSection'
 import { CollapsibleSection } from '../prep/CollapsibleSection'
 import { CompanyPrepReadonly, GlobalAnswersReadonly } from '../prep/PrepReadonly'
 import { CompanyQuestionsModal } from '../prep/CompanyQuestionsModal'
@@ -57,7 +58,12 @@ export function CheatSheet({ applications }: { applications: Application[] }) {
             icon="🏢"
             accent={COMPANY_ACCENT}
             dataCy="section-company"
-            action={<button className="prep-edit-link" data-cy="edit-company" onClick={() => setEditNote(true)}>{t('cheatSheet.edit')}</button>}
+            action={
+              <>
+                <GenerateBriefButton applicationId={selected.id} />
+                <button className="prep-edit-link" data-cy="edit-company" onClick={() => setEditNote(true)}>{t('cheatSheet.edit')}</button>
+              </>
+            }
           >
             <CompanyPrepReadonly application={selected} salary={salary} />
           </CollapsibleSection>

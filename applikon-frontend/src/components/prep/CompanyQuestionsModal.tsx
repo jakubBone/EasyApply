@@ -1,11 +1,22 @@
 import { useState } from 'react'
+import type { ParseKeys } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { useApplicationScreeningAnswers, useSaveApplicationScreeningAnswers } from '../../hooks/useScreeningAnswers'
+import { useBrief, useEditBrief } from '../../hooks/useBrief'
 import { FIXED_COMPANY_KEY } from './globalAnswers'
-import type { Application, ScreeningAnswer, ScreeningAnswerRequest } from '../../types/domain'
+import { BRIEF_FIELD_KEYS } from '../../types/domain'
+import type {
+  Application,
+  BriefFieldEdit,
+  BriefResponse,
+  ScreeningAnswer,
+  ScreeningAnswerRequest,
+} from '../../types/domain'
 import './prep.css'
 
 const MAX_ANSWER = 1000
+// Matches BriefEditRequest.Field's @Size(max = 4000)
+const MAX_BRIEF = 4000
 
 interface Item {
   label: string | null
@@ -30,30 +41,65 @@ const toRequest = (items: Item[]): ScreeningAnswerRequest[] =>
       : { questionKey: FIXED_COMPANY_KEY, label: null, answer: it.answer, custom: false },
   )
 
+/** The brief's texts in the current app language, keyed by field — the editor's starting point. */
+function buildBriefTexts(brief: BriefResponse | null | undefined, lang: string): Record<string, string> {
+  const texts: Record<string, string> = {}
+  if (brief?.status !== 'READY') return texts
+  for (const key of BRIEF_FIELD_KEYS) {
+    texts[key] = brief.fields.find(f => f.key === key)?.texts[lang] ?? ''
+  }
+  return texts
+}
+
 /**
  * Modal editor for the per-application "About the company" prep — same layout/behaviour as
  * the global answers modal (fixed question + add/remove custom questions), saved as a
- * replace-all set of per-application screening answers.
+ * replace-all set of per-application screening answers. A generated brief adds its four
+ * fields on top; those save to the company's brief, not to this application.
  */
 export function CompanyQuestionsModal({ application, onClose }: { application: Application; onClose: () => void }) {
   const { data, isLoading } = useApplicationScreeningAnswers(application.id)
+  const { data: brief, isLoading: briefLoading } = useBrief(application.id)
   // Seed the editor only once the saved set is loaded, so custom questions are not lost.
-  if (isLoading) return <div className="prep-modal-overlay" onClick={onClose} />
-  return <CompanyQuestionsEditor applicationId={application.id} initial={data ?? []} onClose={onClose} />
+  if (isLoading || briefLoading) return <div className="prep-modal-overlay" onClick={onClose} />
+  return (
+    <CompanyQuestionsEditor
+      applicationId={application.id}
+      initial={data ?? []}
+      brief={brief ?? null}
+      onClose={onClose}
+    />
+  )
 }
 
 function CompanyQuestionsEditor({
   applicationId,
   initial,
+  brief,
   onClose,
 }: {
   applicationId: number
   initial: ScreeningAnswer[]
+  brief: BriefResponse | null
   onClose: () => void
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const lang = i18n.language.split('-')[0]
   const { mutate, isPending } = useSaveApplicationScreeningAnswers(applicationId)
+  const { mutate: saveBrief, isPending: savingBrief } = useEditBrief(applicationId)
   const [items, setItems] = useState<Item[]>(() => buildItems(initial))
+  const [briefTexts, setBriefTexts] = useState<Record<string, string>>(() => buildBriefTexts(brief, lang))
+  // The untouched starting point — only fields the user actually changed are sent, so a
+  // generated field is never flagged as the user's own text (it would enter the GDPR export).
+  const [initialBriefTexts] = useState(() => buildBriefTexts(brief, lang))
+  const showBrief = brief?.status === 'READY'
+  // Same rule as the read-only rows: a ready brief makes an unanswered "What do you know
+  // about us?" dead weight. Frozen at open, so the field cannot vanish from under the cursor
+  // when the last character is deleted — clearing it hides the field on the next open. It
+  // stays in `items` either way, so saving never drops the stored row.
+  const [showFixedQuestion] = useState(
+    () => buildItems(initial)[0].answer.trim() !== '' || brief?.status !== 'READY',
+  )
 
   const setAnswer = (index: number, value: string) =>
     setItems(items.map((it, i) => (i === index ? { ...it, answer: value } : it)))
@@ -62,7 +108,20 @@ function CompanyQuestionsEditor({
   const addCustom = () => setItems([...items, { label: '', answer: '', custom: true }])
   const removeCustom = (index: number) => setItems(items.filter((_, i) => i !== index))
 
-  const save = () => mutate(toRequest(items), { onSuccess: onClose })
+  const changedBriefFields = (): BriefFieldEdit[] =>
+    BRIEF_FIELD_KEYS.filter(key => briefTexts[key] !== initialBriefTexts[key]).map(key => ({
+      fieldKey: key,
+      text: briefTexts[key],
+    }))
+
+  // Brief edits go to the company's brief, the answers to this application — save both,
+  // and close only once the answers land.
+  const save = () => {
+    const briefEdits = showBrief ? changedBriefFields() : []
+    const saveAnswers = () => mutate(toRequest(items), { onSuccess: onClose })
+    if (briefEdits.length > 0) saveBrief(briefEdits, { onSuccess: saveAnswers })
+    else saveAnswers()
+  }
 
   return (
     <div className="prep-modal-overlay" onClick={onClose}>
@@ -72,7 +131,22 @@ function CompanyQuestionsEditor({
           <button className="prep-modal-close" onClick={onClose} aria-label={t('app.close')}>×</button>
         </div>
         <div className="prep-modal-body">
-          {items.map((item, index) => (
+          {showBrief && BRIEF_FIELD_KEYS.map(key => (
+            <div className="prep-field" key={`brief-${key}`}>
+              <div className="prep-field-head">
+                <span className="prep-field-label">✨ {t(`brief.fields.${key}` as unknown as ParseKeys)}</span>
+              </div>
+              <textarea
+                className="prep-textarea"
+                data-cy={`brief-edit-${key}`}
+                value={briefTexts[key] ?? ''}
+                maxLength={MAX_BRIEF}
+                placeholder={t('brief.insufficient')}
+                onChange={e => setBriefTexts({ ...briefTexts, [key]: e.target.value })}
+              />
+            </div>
+          ))}
+          {items.map((item, index) => !item.custom && !showFixedQuestion ? null : (
             <div className="prep-field" key={item.custom ? `custom-${index}` : 'fixed'}>
               <div className="prep-field-head">
                 {item.custom ? (
@@ -106,7 +180,7 @@ function CompanyQuestionsEditor({
         </div>
         <div className="prep-modal-actions">
           <button className="prep-modal-btn cancel" onClick={onClose}>{t('notes.cancel')}</button>
-          <button className="prep-modal-btn save" data-cy="prep-save" onClick={save} disabled={isPending}>{t('notes.save')}</button>
+          <button className="prep-modal-btn save" data-cy="prep-save" onClick={save} disabled={isPending || savingBrief}>{t('notes.save')}</button>
         </div>
       </div>
     </div>
