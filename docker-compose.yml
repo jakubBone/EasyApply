@@ -48,6 +48,9 @@ services:
       FRONTEND_URL: ${FRONTEND_URL}
       ADMIN_KEY: ${ADMIN_KEY}
       APP_TOKEN_HMAC_SECRET: ${APP_TOKEN_HMAC_SECRET}
+      # Both brief providers; brief.provider picks which one is read. Blank is tolerated —
+      # a missing key fails generation (brief ends FAILED), never startup.
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:
       - uploads_data:/app/uploads
