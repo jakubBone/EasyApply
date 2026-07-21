@@ -153,8 +153,8 @@ Open `.env` and fill in the required values:
 | `APP_TOKEN_HMAC_SECRET` | any random string, e.g. output of `openssl rand -base64 32` |
 | `GROQ_API_KEY` | free key from [console.groq.com/keys](https://console.groq.com/keys) - powers company brief generation |
 
-> `GROQ_API_KEY` must not be left empty: the backend fails to start without it.
-> `GEMINI_API_KEY` can stay empty - it is an alternative provider, off by default.
+> Both AI keys may be left empty - the app still starts, only brief generation fails.
+> `GEMINI_API_KEY` is an alternative provider, off by default.
 
 Then start the app:
 

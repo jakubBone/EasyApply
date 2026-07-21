@@ -48,11 +48,9 @@ services:
       FRONTEND_URL: ${FRONTEND_URL}
       ADMIN_KEY: ${ADMIN_KEY}
       APP_TOKEN_HMAC_SECRET: ${APP_TOKEN_HMAC_SECRET}
-      # Both brief providers; brief.provider picks which one is read.
-      # GROQ_API_KEY is REQUIRED while brief.provider=groq: Spring AI's auto-configured OpenAI
-      # client asserts a non-blank key when the bean is built, so a missing one fails startup —
-      # the whole app, not just briefs. GEMINI_API_KEY may be blank; GeminiClientConfig tolerates
-      # it and lets the generation call fail instead (terminal FAILED brief).
+      # Both brief providers; brief.provider picks which one is read. Either key may be blank:
+      # GroqClientConfig and GeminiClientConfig own their clients, so a missing or rotated key
+      # fails the single generation call (terminal FAILED brief), never application startup.
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:

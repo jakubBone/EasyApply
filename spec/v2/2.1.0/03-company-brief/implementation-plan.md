@@ -441,7 +441,7 @@ consistent; `npm run e2e` green locally.
 - [ ] CHANGELOG `2.1.0` + version bumps
 - [ ] Deployed; prod key separate from dev; verified live
 - [ ] LinkedIn post (per release ritual)
-- [ ] Groq client bean: blank key fails generation only, hard per-request timeout
+- [x] Groq client bean: blank key fails generation only, hard per-request timeout
 - [ ] ADR-006 + prompt/port drop the job-ad link
 - [ ] Per-offer generation staged in `spec/post/`
 

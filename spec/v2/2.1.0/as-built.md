@@ -167,3 +167,30 @@
   nothing (the company name is the prompt's subject, so a link to a different company changes
   no output) while widening data egress and the injection surface ADR-001 §4 describes.
   Proposed for Step 4 as ADR-006, together with parking per-offer generation in `spec/post/`.
+
+## Step 4 — Release chores
+
+- **`GroqClientConfig` — the blank-key hazard had six sources, not one.** The finding carried
+  into Step 4 described a single missing piece: the Groq path ran on Spring AI's auto-configured
+  OpenAI client, which asserts a non-blank key while building the bean, so a missing or rotated
+  key took the whole application down. Built the counterpart of `GeminiClientConfig`: an own
+  `OpenAiApi` bean (`OpenAiChatAutoConfiguration` declares `openAiApi(..)` and
+  `openAiChatModel(OpenAiApi, ..)` as separate `@ConditionalOnMissingBean` beans, so supplying
+  the api makes it back off from building its own — and from the assertion), the key wrapped in
+  `SimpleApiKey`, whose contract is `Assert.notNull`, not `hasText`, plus a hard 10 s connect /
+  60 s read timeout the auto-configured `RestClient` does not carry. `GroqBriefChatModel` still
+  injects `ChatModel` and did not change.
+- **That fixed only the chat path.** With a blank key, startup still died — now in
+  `OpenAiAudioSpeechAutoConfiguration`. The OpenAI starter ships **six** model
+  auto-configurations (chat, embedding, image, moderation, audio speech, audio transcription),
+  each activating from the classpath alone and each running the same
+  `OpenAIAutoConfigurationUtil.resolveConnectionProperties` assertion. The five unused ones are
+  pinned to `none` in `application.properties`, which also stops five unused model beans from
+  being built on every start. The Gemini side needs no equivalent — its embedding connection
+  auto-configuration asserts `project-id`/`location` (the Vertex path), not a key.
+- **Verified on dev:** with `GROQ_API_KEY` blank the application starts, logs
+  `Groq client: api key MISSING (0 chars, prefix '')`, and the rest of the tracker works;
+  with the key restored, generation works as before.
+- **Docs corrected in step:** `docker-compose.yml`, `applikon-backend/.env.example` and the
+  README variable table all stated that a blank `GROQ_API_KEY` prevents startup — true when
+  written, false as of this change.
