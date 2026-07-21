@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,7 +31,7 @@ class GeminiBriefChatModelTest {
     @Test
     @DisplayName("parses a fenced JSON reply into one entry per field x locale")
     void parsesFencedJson() {
-        GeneratedBrief brief = adapterReturning("```json\n" + FULL_JSON + "\n```").generate("Acme", null);
+        GeneratedBrief brief = adapterReturning("```json\n" + FULL_JSON + "\n```").generate("Acme");
 
         assertEquals(BriefLocales.FIELD_KEYS.size() * BriefLocales.LOCALES.size(), brief.fields().size());
         assertEquals("Fintech (en)", textOf(brief, "industry", "en"));
@@ -40,7 +41,7 @@ class GeminiBriefChatModelTest {
     @Test
     @DisplayName("JSON null and blank strings become the insufficient-info marker (null text)")
     void nullAndBlankMeanInsufficient() {
-        GeneratedBrief brief = adapterReturning(FULL_JSON.replace("\"Java\"", "\"  \"")).generate("Acme", null);
+        GeneratedBrief brief = adapterReturning(FULL_JSON.replace("\"Java\"", "\"  \"")).generate("Acme");
 
         assertNull(textOf(brief, "size_stage", "pl"));
         assertNull(textOf(brief, "size_stage", "en"));
@@ -52,30 +53,31 @@ class GeminiBriefChatModelTest {
     void missingEntryThrows() {
         String missingEn = FULL_JSON.replace(", \"en\": \"Fintech (en)\"", "");
 
-        assertThrows(IllegalStateException.class, () -> adapterReturning(missingEn).generate("Acme", null));
+        assertThrows(IllegalStateException.class, () -> adapterReturning(missingEn).generate("Acme"));
     }
 
     @Test
     @DisplayName("a reply without a JSON object throws")
     void proseThrows() {
         assertThrows(IllegalStateException.class,
-                () -> adapterReturning("I could not find anything about this company.").generate("Acme", null));
+                () -> adapterReturning("I could not find anything about this company.").generate("Acme"));
     }
 
     @Test
-    @DisplayName("prompt carries the company name and the job-ad link as a priority hint")
-    void promptCarriesNameAndLink() {
+    @DisplayName("prompt carries the company name and no URL")
+    void promptCarriesNameOnly() {
         AtomicReference<Prompt> seen = new AtomicReference<>();
         ChatModel stub = prompt -> {
             seen.set(prompt);
             return response(FULL_JSON);
         };
 
-        new GeminiBriefChatModel(stub, new ObjectMapper()).generate("Acme", "https://jobs.example/1");
+        new GeminiBriefChatModel(stub, new ObjectMapper()).generate("Acme");
 
         String prompt = seen.get().getContents();
         assertTrue(prompt.contains("Acme"));
-        assertTrue(prompt.contains("https://jobs.example/1"));
+        // ADR-006: the company name is the only thing that reaches the provider
+        assertFalse(prompt.contains("http"));
     }
 
     private GeminiBriefChatModel adapterReturning(String answer) {

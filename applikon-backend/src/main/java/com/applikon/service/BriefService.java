@@ -69,7 +69,7 @@ public class BriefService {
         }
         brief.setStatus(BriefStatus.PENDING);            // fresh or retry-from-FAILED
         brief = briefRepository.save(brief);
-        eventPublisher.publishEvent(new BriefGenerationRequested(brief.getId(), company, application.getLink()));
+        eventPublisher.publishEvent(new BriefGenerationRequested(brief.getId(), company));
         return buildResponse(brief);
     }
 

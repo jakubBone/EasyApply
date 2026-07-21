@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,7 +33,7 @@ class GroqBriefChatModelTest {
     @Test
     @DisplayName("parses a fenced JSON reply into one entry per field x locale")
     void parsesFencedJson() {
-        GeneratedBrief brief = adapterReturning("```json\n" + FULL_JSON + "\n```").generate("Acme", null);
+        GeneratedBrief brief = adapterReturning("```json\n" + FULL_JSON + "\n```").generate("Acme");
 
         assertEquals(BriefLocales.FIELD_KEYS.size() * BriefLocales.LOCALES.size(), brief.fields().size());
         assertEquals("Fintech (en)", textOf(brief, "industry", "en"));
@@ -42,7 +43,7 @@ class GroqBriefChatModelTest {
     @Test
     @DisplayName("JSON null and blank strings become the insufficient-info marker (null text)")
     void nullAndBlankMeanInsufficient() {
-        GeneratedBrief brief = adapterReturning(FULL_JSON.replace("\"Java\"", "\"  \"")).generate("Acme", null);
+        GeneratedBrief brief = adapterReturning(FULL_JSON.replace("\"Java\"", "\"  \"")).generate("Acme");
 
         assertNull(textOf(brief, "size_stage", "pl"));
         assertNull(textOf(brief, "size_stage", "en"));
@@ -54,14 +55,14 @@ class GroqBriefChatModelTest {
     void missingEntryThrows() {
         String missingEn = FULL_JSON.replace(", \"en\": \"Fintech (en)\"", "");
 
-        assertThrows(IllegalStateException.class, () -> adapterReturning(missingEn).generate("Acme", null));
+        assertThrows(IllegalStateException.class, () -> adapterReturning(missingEn).generate("Acme"));
     }
 
     @Test
     @DisplayName("a reply without a JSON object throws")
     void proseThrows() {
         assertThrows(IllegalStateException.class,
-                () -> adapterReturning("I could not find anything about this company.").generate("Acme", null));
+                () -> adapterReturning("I could not find anything about this company.").generate("Acme"));
     }
 
     @Test
@@ -70,26 +71,27 @@ class GroqBriefChatModelTest {
         ChatModel stub = prompt -> new ChatResponse(List.of());
 
         assertThrows(IllegalStateException.class,
-                () -> new GroqBriefChatModel(stub, new ObjectMapper()).generate("Acme", null));
+                () -> new GroqBriefChatModel(stub, new ObjectMapper()).generate("Acme"));
     }
 
     @Test
-    @DisplayName("prompt carries the company name, the job-ad link, and the web-search instruction")
-    void promptCarriesNameLinkAndSearchInstruction() {
+    @DisplayName("prompt carries the company name and the web-search instruction, and no URL")
+    void promptCarriesNameAndSearchInstructionOnly() {
         AtomicReference<Prompt> seen = new AtomicReference<>();
         ChatModel stub = prompt -> {
             seen.set(prompt);
             return response(FULL_JSON);
         };
 
-        new GroqBriefChatModel(stub, new ObjectMapper()).generate("Acme", "https://jobs.example/1");
+        new GroqBriefChatModel(stub, new ObjectMapper()).generate("Acme");
 
         String prompt = seen.get().getContents();
         assertTrue(prompt.contains("Acme"));
-        assertTrue(prompt.contains("https://jobs.example/1"));
         // compound decides server side whether to search; this instruction is what triggers it,
         // so losing it would silently turn grounded briefs into plain model recall
         assertTrue(prompt.contains("Search the web"));
+        // ADR-006: the company name is the only thing that reaches the provider
+        assertFalse(prompt.contains("http"));
     }
 
     private GroqBriefChatModel adapterReturning(String answer) {

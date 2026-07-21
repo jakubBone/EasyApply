@@ -17,7 +17,7 @@ public class FakeBriefChatModel implements BriefChatModel {
     private volatile boolean failNext = false;
 
     @Override
-    public GeneratedBrief generate(String companyName, String jobAdLink) {
+    public GeneratedBrief generate(String companyName) {
         calls.incrementAndGet();
         if (failNext) {
             throw new IllegalStateException("Fake brief provider forced failure");

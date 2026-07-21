@@ -36,8 +36,7 @@ public class BriefGenerationWorker {
     public void on(BriefGenerationRequested event) {
         taskExecutor.execute(() -> {
             try {
-                briefService.markReady(event.briefId(),
-                        briefChatModel.generate(event.companyName(), event.jobAdLink()));
+                briefService.markReady(event.briefId(), briefChatModel.generate(event.companyName()));
             } catch (Exception e) {
                 log.warn("Brief generation failed for brief {}", event.briefId(), e);
                 briefService.markFailed(event.briefId());

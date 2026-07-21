@@ -43,19 +43,19 @@ public class GeminiBriefChatModel implements BriefChatModel {
     }
 
     @Override
-    public GeneratedBrief generate(String companyName, String jobAdLink) {
+    public GeneratedBrief generate(String companyName) {
         GoogleGenAiChatOptions options = GoogleGenAiChatOptions.builder()
                 .googleSearchRetrieval(true)
                 .temperature(0.2)
                 .build();
-        Generation result = chatModel.call(new Prompt(buildPrompt(companyName, jobAdLink), options)).getResult();
+        Generation result = chatModel.call(new Prompt(buildPrompt(companyName), options)).getResult();
         if (result == null || result.getOutput().getText() == null) {
             throw new IllegalStateException("Empty Gemini response");
         }
         return parse(result.getOutput().getText());
     }
 
-    private String buildPrompt(String companyName, String jobAdLink) {
+    private String buildPrompt(String companyName) {
         String langSchema = BriefLocales.LOCALES.stream()
                 .map("\"%s\": string|null"::formatted)
                 .collect(Collectors.joining(", "));
@@ -65,19 +65,17 @@ public class GeminiBriefChatModel implements BriefChatModel {
         String hints = BriefLocales.FIELD_KEYS.stream()
                 .map(key -> "%s = %s".formatted(key, FIELD_HINTS.getOrDefault(key, key)))
                 .collect(Collectors.joining("; "));
-        String linkHint = jobAdLink == null || jobAdLink.isBlank() ? ""
-                : "Prioritize information from the job ad at %s when relevant.\n".formatted(jobAdLink);
         return """
                 You research companies for job applicants. Using Google Search, find verifiable \
                 public information about the company "%s".
-                %sReply with ONLY one JSON object, no prose and no markdown, exactly in this shape:
+                Reply with ONLY one JSON object, no prose and no markdown, exactly in this shape:
                 %s
                 Field meanings: %s.
                 Rules:
                 - each value is 1-2 concise sentences written in the language whose ISO 639-1 code is its key
                 - use only verifiable public information
                 - if there is not enough public information for a field, set it to null for EVERY language key — never guess
-                """.formatted(companyName, linkHint, schema, hints);
+                """.formatted(companyName, schema, hints);
     }
 
     private GeneratedBrief parse(String answer) {

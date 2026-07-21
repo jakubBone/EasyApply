@@ -107,7 +107,6 @@ class BriefServiceTest {
         // covered end-to-end in BriefControllerTest.
         verify(eventPublisher).publishEvent(publishedEvent.capture());
         assertEquals(COMPANY, publishedEvent.getValue().companyName());
-        assertEquals("http://job", publishedEvent.getValue().jobAdLink());
     }
 
     @Test
