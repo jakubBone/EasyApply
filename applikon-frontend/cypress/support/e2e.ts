@@ -26,7 +26,15 @@ declare global {
  * 3. Visits the main page and waits for identity verification to complete
  */
 Cypress.Commands.add('login', (path = '/') => {
-  const mockUser = { id: '1', email: 'test@example.com', name: 'Test User' }
+  // privacyPolicyAcceptedAt must be set: ConsentGate holds the whole dashboard behind the
+  // consent modal while it is null, so no view ever loads and every spec's first cy.wait()
+  // times out on a request the app never made.
+  const mockUser = {
+    id: '1',
+    email: 'test@example.com',
+    name: 'Test User',
+    privacyPolicyAcceptedAt: '2026-04-23T10:00:00',
+  }
 
   cy.intercept('GET', '**/api/auth/me', mockUser).as('authMe')
 
