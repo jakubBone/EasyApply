@@ -194,3 +194,33 @@
 - **Docs corrected in step:** `docker-compose.yml`, `applikon-backend/.env.example` and the
   README variable table all stated that a blank `GROQ_API_KEY` prevents startup — true when
   written, false as of this change.
+- **The job-ad link left the prompt
+  ([ADR-006](../../adr/ADR-006-drop-job-ad-link-from-brief-prompt.md)).** The port is now
+  `generate(String companyName)`; both adapters dropped the link hint, and
+  `BriefGenerationRequested` dropped the field. Data egress for the feature is one value: the
+  company name the user typed. `Application.link` is untouched everywhere else — the user still
+  opens it and the GDPR export still carries it; only the AI path stopped reading it. The
+  adapter tests now assert the prompt contains no URL, so the reduction is enforced by the suite.
+- **The E2E suite was dead before the brief spec was written — every spec, at the consent
+  gate.** `cy.login()`'s mock user carried no `privacyPolicyAcceptedAt`, so `ConsentGate` held
+  the whole dashboard behind the consent modal, no view ever loaded, and each spec timed out in
+  `beforeEach` on a request the app never made. One field in `cypress/support/e2e.ts` fixed it.
+  Diagnosed from Cypress's failure screenshot after the existing `cheat-sheet.cy.ts` failed
+  identically to the new spec — the control run is what separated "my spec is wrong" from "the
+  harness is wrong".
+- **`company-brief.cy.ts` covers the planned happy path** (generate → pending → four fields →
+  no regenerate control) plus the edit path asserting the `PUT` body carries **only** the field
+  the user touched. Verified in-session: the spec is green, and the suite went from 0 to 38
+  passing tests.
+- **Seven pre-existing failures surfaced, none related to this release.** With the gate open,
+  `cv-manager.cy.ts` (3) and `kanban-flow.cy.ts` (4) fail on stale expectations — a
+  `.kanban-card` containing "Google", the Polish string "Zaproponowałeś wynagrodzenie", a
+  `.edit-btn` selector. They assert translated UI strings and CSS classes, which the repo's own
+  convention forbids (`data-cy` or English test data), and that is why they rotted. **The
+  cross-cutting DoD line "`npm run e2e` green locally" therefore does not hold yet** and is
+  deliberately left unticked; fixing those two specs is its own job, not a brief change.
+- **Per-offer generation was parked in the ADR, not in `spec/post/` as the plan's checklist
+  said.** `spec/post/` is gitignored (`.gitignore:46`, no files tracked), so a note there is
+  invisible to any reader of the repo and cannot be cited from a published document. ADR-006 §3
+  carries the reasoning instead — different cache key, different lifetime, its own egress
+  justification — where it stays readable next to the decision that produced it.

@@ -15,6 +15,8 @@
 com.applikon/
   ApplikonApplication.java        — main class, @SpringBootApplication, @EnableJpaAuditing, @EnableScheduling
   config/
+    GeminiClientConfig.java        — (v2 03-company-brief) own Gemini `Client` bean: 60 s request timeout + blank key tolerated at startup; built only when brief.provider=gemini
+    GroqClientConfig.java          — (v2 03-company-brief) own `OpenAiApi` bean for the Groq endpoint: 10 s connect / 60 s read timeout, blank key tolerated (SimpleApiKey); built only when brief.provider=groq
     I18nConfig.java                — MessageSource (i18n/messages), AcceptHeaderLocaleResolver (default: en)
     OpenApiConfig.java             — @OpenAPIDefinition (title/description/version/contact) + @SecurityScheme (JWT Bearer) (11-swagger)
     SecurityConfig.java            — Spring Security, OAuth2, JWT encoder/decoder, CORS
@@ -22,6 +24,7 @@ com.applikon/
     ApplicationController.java     — /api/applications
     AuthController.java            — /api/auth
     AdminController.java           — /api/admin (08-user-data)
+    BriefController.java           — /api/applications/{applicationId}/brief (v2 03-company-brief)
     CVController.java              — /api/cv
     NoteController.java            — /api (nested under /applications and /notes)
     StatisticsController.java      — /api/statistics
@@ -32,6 +35,9 @@ com.applikon/
     ApplicationStats.java          — record (rejections, ghosting, offers) — for JPQL projection
     BadgeResponse.java             — record (name, icon, description, threshold, currentCount, nextThreshold, nextBadgeName)
     BadgeStatsResponse.java        — record (rejectionBadge, ghostingBadge, sweetRevengeUnlocked, totals)
+    BriefEditRequest.java          — record (fields: List<Field{fieldKey, text}>) (v2 03-company-brief)
+    BriefFieldResponse.java        — record (key, texts: Map<lang, text>, edited) (v2 03-company-brief)
+    BriefResponse.java             — record (status, fields) (v2 03-company-brief)
     NoteRequest.java               — record (content, category)
     NoteResponse.java              — record (id, content, category, applicationId, createdAt)
     ServiceNoticeRequest.java      — record (type, messagePl, messageEn, expiresAt) with @NotBlank @Pattern on type (08-user-data)
@@ -41,12 +47,15 @@ com.applikon/
     UserResponse.java              — record (id, email, name, privacyPolicyAcceptedAt) (07-privacy-rodo)
   entity/
     Application.java               — @Entity, table: applications
+    CompanyBrief.java              — @Entity, table: company_briefs (v2 03-company-brief)
+    CompanyBriefField.java         — @Entity, table: company_brief_fields; child side, @ManyToOne CompanyBrief (ADR-002)
     CV.java                        — @Entity, table: cvs
     Note.java                      — @Entity, table: notes
     ServiceNotice.java             — @Entity, table: service_notices (08-user-data)
     ServiceNoticeType.java         — enum: BANNER, MODAL (08-user-data)
     User.java                      — @Entity, table: users
     ApplicationStatus.java         — enum: SENT, IN_PROGRESS, OFFER, REJECTED
+    BriefStatus.java               — enum: PENDING, READY, FAILED (v2 03-company-brief)
     ContractType.java              — enum: B2B, EMPLOYMENT, MANDATE, OTHER
     CVType.java                    — enum: FILE, LINK, NOTE
     NoteCategory.java              — enum: QUESTIONS, FEEDBACK, OTHER
@@ -59,6 +68,8 @@ com.applikon/
     MdcUserFilter.java             — OncePerRequestFilter; puts authenticated userId (UUID) into SLF4J MDC under key `userId` for log correlation; runs after Spring Security chain via Spring Boot auto-registration
   repository/
     ApplicationRepository.java     — JpaRepository; custom queries: findByUserId, findByIdAndUserId, existsByIdAndUserId, findByUserIdAndCompanyIgnoreCaseAndPositionIgnoreCase, getApplicationStats, clearCVReferences
+    CompanyBriefRepository.java    — JpaRepository; findByUserIdAndCompanyName (the cache key) (v2 03-company-brief)
+    CompanyBriefFieldRepository.java — JpaRepository; findByBriefId, deleteByBriefId (child-side access, ADR-002)
     CVRepository.java              — JpaRepository
     NoteRepository.java            — JpaRepository; findByApplicationIdAndApplicationUserIdOrderByCreatedAtDesc, findByIdAndApplicationUserId, etc.
     ServiceNoticeRepository.java   — JpaRepository; JPQL findActive(@Param("now") LocalDateTime now) — WHERE active=true AND (expiresAt IS NULL OR expiresAt > :now) (08-user-data)
@@ -74,6 +85,15 @@ com.applikon/
   service/
     AccountRetentionService.java   — @Scheduled(cron daily 3:00): deletes accounts inactive > 12 months via UserService.deleteAccount; threshold from app.retention.inactive-months (07-privacy-rodo)
     ApplicationService.java        — create, findAllByUserId, findById, updateStatus, updateStage, addStage, findDuplicates, delete, update
+    BriefService.java              — (v2 03-company-brief) trigger (cache-aside per company, retry only from FAILED), get, editFields, markReady, markFailed
+    BriefGenerationRequested.java  — record (briefId, companyName) — the event trigger publishes (ADR-004)
+    BriefGenerationWorker.java     — @TransactionalEventListener(AFTER_COMMIT); hands the model call to `applicationTaskExecutor`, writes back through BriefService
+    ai/
+      BriefChatModel.java          — port: `GeneratedBrief generate(String companyName)` — the company name is all that leaves the system (ADR-006)
+      BriefLocales.java            — FIELD_KEYS (industry, product_customers, tech_stack, size_stage) + active LOCALES; one source of truth for prompt and persistence
+      GeneratedBrief.java          — record (fields: List<Field{fieldKey, lang, text}>); null text = "not enough public info"
+      GroqBriefChatModel.java      — active adapter, `groq/compound-mini` via the OpenAI-compatible API (ADR-005)
+      GeminiBriefChatModel.java    — dormant adapter, Google Search grounding; kept as the documented return path
     CVService.java                 — uploadCV, findAllByUserId, findById, downloadCV, deleteCV, createCV, updateCV, assignCVToApplication, removeCVFromApplication
     NoteService.java               — create, findByApplicationId, findById, update, delete, deleteByApplicationId, createSalaryChangeNote (⚠️ dead code — never called)
     ServiceNoticeService.java      — findActive(), create(ServiceNoticeRequest) (08-user-data)
@@ -151,6 +171,43 @@ com.applikon/
 | `GET` | `/api/applications/{applicationId}/screening-answers` | List "About the company" answers for one application |
 | `PUT` | `/api/applications/{applicationId}/screening-answers` | Replace-all save, scoped to that application (ownership verified) |
 
+**BriefController — `/api/applications/{applicationId}/brief`** (v2 03-company-brief)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/applications/{applicationId}/brief` | Trigger generation — 202 Accepted, body carries the status. Idempotent: `READY` returns the cached brief, `PENDING` is a no-op, only `FAILED` retries |
+| `GET` | `/api/applications/{applicationId}/brief` | The company's brief — 404 when none was ever generated (the frontend reads that as "offer the generate button") |
+| `PUT` | `/api/applications/{applicationId}/brief` | Save the user's own text for one or more fields; writes to the company's brief, so it shows on every application to that company |
+
+All three resolve the application first and verify ownership before any work happens.
+
+### Brief generation flow (v2 03-company-brief)
+
+```
+POST /brief ──► BriefService.trigger  (@Transactional)
+                  ├─ requireOwnedApplication → company name
+                  ├─ cache-aside on (user_id, company_name): READY → return, PENDING → no-op, FAILED → reset
+                  └─ publishEvent(BriefGenerationRequested)
+                                    │  AFTER_COMMIT (the PENDING row is committed first)
+                                    ▼
+                     BriefGenerationWorker ──► applicationTaskExecutor (off the request thread)
+                                    │
+                                    ├─ BriefChatModel.generate(companyName)  ──► provider (web search server side)
+                                    ├─ success → BriefService.markReady   (rows replaced in one transaction)
+                                    └─ any exception → BriefService.markFailed  (terminal; never a partial brief)
+
+GET /brief ◄── the frontend polls every 2 s while the status is PENDING
+```
+
+**Trust boundary** ([ADR-001](adr/ADR-001-gemini-free-tier-grounding.md) §4): the text
+comes from web pages the provider searched, so it is **untrusted input**. The brief is
+**display-only** — its content never triggers an action, a tool call, or another feature.
+Anything that later wants to *act* on brief content needs a new decision.
+Outbound, only the company name ever leaves the system
+([ADR-006](adr/ADR-006-drop-job-ad-link-from-brief-prompt.md)). No annotation-driven AOP is
+involved: timeouts live in the client beans, retry in Spring AI's `RetryTemplate`
+([ADR-004](adr/ADR-004-transactional-event-brief-generation.md)).
+
 **SystemController — `/api/system`** (08-user-data)
 
 | Method | Path | Description |
@@ -186,6 +243,9 @@ com.applikon/
 | `flyway-core` + `flyway-database-postgresql` | DB migrations |
 | `spring-dotenv` | `.env` file support |
 | `springdoc-openapi-starter-webmvc-ui 2.8.8` | Swagger UI + OpenAPI 3 spec generation (11-swagger) |
+| `spring-ai-bom 1.1.8` | Version management for the Spring AI starters (v2 03-company-brief) |
+| `spring-ai-starter-model-openai` | The active brief provider — Groq via its OpenAI-compatible API (ADR-005) |
+| `spring-ai-starter-model-google-genai` | The dormant Gemini return path; application code only ever sees `ChatModel` |
 | No Lombok | All getters/setters written manually |
 
 ---
@@ -216,6 +276,7 @@ com.applikon/
 | V18 | `V18__application_company_research.sql` | Add `applications.company_research` TEXT (v2 01-screening-companion, Step 3) — **dropped in V20** |
 | V19 | `V19__screening_answers_application_scope.sql` | Add nullable `screening_answers.application_id` FK — scopes rows to one application for "About the company" (v2 02-cheat-sheet-consolidation, Step 2) |
 | V20 | `V20__drop_application_company_research.sql` | Drop `applications.company_research` — superseded by V19 (v2 02-cheat-sheet-consolidation, Step 2) |
+| V21 | `V21__company_briefs.sql` | Create `company_briefs` + `company_brief_fields` — the AI company brief (v2 03-company-brief, Step 1) |
 
 ### Current tables
 
@@ -312,6 +373,38 @@ com.applikon/
 | created_at | TIMESTAMP | NOT NULL |
 | updated_at | TIMESTAMP | nullable |
 
+**`company_briefs`** (v2 03-company-brief)
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | BIGSERIAL | PK |
+| user_id | UUID | FK → users(id), NOT NULL, ON DELETE CASCADE |
+| company_name | VARCHAR(255) | NOT NULL |
+| status | VARCHAR(16) | NOT NULL (PENDING/READY/FAILED) |
+| created_at | TIMESTAMP | NOT NULL |
+| updated_at | TIMESTAMP | nullable |
+
+`UNIQUE (user_id, company_name)` — `uq_company_brief`. Serves two roles at once: the
+cache key (one brief per company, reused by every application to it) and the dedup lock
+behind the idempotent trigger.
+
+**`company_brief_fields`** (v2 03-company-brief)
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | BIGSERIAL | PK |
+| brief_id | BIGINT | FK → company_briefs(id), NOT NULL, ON DELETE CASCADE |
+| field_key | VARCHAR(32) | NOT NULL — industry / product_customers / tech_stack / size_stage |
+| lang | VARCHAR(8) | NOT NULL — `pl`, `en`, … whatever the UI supports |
+| text | TEXT | nullable — `NULL` = "not enough public info", shown as such, never guessed |
+| edited | BOOLEAN | NOT NULL, default false — `true` once the user overwrote the generated text |
+
+`UNIQUE (brief_id, field_key, lang)` — `uq_brief_field`. **Language is a row value, not a
+column**: a new locale is a new `lang` value and a new field is a new `field_key`, so
+neither needs a migration. `edited` separates the user's own words from derived public
+data — it is exactly what makes the GDPR export honest (only `edited=true` rows are
+personal data and get exported).
+
 **`applications.company_research`** (v2) — TEXT column added V18, held the per-application
 "About the company" free-text note before custom questions existed. DROPPED (V20) once
 superseded by `screening_answers.application_id` (V19) — see
@@ -326,6 +419,10 @@ superseded by `screening_answers.application_id` (V19) — see
 - `service_notices` — no FK relations; standalone admin-managed table
 - `screening_answers.user_id` → `users.id` (CASCADE DELETE) (v2)
 - `screening_answers.application_id` → `applications.id` (nullable, CASCADE DELETE) (v2)
+- `company_briefs.user_id` → `users.id` (CASCADE DELETE) (v2 03-company-brief)
+- `company_brief_fields.brief_id` → `company_briefs.id` (CASCADE DELETE) — deleting an
+  account chains `users → company_briefs → company_brief_fields`; deleting a single
+  application leaves the company's brief and its edits intact, by design
 
 ---
 
@@ -433,6 +530,7 @@ App.tsx
 | `PrepReadonly` | `components/prep/PrepReadonly.tsx` | `CompanyPrepReadonly` (salary + company Q&A) and `GlobalAnswersReadonly` |
 | `GlobalAnswersModal` | `components/prep/GlobalAnswersModal.tsx` | Modal editor for "General" (fixed + custom questions, Save) |
 | `CompanyQuestionsModal` | `components/prep/CompanyQuestionsModal.tsx` | Modal editor for "About the company" (same shape as General, per application) |
+| `BriefSection` | `components/prep/BriefSection.tsx` | (03-company-brief) two exports: `GenerateBriefButton` (the ✨ header action, rendered only while the company has no brief) and `BriefFields` (generating / failed+retry / the four Q&A rows). Both read the same React Query cache, so the cheat sheet and the details page stay in step |
 | `StaleBanner` | `components/kanban/StaleBanner.tsx` | Top-of-board banner counting stale (`SENT` >60 days) applications |
 | `utils/stale.ts` | `utils/stale.ts` | `isStale`, `daysSince`, `STALE_THRESHOLD_DAYS`, `ARCHIVE_STALE_PAYLOAD` |
 | `utils/salary.ts` | `utils/salary.ts` | `formatSalary` — shared by the cheat sheet and details |
@@ -449,6 +547,7 @@ App.tsx
 | `useServiceNotices` | hooks/useServiceNotices.ts | fetch active notices; staleTime 5 min; returns `[]` on error (08-user-data) |
 | `useScreeningAnswers` / `useSaveScreeningAnswers` | hooks/useScreeningAnswers.ts | (v2) fetch/save the global "General" set |
 | `useApplicationScreeningAnswers` / `useSaveApplicationScreeningAnswers` | hooks/useScreeningAnswers.ts | (v2) fetch/save "About the company" for one application |
+| `useBrief` / `useGenerateBrief` / `useEditBrief` | hooks/useBrief.ts | (v2 03-company-brief) fetch the company brief (`null` = never generated), trigger generation, save edited fields. `useBrief` polls every 2 s **only** while the status is `PENDING`; a terminal status and unmount both stop it |
 
 ### API calls (api.ts → backend endpoints)
 
@@ -485,6 +584,9 @@ App.tsx
 | `saveScreeningAnswers` | PUT | `/api/screening-answers` (v2) |
 | `fetchApplicationScreeningAnswers` | GET | `/api/applications/{id}/screening-answers` (v2) |
 | `saveApplicationScreeningAnswers` | PUT | `/api/applications/{id}/screening-answers` (v2) |
+| `triggerBrief` | POST | `/api/applications/{id}/brief` (v2 03-company-brief) |
+| `fetchBrief` | GET | `/api/applications/{id}/brief` — maps 404 to `null`; every other non-OK status throws |
+| `editBrief` | PUT | `/api/applications/{id}/brief` — sends only the fields the user changed |
 
 ### i18n
 

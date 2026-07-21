@@ -436,14 +436,14 @@ in both languages; insufficient field shows the marker; no regenerate control wh
 consistent; `npm run e2e` green locally.
 
 **Checklist**
-- [ ] E2E stubbed happy path (`data-cy`)
-- [ ] `spec/architecture.md` + `as-built.md` updated
+- [x] E2E stubbed happy path (`data-cy`)
+- [x] `spec/architecture.md` + `as-built.md` updated
 - [ ] CHANGELOG `2.1.0` + version bumps
 - [ ] Deployed; prod key separate from dev; verified live
 - [ ] LinkedIn post (per release ritual)
 - [x] Groq client bean: blank key fails generation only, hard per-request timeout
-- [ ] ADR-006 + prompt/port drop the job-ad link
-- [ ] Per-offer generation staged in `spec/post/`
+- [x] ADR-006 + prompt/port drop the job-ad link
+- [x] Per-offer generation parked (in ADR-006 §3 — see as-built)
 
 ---
 
