@@ -143,12 +143,12 @@ export function ApplicationForm({ mode, application, onClose }: Props) {
   }
 
   return (
-    <div className="form-modal" onClick={onClose}>
+    <div data-cy="form-modal" className="form-modal" onClick={onClose}>
       <div className="form-modal-content large" onClick={e => e.stopPropagation()}>
-        <h2>{mode === 'create' ? t('form.titleCreate') : t('form.titleEdit')}</h2>
+        <h2 data-cy="form-title">{mode === 'create' ? t('form.titleCreate') : t('form.titleEdit')}</h2>
 
         {duplicateWarning && (
-          <div className="duplicate-warning">
+          <div data-cy="duplicate-warning" className="duplicate-warning">
             <p>{duplicateWarning.message}</p>
             <p>{t('form.duplicateContinue')}</p>
           </div>

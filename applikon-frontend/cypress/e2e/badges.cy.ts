@@ -1,3 +1,7 @@
+// Assertions hook on data-cy, never on translated UI chrome, so the spec survives i18n changes.
+// Badge names stay Polish on purpose: the backend sends them as identifiers and the frontend
+// looks them up in badges.json `names`, so they are mocked API data, not UI copy.
+
 describe('Badge Widget', () => {
   beforeEach(() => {
     cy.interceptApi()
@@ -20,7 +24,7 @@ describe('Badge Widget', () => {
       cy.wait('@getApplications')
       cy.wait('@getBadgesEmpty')
 
-      cy.contains('Twoje odznaki').should('be.visible')
+      cy.get('[data-cy="badge-widget-title"]').should('be.visible')
     })
 
     it('should expand on click to show badge details', () => {
@@ -50,9 +54,11 @@ describe('Badge Widget', () => {
       cy.get('[data-cy="badge-widget-header"]').click()
 
       // Should show badge details
-      cy.contains('Odrzucone aplikacje').should('be.visible')
-      cy.contains('Rękawica').should('be.visible')
-      cy.contains('🥊').should('be.visible')
+      cy.get('[data-cy="badge-section-rejections"]').should('be.visible')
+      cy.get('[data-cy="badge-row-rejection"]').within(() => {
+        cy.get('[data-cy="badge-name"]').should('contain', 'Rękawica')
+        cy.get('[data-cy="badge-icon"]').should('contain', '🥊')
+      })
     })
 
     it('should show ghosting badge section', () => {
@@ -82,9 +88,11 @@ describe('Badge Widget', () => {
 
       cy.get('[data-cy="badge-widget-header"]').click()
 
-      cy.contains('Bez odzewu').should('be.visible')
-      cy.contains('Widmo').should('be.visible')
-      cy.contains('👻').should('be.visible')
+      cy.get('[data-cy="badge-section-ghosting"]').should('be.visible')
+      cy.get('[data-cy="badge-row-ghosting"]').within(() => {
+        cy.get('[data-cy="badge-name"]').should('contain', 'Widmo')
+        cy.get('[data-cy="badge-icon"]').should('contain', '👻')
+      })
     })
   })
 
@@ -115,8 +123,7 @@ describe('Badge Widget', () => {
 
       cy.get('[data-cy="badge-widget-header"]').click()
 
-      cy.contains('Sweet Revenge').should('be.visible')
-      cy.contains('Kto się śmieje ostatni').should('be.visible')
+      cy.get('[data-cy="badge-sweet-revenge"]').should('be.visible')
     })
 
     it('should not display Sweet Revenge when not unlocked', () => {
@@ -141,7 +148,7 @@ describe('Badge Widget', () => {
 
       cy.get('[data-cy="badge-widget-header"]').click()
 
-      cy.contains('Sweet Revenge').should('not.exist')
+      cy.get('[data-cy="badge-sweet-revenge"]').should('not.exist')
     })
   })
 
@@ -172,8 +179,10 @@ describe('Badge Widget', () => {
       cy.get('[data-cy="badge-widget-header"]').click()
 
       // Should show next badge info
-      cy.contains('Patelnia').should('be.visible')
-      cy.contains('Następny').should('be.visible')
+      cy.get('[data-cy="badge-row-rejection"]')
+        .find('[data-cy="badge-next"]')
+        .should('be.visible')
+        .and('contain', 'Patelnia')
     })
 
     it('should show MAX for highest badge', () => {
@@ -201,8 +210,10 @@ describe('Badge Widget', () => {
 
       cy.get('[data-cy="badge-widget-header"]').click()
 
-      cy.contains('Statystyczna Pewność').should('be.visible')
-      cy.contains('MAX').should('be.visible')
+      cy.get('[data-cy="badge-row-rejection"]').within(() => {
+        cy.get('[data-cy="badge-name"]').should('contain', 'Statystyczna Pewność')
+        cy.get('[data-cy="badge-max"]').should('be.visible')
+      })
     })
   })
 
@@ -229,7 +240,7 @@ describe('Badge Widget', () => {
 
       // Badge widget is rendered and API was called
       cy.get('[data-cy="badge-widget-header"]').should('be.visible')
-      cy.contains('Twoje odznaki').should('be.visible')
+      cy.get('[data-cy="badge-widget-title"]').should('be.visible')
     })
   })
 })

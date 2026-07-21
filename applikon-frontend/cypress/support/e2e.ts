@@ -8,8 +8,6 @@ declare global {
   namespace Cypress {
     interface Chainable {
       login(path?: string): void
-      createApplication(company: string, position: string, options?: { salaryMin?: number; source?: string }): void
-      waitForApi(): void
       interceptApi(): void
     }
   }
@@ -47,28 +45,6 @@ Cypress.Commands.add('login', (path = '/') => {
   })
 
   cy.wait('@authMe')
-})
-
-// Custom commands
-Cypress.Commands.add('createApplication', (company, position, options = {}) => {
-  cy.get('button').contains('+ Dodaj aplikację').click()
-  cy.get('#company').type(company)
-  cy.get('#position').type(position)
-
-  if (options.salaryMin) {
-    cy.get('input[name="salaryMin"]').type(options.salaryMin.toString())
-  }
-
-  if (options.source) {
-    cy.get('#source').type(options.source)
-  }
-
-  cy.get('button[type="submit"]').contains(/Dodaj aplikację|Kontynuuj/).click()
-})
-
-Cypress.Commands.add('waitForApi', () => {
-  // Wait for the loading state to disappear
-  cy.get('.loading').should('not.exist')
 })
 
 // API intercepts

@@ -292,7 +292,7 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="kanban-board" ref={kanbanBoardRef}>
+          <div data-cy="kanban-board" className="kanban-board" ref={kanbanBoardRef}>
             {STATUSES.map(status => (
               <KanbanColumn
                 key={status.id}

@@ -56,13 +56,13 @@ function BadgeRow({ badge, count, type }: BadgeRowProps) {
     : (isGhosting ? t('defaults.firstGhosting') : t('defaults.firstRejection'))
 
   return (
-    <div className="badge-row">
+    <div data-cy={`badge-row-${type}`} className="badge-row">
       <div className="badge-row-left">
-        <span className={`badge-row-icon ${!hasAchieved ? 'locked' : ''}`}>
+        <span data-cy="badge-icon" className={`badge-row-icon ${!hasAchieved ? 'locked' : ''}`}>
           {hasAchieved ? badge?.icon : (isGhosting ? '👻' : '🥊')}
         </span>
         <div className="badge-row-info">
-          <div className="badge-row-name">
+          <div data-cy="badge-name" className="badge-row-name">
             {displayName}
           </div>
           <div className="badge-row-description">
@@ -78,13 +78,13 @@ function BadgeRow({ badge, count, type }: BadgeRowProps) {
             <span className="badge-progress-count">{count}/{progressLabel ?? '∞'}</span>
           </div>
           {!isMaxed && nextBadgeApiName && (
-            <div className="badge-row-next-line">
+            <div data-cy="badge-next" className="badge-row-next-line">
               {t('widget.next', { icon: getIconForBadge(nextBadgeApiName), name: nextBadgeDisplayName })}
             </div>
           )}
         </div>
       </div>
-      {isMaxed && <div className="badge-row-max">{t('widget.max')}</div>}
+      {isMaxed && <div data-cy="badge-max" className="badge-row-max">{t('widget.max')}</div>}
     </div>
   )
 }
@@ -102,7 +102,7 @@ export function BadgeWidget() {
   return (
     <div className="badge-widget">
       <div data-cy="badge-widget-header" className="badge-widget-header" onClick={() => setExpanded(!expanded)}>
-        <span className="badge-header-title">{t('widget.title')}</span>
+        <span data-cy="badge-widget-title" className="badge-header-title">{t('widget.title')}</span>
         <span className="badge-expand-arrow">{expanded ? '▲' : '▼'}</span>
       </div>
 
@@ -114,14 +114,14 @@ export function BadgeWidget() {
             </div>
 
             <div className="badge-modal-body">
-              <div className="badge-section-label">{t('widget.rejections', { count: totalRejections })}</div>
+              <div data-cy="badge-section-rejections" className="badge-section-label">{t('widget.rejections', { count: totalRejections })}</div>
               <BadgeRow badge={rejectionBadge} count={totalRejections} type="rejection" />
 
-              <div className="badge-section-label">{t('widget.ghosting', { count: totalGhosting })}</div>
+              <div data-cy="badge-section-ghosting" className="badge-section-label">{t('widget.ghosting', { count: totalGhosting })}</div>
               <BadgeRow badge={ghostingBadge} count={totalGhosting} type="ghosting" />
 
               {sweetRevengeUnlocked && (
-                <div className="badge-row sweet-revenge">
+                <div data-cy="badge-sweet-revenge" className="badge-row sweet-revenge">
                   <div className="badge-row-left">
                     <span className="badge-row-icon special">🏆</span>
                     <div className="badge-row-info">

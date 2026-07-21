@@ -355,7 +355,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
   return (
     <div className="cv-manager">
       <div className="cv-header">
-        <h2>{t('cv.title')}</h2>
+        <h2 data-cy="cv-title">{t('cv.title')}</h2>
         <button data-cy="add-cv-btn" className="add-cv-btn" onClick={() => setShowAddModal(true)}>
           {t('cv.addBtn')}
         </button>

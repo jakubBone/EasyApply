@@ -9,15 +9,15 @@ describe('Application CRUD Operations', () => {
   describe('Create Application', () => {
     it('should open the application form', () => {
       cy.get('[data-cy="add-application-btn"]').click()
-      cy.get('.form-modal').should('be.visible')
-      cy.contains('Dodaj nową aplikację').should('be.visible')
+      cy.get('[data-cy="form-modal"]').should('be.visible')
+      cy.get('[data-cy="form-title"]').should('be.visible')
     })
 
     it('should close the form when clicking Cancel', () => {
       cy.get('[data-cy="add-application-btn"]').click()
-      cy.get('.form-modal').should('be.visible')
+      cy.get('[data-cy="form-modal"]').should('be.visible')
       cy.get('[data-cy="form-cancel-btn"]').click()
-      cy.get('.form-modal').should('not.exist')
+      cy.get('[data-cy="form-modal"]').should('not.exist')
     })
 
     it('should create a new application with required fields', () => {
@@ -107,9 +107,10 @@ describe('Application CRUD Operations', () => {
 
       cy.wait('@checkDuplicateWithResult')
 
-      // Warning should be shown (scroll into view — form modal may overflow)
-      cy.contains('Już aplikowałeś do Google').scrollIntoView().should('be.visible')
-      cy.contains('Kontynuuj mimo duplikatu').scrollIntoView().should('be.visible')
+      // Warning names the clashing company; submitting again is what confirms it.
+      // (scroll into view — the form modal may overflow)
+      cy.get('[data-cy="duplicate-warning"]').scrollIntoView().should('be.visible').and('contain', 'Google')
+      cy.get('[data-cy="form-submit-btn"]').scrollIntoView().should('be.visible')
     })
 
     it('should allow creating duplicate after confirmation', () => {
@@ -145,7 +146,7 @@ describe('Application CRUD Operations', () => {
 
     it('should switch to CV view', () => {
       cy.get('[data-cy="tab-cv"]').click()
-      cy.contains('Moje CV').should('be.visible')
+      cy.get('[data-cy="cv-title"]').should('be.visible')
     })
 
     it('should switch back to Kanban view', () => {
@@ -153,7 +154,7 @@ describe('Application CRUD Operations', () => {
       cy.get('table').should('be.visible')
 
       cy.get('[data-cy="tab-kanban"]').click()
-      cy.get('.kanban-board').should('be.visible')
+      cy.get('[data-cy="kanban-board"]').should('be.visible')
     })
   })
 })
