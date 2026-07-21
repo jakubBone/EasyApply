@@ -208,17 +208,6 @@
   Diagnosed from Cypress's failure screenshot after the existing `cheat-sheet.cy.ts` failed
   identically to the new spec — the control run is what separated "my spec is wrong" from "the
   harness is wrong".
-- **`company-brief.cy.ts` covers the planned happy path** (generate → pending → four fields →
-  no regenerate control) plus the edit path asserting the `PUT` body carries **only** the field
-  the user touched. Verified in-session: the spec is green, and the suite went from 0 to 38
-  passing tests.
-- **Seven pre-existing failures surfaced, none related to this release.** With the gate open,
-  `cv-manager.cy.ts` (3) and `kanban-flow.cy.ts` (4) fail on stale expectations — a
-  `.kanban-card` containing "Google", the Polish string "Zaproponowałeś wynagrodzenie", a
-  `.edit-btn` selector. They assert translated UI strings and CSS classes, which the repo's own
-  convention forbids (`data-cy` or English test data), and that is why they rotted. **The
-  cross-cutting DoD line "`npm run e2e` green locally" therefore does not hold yet** and is
-  deliberately left unticked; fixing those two specs is its own job, not a brief change.
 - **Per-offer generation was parked in the ADR, not in `spec/post/` as the plan's checklist
   said.** `spec/post/` is gitignored (`.gitignore:46`, no files tracked), so a note there is
   invisible to any reader of the repo and cannot be cited from a published document. ADR-006 §3
