@@ -103,13 +103,19 @@ board cleanup, built on top of the **v1 MVP** (`spec/v1/`).
 - **Board cleanup** - flags applications stuck in "Sent" for 60+ days with no response, with one-click archiving
 
 
-## 🐳 Running with Docker
+## 🐳 Run it yourself (Docker)
+
+> Just want to see the app? Open the [live version](https://aplikujbezspiny.pl) - nothing to install.
+> This section is for running your own instance.
 
 **Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
 
 ### Step 1 - Google OAuth credentials (required for login)
 
-The app uses Google login. You need to create credentials once in Google Cloud Console:
+The app uses Google login, so it needs credentials of your own - a one-time setup in Google Cloud Console, about 5 minutes.
+
+<details>
+<summary><b>Show the steps</b></summary>
 
 1. Go to [console.cloud.google.com](https://console.cloud.google.com/) and sign in.
 2. Create a new project (top-left dropdown → **New Project**).
@@ -125,6 +131,8 @@ The app uses Google login. You need to create credentials once in Google Cloud C
    - Click **Create**.
 5. Copy the **Client ID** and **Client Secret** - you will need them in the next step.
 
+</details>
+
 ### Step 2 - Configure and start
 
 ```bash
@@ -137,14 +145,16 @@ Open `.env` and fill in the required values:
 |----------|-------|
 | `POSTGRES_USER` | any username, e.g. `applikon` |
 | `POSTGRES_PASSWORD` | any password |
-| `DATABASE_USERNAME` | same as `POSTGRES_USER` |
-| `DATABASE_PASSWORD` | same as `POSTGRES_PASSWORD` |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:3000,http://localhost:5173` |
 | `FRONTEND_URL` | `http://localhost:3000` |
 | `GOOGLE_CLIENT_ID` | from Step 1 |
 | `GOOGLE_CLIENT_SECRET` | from Step 1 |
 | `ADMIN_KEY` | any random string, e.g. output of `openssl rand -base64 32` |
 | `APP_TOKEN_HMAC_SECRET` | any random string, e.g. output of `openssl rand -base64 32` |
+| `GROQ_API_KEY` | free key from [console.groq.com/keys](https://console.groq.com/keys) - powers company brief generation |
+
+> `GROQ_API_KEY` must not be left empty: the backend fails to start without it.
+> `GEMINI_API_KEY` can stay empty - it is an alternative provider, off by default.
 
 Then start the app:
 
@@ -159,6 +169,9 @@ Production images (published to GHCR on every `main` build):
 ghcr.io/jakubbone/applikon-backend:latest
 ghcr.io/jakubbone/applikon-frontend:latest
 ```
+
+The live instance runs on a Hetzner VPS behind a Caddy reverse proxy - the full
+deployment runbook is in [`spec/deployment/deployment-hetzner.md`](spec/deployment/deployment-hetzner.md).
 
 
 ## 🔒 Privacy & Data

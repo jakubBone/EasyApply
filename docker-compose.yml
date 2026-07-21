@@ -79,7 +79,6 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL}
-        VITE_USE_BACKEND: ${VITE_USE_BACKEND:-true}
     container_name: applikon-frontend
     restart: unless-stopped
     logging:

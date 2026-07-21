@@ -89,7 +89,6 @@ jobs:
           provenance: false
           build-args: |
             VITE_API_URL=${{ secrets.VITE_API_URL }}
-            VITE_USE_BACKEND=true
           tags: |
             ghcr.io/${{ env.OWNER }}/applikon-frontend:latest
             ghcr.io/${{ env.OWNER }}/applikon-frontend:${{ github.sha }}
