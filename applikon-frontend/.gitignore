@@ -20,6 +20,10 @@ dist-ssr
 # Vercel deployment metadata
 .vercel/
 
+# Cypress run artifacts — written on failure, never source
+cypress/screenshots/
+cypress/videos/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
