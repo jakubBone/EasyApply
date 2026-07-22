@@ -1,6 +1,6 @@
 # 💼 Applikon
 
-![Version](https://img.shields.io/badge/v-2.0.0-green.svg)
+![Version](https://img.shields.io/badge/v-2.1.0-green.svg)
 ![Java](https://img.shields.io/badge/Java-21-007396?style=flat&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4-6DB33F?style=flat&logo=springboot&logoColor=white)
 ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=flat&logo=springsecurity&logoColor=white)
@@ -41,8 +41,8 @@
 Built with **Claude Code** using a strict spec-first approach. No code was written
 without a plan first; no plan was written without knowing what *not* to do.
 
-Currently on **v2 - Screening Companion** (`spec/v2/`): a screening cheat sheet and
-board cleanup, built on top of the **v1 MVP** (`spec/v1/`).
+Currently on **v2 - Screening Companion** (`spec/v2/`): a screening cheat sheet,
+board cleanup, and an AI company brief, built on top of the **v1 MVP** (`spec/v1/`).
 
 🟦 **Specify** → 🟪 **Plan** → 🟧 **Implement** → 🟥 **Use it for real** → back to 🟦 ↺
 *(🟨 Review and 🟩 Refactor ran once, for the v1 MVP - available anytime since via dedicated skills.)*
@@ -101,6 +101,7 @@ board cleanup, built on top of the **v1 MVP** (`spec/v1/`).
 - **API documentation** - Swagger UI with all endpoints, schemas, and authorization
 - **Screening cheat sheet** - a "General" answers template (written once) plus a per-application "About the company" note, composed with the proposed salary on one screen before a recruiter call
 - **Board cleanup** - flags applications stuck in "Sent" for 60+ days with no response, with one-click archiving
+- **Company brief** - AI-generated summary of the company (industry, product and customers, tech stack, size and stage), generated once per company, reused across applications and editable by hand
 
 
 ## 🐳 Run it yourself (Docker)
@@ -179,6 +180,7 @@ deployment runbook is in [`spec/deployment/deployment-hetzner.md`](spec/deployme
 - **Refresh tokens** stored as HMAC-SHA256 hashes - a stolen database cannot be used to hijack sessions
 - **Logs** contain UUIDs only - no emails, names, or tokens in plaintext
 - **Account deletion** permanently removes all data; inactive accounts purged after 12 months
+- **Company brief** sends only the company name to the AI provider - never your notes, applications, or personal data
 
 Full design rationale: [`spec/v1/1.0.0/07-privacy-rodo/`](spec/v1/1.0.0/07-privacy-rodo/)
 

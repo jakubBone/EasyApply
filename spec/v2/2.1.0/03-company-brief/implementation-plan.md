@@ -438,7 +438,7 @@ consistent; `npm run e2e` green locally.
 **Checklist**
 - [x] E2E stubbed happy path (`data-cy`)
 - [x] `spec/architecture.md` + `as-built.md` updated
-- [ ] CHANGELOG `2.1.0` + version bumps
+- [x] CHANGELOG `2.1.0` + version bumps
 - [ ] Deployed; prod key separate from dev; verified live
 - [ ] LinkedIn post (per release ritual)
 - [x] Groq client bean: blank key fails generation only, hard per-request timeout
