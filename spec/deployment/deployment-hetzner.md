@@ -326,13 +326,58 @@ systemctl restart sshd
 ## Day-to-day operations
 
 ### Deploy a code update
+
+The server runs pre-built images from GHCR and never compiles anything — CI builds
+and pushes them on every green `main` (see
+[`../v1/1.0.0/13-docker-registry/brief.md`](../v1/1.0.0/13-docker-registry/brief.md)).
+`build:` stays in `docker-compose.yml` for local development only.
+
+**Before touching the server:** the CI run for the commit you are deploying must be
+green — the `docker` job is what publishes the images. Deploying earlier just pulls
+the previous release.
+
 ```bash
 cd /opt/applikon
-git pull
-docker compose build
+git pull                     # docker-compose.yml and Caddy config — NOT sources to build
+docker compose pull          # the actual new code, from GHCR
 docker compose up -d
+docker compose logs -f backend
 ```
-Spring Boot has ~60 s startup — the page is briefly unavailable during the rolling restart.
+
+Ready when the log shows `Started ApplikonApplication` (~60 s). Named volumes are
+untouched, so database and uploads survive.
+
+**If the release adds an environment variable**, put it in `/opt/applikon/.env`
+(the root one, read by docker-compose) *before* `up -d`, and make sure `git pull`
+brought the matching `docker-compose.yml` — a variable absent from the compose file
+never reaches the container, however correct `.env` is.
+
+**If the release adds a Flyway migration**, back up first — migrations are
+forward-only and `validate-on-migrate` is on, so an older image will refuse to start
+against an already-migrated database:
+```bash
+docker exec applikon-db pg_dump -U applikon_user applikon_db > backup_pre_<version>.sql
+```
+
+**Verify in this order** — it separates a broken deploy from a broken feature:
+`docker compose ps` all healthy → `curl http://localhost:8080/actuator/health` →
+login → board renders → a new application survives a refresh → only then the
+release's own feature.
+
+**Rollback.** Frontend is clean — pin the previous commit SHA (tags are full SHAs;
+there is no `:vX.Y.Z` image tag):
+```bash
+docker compose pull frontend    # after editing image: to ...frontend:<sha>
+```
+Backend is only clean if no migration ran; otherwise restore the dump.
+
+### Reclaim disk after deploying
+```bash
+docker system df             # see the Images / Build Cache split
+docker image prune -f        # untagged images left behind by pull
+docker builder prune -f      # build cache (only grows if someone builds on the server)
+```
+Safe by design: both skip anything a running container uses.
 
 ### Read live logs
 ```bash
@@ -430,4 +475,4 @@ you accidentally drop a table or migration, you'll wish you'd run weekly backups
 
 ---
 
-*Last updated: 2026-05-04*
+*Last updated: 2026-07-22*
