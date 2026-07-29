@@ -32,7 +32,7 @@ Check for OWASP Top 10 issues:
 10. **Insufficient Logging & Monitoring** — swallowed exceptions, missing audit log on auth failures
 
 **Step 3 — Cross-check with project conventions**
-Consult `spec/v1/security.md` if present — flag deviations from the documented filter chain, token handling, or CORS rules.
+Consult `spec/security.md` if present — flag deviations from the documented filter chain, token handling, or CORS rules.
 
 ## Output format
 
