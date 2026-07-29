@@ -1,16 +1,4 @@
-# Service Notices Implementation Plan — Frontend
-
-## Work Process (applicable to each step)
-
-1. **Implementation** — Claude makes code changes
-2. **Automatic verification** — `npm run build` + `npm run test:run`, both must be green
-3. **Manual verification** — user runs `npm run dev` and verifies visually
-4. **Update plans** — Claude updates checkboxes in this file
-5. **Commit suggestion** — Claude proposes commit message (format: `type(frontend): description`)
-6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next step
-
----
+# 1.0.0 08-user-data / service-notices — Implementation Plan (frontend)
 
 ## Goal
 
@@ -201,7 +189,7 @@ On next visit: modal won't appear for this `id`.
 **File:** `src/pages/DashboardPage.tsx` (or `AppContent.tsx` — check
 where main layout is mounted after login in project)
 
-- [ ] Import hook and components:
+- [x] Import hook and components:
 
 ```tsx
 const { data: notices = [] } = useServiceNotices();
@@ -210,7 +198,7 @@ const banners = notices.filter(n => n.type === 'BANNER');
 const modals  = notices.filter(n => n.type === 'MODAL');
 ```
 
-- [ ] Render below header:
+- [x] Render below header:
 
 ```tsx
 {banners.map(n => <ServiceBanner key={n.id} notice={n} />)}
@@ -225,7 +213,7 @@ const modals  = notices.filter(n => n.type === 'MODAL');
 
 **Files:** `src/i18n/locales/pl/common.json`, `src/i18n/locales/en/common.json`
 
-- [ ] Add (PL):
+- [x] Add (PL):
 
 ```json
 "notices": {
@@ -233,7 +221,7 @@ const modals  = notices.filter(n => n.type === 'MODAL');
 }
 ```
 
-- [ ] Add (EN):
+- [x] Add (EN):
 
 ```json
 "notices": {
@@ -249,17 +237,17 @@ const modals  = notices.filter(n => n.type === 'MODAL');
 
 **New file:** `src/test/components/ServiceBanner.test.tsx`
 
-- [ ] Test: banner renders message in current language (PL)
-- [ ] Test: banner renders message in current language (EN)
-- [ ] Test: clicking "×" hides banner
-- [ ] Test: banner visible again after remount (state in useState, not localStorage)
+- [x] Test: banner renders message in current language (PL)
+- [x] Test: banner renders message in current language (EN)
+- [x] Test: clicking "×" hides banner
+- [x] Test: banner visible again after remount (state in useState, not localStorage)
 
 **New file:** `src/test/components/ServiceModal.test.tsx`
 
-- [ ] Test: modal renders message in current language
-- [ ] Test: clicking "OK" hides modal
-- [ ] Test: modal doesn't appear if `id` already in localStorage
-- [ ] Test: after clicking "OK" `id` goes to localStorage
+- [x] Test: modal renders message in current language
+- [x] Test: clicking "OK" hides modal
+- [x] Test: modal doesn't appear if `id` already in localStorage
+- [x] Test: after clicking "OK" `id` goes to localStorage
 
 - [x] `npm run test:run` — all tests green
 

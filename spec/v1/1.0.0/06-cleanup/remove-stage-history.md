@@ -79,66 +79,66 @@ The following files have `stageHistory` or `currentStage` in name/code — **che
 Each step ends with `mvn test` — we don't move forward if tests are red.
 
 ### Step 1 — Database Migration: DROP TABLE
-- [ ] Add `V5__drop_stage_history.sql`:
+- [x] Add `V5__drop_stage_history.sql`:
   ```sql
   ALTER TABLE applications DROP CONSTRAINT IF EXISTS fk_applications_stage_history;
   ALTER TABLE cvs DROP CONSTRAINT IF EXISTS fk_cvs_stage_history;
   DROP TABLE IF EXISTS stage_history;
   ```
-- [ ] `mvn compile` — check if Flyway doesn't complain
+- [x] `mvn compile` — check if Flyway doesn't complain
 
 ### Step 2 — Delete Files
-- [ ] Delete `entity/StageHistory.java`
-- [ ] Delete `repository/StageHistoryRepository.java`
-- [ ] Delete `dto/StageHistoryResponse.java`
-- [ ] `mvn compile` — there will be errors (usages in other files), this is expected
+- [x] Delete `entity/StageHistory.java`
+- [x] Delete `repository/StageHistoryRepository.java`
+- [x] Delete `dto/StageHistoryResponse.java`
+- [x] `mvn compile` — there will be errors (usages in other files), this is expected
 
 ### Step 3 — Clean Up `Application.java`
-- [ ] Delete `import StageHistory`
-- [ ] Delete field `List<StageHistory> stageHistory`
-- [ ] Delete getter `getStageHistory()`
-- [ ] Delete method `addStageHistory()`
-- [ ] `mvn compile`
+- [x] Delete `import StageHistory`
+- [x] Delete field `List<StageHistory> stageHistory`
+- [x] Delete getter `getStageHistory()`
+- [x] Delete method `addStageHistory()`
+- [x] `mvn compile`
 
 ### Step 4 — Clean Up `ApplicationResponse.java`
-- [ ] Delete `import StageHistoryResponse`
-- [ ] Delete field `List<StageHistoryResponse> stageHistory` from record
-- [ ] Delete mapping `application.getStageHistory()...` in `fromEntity()`
-- [ ] `mvn compile`
+- [x] Delete `import StageHistoryResponse`
+- [x] Delete field `List<StageHistoryResponse> stageHistory` from record
+- [x] Delete mapping `application.getStageHistory()...` in `fromEntity()`
+- [x] `mvn compile`
 
 ### Step 5 — Clean Up `ApplicationService.java`
-- [ ] Delete `import StageHistoryRepository` and `import StageHistory`
-- [ ] Delete field `stageHistoryRepository` and its injection in constructor
-- [ ] Delete method `markCurrentStageCompleted()`
-- [ ] In `create()`: delete `stageHistoryRepository.save(new StageHistory(...))`
-- [ ] In `addStage()`: delete call to `markCurrentStageCompleted(application)` and `stageHistoryRepository.save(...)`
-- [ ] In `updateStage()`: delete `stageHistoryRepository.deleteByApplicationId(...)` and `stageHistoryRepository.save(...)` (added this session)
-- [ ] `mvn compile`
+- [x] Delete `import StageHistoryRepository` and `import StageHistory`
+- [x] Delete field `stageHistoryRepository` and its injection in constructor
+- [x] Delete method `markCurrentStageCompleted()`
+- [x] In `create()`: delete `stageHistoryRepository.save(new StageHistory(...))`
+- [x] In `addStage()`: delete call to `markCurrentStageCompleted(application)` and `stageHistoryRepository.save(...)`
+- [x] In `updateStage()`: delete `stageHistoryRepository.deleteByApplicationId(...)` and `stageHistoryRepository.save(...)` (added this session)
+- [x] `mvn compile`
 
 ### Step 6 — Clean Up `ApplicationRepository.java` and `UserService.java`
-- [ ] In `ApplicationRepository`: delete `@EntityGraph`, delete method `findByUserIdWithStageHistory`, add standard `findByUserId` (or check if it already exists)
-- [ ] In `ApplicationService.findAllByUserId()`: change call to `findByUserId`
-- [ ] In `UserService`: delete `import StageHistoryRepository` and `import StageHistory`, delete field and injection in constructor, delete `stageHistoryRepository.save(initialStage)`
-- [ ] `mvn compile`
+- [x] In `ApplicationRepository`: delete `@EntityGraph`, delete method `findByUserIdWithStageHistory`, add standard `findByUserId` (or check if it already exists)
+- [x] In `ApplicationService.findAllByUserId()`: change call to `findByUserId`
+- [x] In `UserService`: delete `import StageHistoryRepository` and `import StageHistory`, delete field and injection in constructor, delete `stageHistoryRepository.save(initialStage)`
+- [x] `mvn compile`
 
 ### Step 7 — Clean Up Tests
-- [ ] In `ApplicationServiceTest`: delete mock `stageHistoryRepository`, delete test `updateStage_toInProgress_withCurrentStage_savesStageHistory`, delete all `verify(stageHistoryRepository)`
-- [ ] In `ApplicationControllerTest`: delete assertions `$.stageHistory`
-- [ ] `mvn test` — must be green
+- [x] In `ApplicationServiceTest`: delete mock `stageHistoryRepository`, delete test `updateStage_toInProgress_withCurrentStage_savesStageHistory`, delete all `verify(stageHistoryRepository)`
+- [x] In `ApplicationControllerTest`: delete assertions `$.stageHistory`
+- [x] `mvn test` — must be green
 
 ### Step 8 — Frontend
-- [ ] In `domain.ts`: delete interface `StageHistory`, delete field `stageHistory` from `ApplicationResponse`
-- [ ] Check if TypeScript compiles (`npm run build` or `tsc --noEmit`)
+- [x] In `domain.ts`: delete interface `StageHistory`, delete field `stageHistory` from `ApplicationResponse`
+- [x] Check if TypeScript compiles (`npm run build` or `tsc --noEmit`)
 
 ---
 
 ## Final Verification
 
 After all steps:
-- [ ] `mvn test` — green
-- [ ] `npm run build` — no TypeScript errors
-- [ ] Restart application — no errors on startup (Flyway, JPA)
-- [ ] Manual: log in, open application, drag on Kanban — everything works as before changes
+- [x] `mvn test` — green
+- [x] `npm run build` — no TypeScript errors
+- [x] Restart application — no errors on startup (Flyway, JPA)
+- [x] Manual: log in, open application, drag on Kanban — everything works as before changes
 
 ---
 

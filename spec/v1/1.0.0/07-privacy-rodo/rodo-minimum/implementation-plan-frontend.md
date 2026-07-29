@@ -1,16 +1,4 @@
-# RODO Minimum Implementation Plan — Applikon Frontend
-
-## Work Process (applicable to each step)
-
-1. **Implementation** — Claude makes code changes
-2. **Automatic verification** — `npm run build` + `npm run test:run`, both must be green
-3. **Manual verification** — user runs `npm run dev` and verifies visually
-4. **Update plans** — Claude updates checkboxes in this file
-5. **Commit suggestion** — Claude proposes commit message (format: `type(frontend): description`)
-6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next step
-
----
+# 1.0.0 07-privacy-rodo / rodo-minimum — Implementation Plan (frontend)
 
 ## Goal
 

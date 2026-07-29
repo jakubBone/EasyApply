@@ -1,155 +1,69 @@
-# Applikon — Logging (production observability)
+# 1.0.0 — Logging
 
-## 1. Context
+## 1. Problem
 
-The application is being prepared for public deployment on a Hetzner VPS
-running Docker Compose. After deployment, there is no IDE, no debugger,
-and no interactive console — **logs are the only diagnostic tool available**.
+The application is being prepared for public deployment on a Hetzner VPS running
+Docker Compose. After deployment there is no IDE, no debugger and no interactive
+console, so **logs are the only diagnostic tool available**.
 
-The existing logging setup has a solid foundation: MDC integration
-(`MdcUserFilter` adds `userId` to every log line automatically), Logback
-configured with a custom pattern, and key business operations already logged
-in services. However, three specific gaps make the application partially
-blind in production — especially around security events and error handling.
+The foundation is already solid: `MdcUserFilter` adds `userId` to every log line
+automatically, Logback runs a custom pattern, and services log the key business
+operations. But three gaps leave the application partly blind in production,
+especially around security events and error handling.
 
----
+**The security boundary is silent.** `AdminKeyFilter` blocks requests to
+`/api/admin/**` without a valid `X-Admin-Key` and returns `403` without logging
+anything. Brute-force probing of the admin key leaves no trace, and if the filter
+itself malfunctions, for example because of a wrong environment variable, the
+failure looks exactly like "the filter works and the key is wrong".
 
-## 2. Problem
+**Auth failures are silent.** `POST /api/auth/refresh` wraps token validation in
+a try-catch that returns `401` but never logs the exception. An expired token, a
+tampered payload, a database error and a code bug are all invisible and
+indistinguishable.
 
-### 2.1 Silent security boundary (`AdminKeyFilter`)
+**404s are silent.** `handleEntityNotFoundException` returns `404` for every
+`EntityNotFoundException` and logs nothing. There is no way to tell an expected
+"resource gone" from an unexpected "the frontend sent an ID from a bug".
 
-`AdminKeyFilter` blocks requests to `/api/admin/**` without a valid
-`X-Admin-Key` header and returns `403 Forbidden` silently. No log is produced.
-In production this means:
+There is also dead weight: `NoteService` and `JwtService` each declare a `Logger`
+field that is never used. That misleads a reader into assuming something is
+logged when nothing is.
 
-- Brute-force probing of the admin key leaves zero trace.
-- If the filter malfunctions (e.g. wrong env variable), the failure is
-  indistinguishable from "filter works correctly, key is wrong".
+## 2. Solution
 
-### 2.2 Silent auth failure (`AuthController.refresh`)
+**Log at the "something went wrong" boundary, not at every operation.** Backend
+only, no frontend change.
 
-The `POST /api/auth/refresh` endpoint wraps token validation in a try-catch
-block (lines 84–91) that returns `401` but never logs the exception. In
-production this means:
+- `AdminKeyFilter` logs `WARN` on every blocked request, with the URI and the
+  remote IP.
+- `AuthController.refresh()` logs `WARN` in its catch block, with the exception
+  message.
+- `GlobalExceptionHandler.handleEntityNotFoundException` logs `WARN` with the
+  exception message before returning the `ProblemDetail`.
+- The two unused `Logger` fields are removed. No placeholder logging.
 
-- A failed refresh (expired token, tampered payload, DB error, code bug)
-  is completely invisible.
-- Impossible to distinguish user error from infrastructure failure.
+The existing MDC setup already injects `userId` into every line, so nothing new
+is needed there.
 
-### 2.3 Silent 404 errors (`GlobalExceptionHandler`)
+## 3. Out of scope
 
-`handleEntityNotFoundException` returns `404 Not Found` for every
-`EntityNotFoundException` — but logs nothing (lines 57–61). In production
-this means:
+- **Controller-level request logging.** Too noisy, and services already cover
+  the mutations.
+- **Logging in `ConsentRequiredFilter`.** Consent denials are expected behaviour
+  in the OAuth flow, so `debug` at best. Deferred.
+- **Structured JSON logs.** The Logback pattern is enough for v1.
+- **Log rotation and retention.** Handled by the Docker logging driver and the
+  host OS, not by application config.
+- **Centralised log aggregation** such as ELK or Grafana Loki. Post-v1.
+- **Logging in `JwtAuthenticationConverter` and `TokenHasher`.** Utility classes
+  with no observable failure mode worth logging.
 
-- Frontend calling a wrong or stale ID produces a silent 404 with no
-  server-side trace.
-- Hard to tell whether a 404 is an expected "resource gone" or an
-  unexpected "ID from a bug".
+## 4. Done when
 
-### 2.4 Dead logger fields
-
-`NoteService` (line 23) and `JwtService` (line 28) each declare a
-`private static final Logger log` field that is never used anywhere in
-the class. Dead code misleads: a reader assumes something is logged when
-nothing is.
-
----
-
-## 3. Decision
-
-**Log at the "something went wrong" boundary — not at every operation.**
-
-Specifically:
-- `WARN` for security denials (AdminKeyFilter, failed token refresh) — these
-  are unexpected and warrant attention.
-- `WARN` for 404 errors — not a crash, but useful signal.
-- Remove the two unused `Logger` fields — no placeholder logging.
-
-**What we do NOT add:**
-- Request-level logging in controllers — services already log key mutations.
-  Adding controller logs would duplicate entries and increase noise.
-- Access logging for read endpoints (`GET /me`, `GET /applications`, etc.) —
-  low signal-to-noise in production.
-- Centralized log aggregation (ELK, Grafana Loki) — out of scope for v1.
-
-The existing MDC infrastructure (`MdcUserFilter`) already injects `userId`
-into every log line — no additional MDC setup needed.
-
----
-
-## 4. Scope
-
-Single thread: **`logging/`** — backend only (no frontend changes required).
-
-### 4.1 Security visibility
-
-- `AdminKeyFilter`: log `WARN` on every blocked request (URI + remote IP).
-
-### 4.2 Auth visibility
-
-- `AuthController.refresh()`: log `WARN` in the catch block with
-  the exception message.
-
-### 4.3 Error handler coverage
-
-- `GlobalExceptionHandler.handleEntityNotFoundException`: add `log.warn`
-  with the exception message before returning the `ProblemDetail`.
-
-### 4.4 Dead code cleanup
-
-- `NoteService`: remove the unused `Logger` field.
-- `JwtService`: remove the unused `Logger` field.
-
----
-
-## 5. Out of Scope
-
-- **Controller-level request logging** — too noisy, services cover mutations.
-- **Logging for `ConsentRequiredFilter`** — consent denials are expected
-  behaviour in the OAuth flow; `debug` logging at best, deferred.
-- **Structured JSON logs** — Logback pattern is sufficient for v1.
-- **Log rotation / retention policy** — handled by Docker logging driver
-  and host OS, not application config.
-- **Centralized log aggregation** — post-v1.
-- **Logging in `JwtAuthenticationConverter`, `TokenHasher`** — utility
-  classes with no observable failure modes worth logging.
-
----
-
-## 6. Success Criteria (Definition of Done)
-
-`10-logging` is closed when:
-
-1. ✅ A request to `/api/admin/**` with a wrong or missing key produces a
-   `WARN` log line containing URI and remote IP.
-2. ✅ A failed `POST /api/auth/refresh` (invalid/expired token) produces a
-   `WARN` log line containing the exception message.
-3. ✅ An `EntityNotFoundException` produces a `WARN` log line before the
-   `404` response is returned.
-4. ✅ No unused `Logger` fields remain in the codebase.
-5. ✅ `./mvnw test` — all tests pass, zero failures.
-6. ✅ `as-built.md` updated: logging coverage section.
-
----
-
-## 7. Implementation Order
-
-Single thread, steps executed in order:
-
-1. **Step 1** — `AdminKeyFilter`: security warn (most critical before deploy)
-2. **Step 2** — `AuthController.refresh()`: catch block warn
-3. **Step 3** — `GlobalExceptionHandler`: 404 warn
-4. **Step 4** — Dead code cleanup: remove unused loggers
-
----
-
-## 8. Related Documents
-
-- `spec/v1/1.0.0/as-built.md` — update after completion (logging coverage section)
-- `spec/v1/1.0.0/10-logging/implementation-plan-backend.md` — detailed implementation plan
-- `spec/README.md` — add row for 10-logging
-
----
-
-*Created: 2026-05-06*
+- A request to `/api/admin/**` with a wrong or missing key produces a `WARN` line
+  containing the URI and the remote IP.
+- A failed `POST /api/auth/refresh` produces a `WARN` line containing the
+  exception message.
+- An `EntityNotFoundException` produces a `WARN` line before the `404` response.
+- No unused `Logger` fields remain in the codebase.

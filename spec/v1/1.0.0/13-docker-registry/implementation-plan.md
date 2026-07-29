@@ -1,101 +1,55 @@
-# Docker Registry Implementation Plan — Applikon
+# 1.0.0 13-docker-registry — Implementation Plan
 
-## Work Process
+## What changes
 
-1. **Secret** — user adds `VITE_API_URL` in GitHub repo Settings → Secrets → Actions
-2. **Implementation** — Claude extends `.github/workflows/ci.yml` and updates `docker-compose.yml`
-3. **Verification** — user pushes to `master`, checks GitHub → Actions and GitHub → Packages
-4. **Commit suggestion** — Claude proposes commit message
-5. **Commit** — user runs `git add` + `git commit`
+| File | Change |
+|------|--------|
+| `.github/workflows/ci.yml` | Add the `docker` job: build and push to GHCR |
+| `docker-compose.yml` | Add `image:` to the `backend` and `frontend` services |
+| GitHub repo settings | Add the `VITE_API_URL` secret |
 
----
+After every successful CI run, two images land in GHCR:
+`ghcr.io/jakubbone/applikon-backend` and `ghcr.io/jakubbone/applikon-frontend`.
+Each push produces `:latest`, which moves, and `:<short-sha>`, which does not.
+The server pulls `:latest` and runs the application without building anything.
 
-## Goal
+**Design decisions**
 
-After every successful CI run on `master`, two Docker images are pushed to GHCR:
-- `ghcr.io/jakubbone/applikon-backend`
-- `ghcr.io/jakubbone/applikon-frontend`
+- **The `docker` job needs `backend` and `frontend`.** Images are pushed only
+  when all tests pass, so a broken build never reaches the registry.
+- **It runs only on a push, not on pull requests.** A PR triggers tests alone,
+  and no image is pushed for an unmerged branch.
+- **`GITHUB_TOKEN` authenticates to GHCR.** Actions has built-in write access, so
+  no personal access token is stored in CI.
+- **`docker-compose.yml` keeps both `image:` and `build:`.** `image:` names the
+  registry image, and `build:` stays for local development with
+  `docker-compose up --build`. On the server `docker-compose pull` uses `image:`
+  and ignores `build:`.
+- **`VITE_API_URL` is a GitHub secret.** The production API URL is baked into the
+  frontend bundle at CI build time, so it must not sit in the repository.
+- **The short SHA tag** uses `${GITHUB_SHA::7}`, which is readable and matches
+  `git log --oneline`, rather than the full 40 characters.
+- **Package visibility follows the repository.** A public repo gives public
+  packages, so the server needs no `docker login` to pull.
 
-Each push produces two tags: `:latest` (moving) and `:<short-sha>` (immutable).
-The server pulls `:latest` and runs the application without building anything locally.
+## Step 1 — The GitHub secret
 
----
-
-## Design Decisions
-
-- **`docker` job depends on `backend` and `frontend`** — images are only pushed when all tests pass; a broken build never reaches the registry.
-- **Only runs on `push` to `master`, not PRs** — PRs trigger tests only; no images are pushed for unmerged branches.
-- **`GITHUB_TOKEN` for GHCR auth** — Actions has built-in write access to GHCR via `secrets.GITHUB_TOKEN`; no manual PAT needed in CI.
-- **Both `image:` and `build:` in docker-compose.yml** — `image:` tells Docker which registry name to use; `build:` stays for local development (`docker-compose up --build`). On the server `docker-compose pull` uses `image:`, `build:` is ignored.
-- **`VITE_API_URL` as GitHub Secret** — the production API URL is baked into the frontend JS bundle at CI build time; it must not be hardcoded in the repository.
-- **Short SHA tag** — `github.sha` is 40 chars; `${GITHUB_SHA::7}` gives a readable 7-char short hash matching `git log --oneline` output.
-- **Packages visibility** — GHCR packages inherit repository visibility. If the repo is public, packages are public; no server-side `docker login` is required to pull.
-
----
-
-## Implementation
-
-### Step 1 — GitHub Secret
-
-In GitHub repo: **Settings → Secrets and variables → Actions → New repository secret**
+**Build** — in the repository, under Settings, Secrets and variables, Actions,
+add a new repository secret:
 
 | Name | Value |
 |------|-------|
-| `VITE_API_URL` | `https://api.yourdomain.com/api` (production URL) |
+| `VITE_API_URL` | the production API URL, for example `https://api.yourdomain.com/api` |
 
----
+**Checklist**
+- [x] `VITE_API_URL` secret added
 
-### Step 2 — File: `.github/workflows/ci.yml` *(extend)*
+## Step 2 — The `docker` job
 
-Add the `docker` job below the existing `frontend` job:
+**Build** — add this job to `.github/workflows/ci.yml`, below the existing
+`frontend` job:
 
 ```yaml
-name: CI
-
-on:
-  push:
-    branches: [master]
-
-jobs:
-  backend:
-    name: Backend — Maven tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Java 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: temurin
-
-      - name: Run tests
-        working-directory: applikon-backend
-        run: ./mvnw test
-
-  frontend:
-    name: Frontend — Vitest + build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install dependencies
-        working-directory: applikon-frontend
-        run: npm ci
-
-      - name: Run unit tests
-        working-directory: applikon-frontend
-        run: npm run test:run
-
-      - name: Build
-        working-directory: applikon-frontend
-        run: npm run build
-
   docker:
     name: Docker — build and push to GHCR
     runs-on: ubuntu-latest
@@ -137,11 +91,14 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/applikon-frontend:${{ github.sha }}
 ```
 
----
+**Checklist**
+- [x] The `docker` job builds and pushes after `backend` and `frontend` pass
+- [x] Both images are in GHCR with `:latest` and `:<sha>` tags
 
-### Step 3 — File: `docker-compose.yml` *(update backend and frontend services)*
+## Step 3 — `docker-compose.yml`
 
-Add `image:` field to `backend` and `frontend` — keep all existing `build:` sections intact:
+**Build** — add `image:` to both services and leave every existing `build:`
+section intact:
 
 ```yaml
   backend:
@@ -162,34 +119,10 @@ Add `image:` field to `backend` and `frontend` — keep all existing `build:` se
     # ... rest unchanged
 ```
 
----
+**Done when** a push shows all three jobs green in GitHub Actions, GitHub
+Packages lists both images with their two tags, and the server can
+`docker-compose pull` and `up -d` from them.
 
-## Verification
-
-- [x] Push to `master` — all three jobs appear in GitHub → Actions (`backend`, `frontend`, `docker`)
-- [x] `docker` job is green
-- [x] GitHub → Packages shows `applikon-backend` and `applikon-frontend`
-- [x] Each package has tags `:latest` and `:<sha>`
-
----
-
-## Definition of Done
-
-- [x] `docker` CI job builds and pushes after every successful `backend` + `frontend` run
-- [x] Both images present in GHCR with `:latest` and `:<sha>` tags
-- [x] `docker-compose.yml` has `image:` fields pointing to GHCR
-- [x] `spec/README.md` updated with 13-docker-registry row
-
----
-
-## Files to Change
-
-| File | Change |
-|------|--------|
-| `.github/workflows/ci.yml` | Add `docker` job (build + push to GHCR) |
-| `docker-compose.yml` | Add `image:` to `backend` and `frontend` services |
-| GitHub repo Settings | Add `VITE_API_URL` secret |
-
----
-
-*Created: 2026-05-07*
+**Checklist**
+- [x] `image:` fields point at GHCR on both services
+- [x] `docker-compose pull` on the server downloads the images

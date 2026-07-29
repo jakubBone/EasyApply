@@ -1,16 +1,4 @@
-# Landing Page — Implementation Plan (Frontend)
-
-## Work Process (applicable to each step)
-
-1. **Implementation** — Claude makes code changes
-2. **Verification** — `npm run build` + `npm run test:run`, both must pass
-3. **Manual verification** — user runs `npm run dev` and checks visually
-4. **Update plan** — Claude updates checkboxes in this file
-5. **Commit proposal** — Claude proposes commit message (`type(frontend): description`)
-6. **Commit** — user runs `git add` + `git commit`
-7. **Continue** — Claude asks if we proceed to next step
-
----
+# 1.1.0 15-landing-page — Implementation Plan (frontend)
 
 ## Final Copy (approved in mockup)
 
@@ -57,8 +45,8 @@
 
 - [x] Import `LandingPage` from `./pages/LandingPage`
 - [x] Replace `<Route path="/" element={<Navigate to="/dashboard" replace />} />` with `<Route path="/" element={<LandingPage />} />`
-- [ ] Verify: unauthenticated user visiting `/` sees landing page
-- [ ] Verify: authenticated user visiting `/` is redirected to `/dashboard`
+- [x] Verify: unauthenticated user visiting `/` sees landing page
+- [x] Verify: authenticated user visiting `/` is redirected to `/dashboard`
 
 ---
 
@@ -201,7 +189,7 @@ Breakpoint `@media (max-width: 768px)`:
 - [x] CTA button: `width: 100%`
 - [x] Footer CTA: adjust padding
 
-- [ ] Manual verification on mobile viewport (DevTools 375px)
+- [x] Manual verification on mobile viewport (DevTools 375px)
 
 ---
 
@@ -265,7 +253,3 @@ public/
 - [x] `npm run build` — no errors
 - [x] `npm run test:run` — 0 failed (105/105)
 - [x] `as-built.md` updated
-
----
-
-*Created: 2026-05-28*

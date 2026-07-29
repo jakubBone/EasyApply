@@ -1,18 +1,20 @@
-# Applikon 2.2.0 — As-Built
+# 2.2.0 — As-Built
 
-> Differences between the plan and what actually shipped, with a short why. Source
-> of truth is the code. Plan files
-> ([`04-question-kind/brief.md`](04-question-kind/brief.md),
-> [`04-question-kind/user-stories.md`](04-question-kind/user-stories.md),
-> [`04-question-kind/implementation-plan.md`](04-question-kind/implementation-plan.md))
-> are never edited after the fact — reality that disagrees with them lands here.
+Source of truth is the code. What exists now:
+[`architecture.md`](../../architecture.md).
 
-## Deviations from plan
+## 1. What shipped
+
+*(written when the release ships)*
+
+## 2. Changed from plan
 
 | Where | Planned | Built | Why |
 |-------|---------|-------|-----|
-| — | — | — | *(filled as steps ship)* |
+| | | | |
 
-## Notes
+## 3. Not done
 
-*(anything worth recording that isn't a clean plan-vs-built row)*
+| Item | Why not |
+|------|---------|
+| | |

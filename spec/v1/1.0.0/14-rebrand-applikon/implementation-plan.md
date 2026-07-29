@@ -1,216 +1,165 @@
-# Rebrand Implementation Plan — EasyApply → Applikon
+# 1.0.0 14-rebrand-applikon — Implementation Plan
 
-## Work Process
-
-1. **Step-by-step commits** — Claude executes each step, proposes commit
-   message, user runs `git add` + `git commit`.
-2. **Tests at the end** — `./mvnw test` and the frontend build run **once after
-   Step 4** (per project convention).
-3. **Live verification** — after deploy, user opens `aplikujbezspiny.pl` and
-   confirms the new branding renders.
-
----
-
-## Goal
-
-Replace every reference to `EasyApply` / `easyapply` / `com.easyapply` with the
-new `Applikon` / `applikon` / `com.applikon` brand, leaving the running
-application functionally identical.
-
----
-
-## Design Decisions
-
-- **Package rename via IDE refactor** — IntelliJ `Refactor → Rename Package`
-  updates all imports atomically; safer than text-replace.
-- **Folder rename via `git mv`** — IDE doesn't reliably rename top-level Maven
-  modules; rename folders explicitly and update path references in `pom.xml`,
-  `docker-compose.yml`, CI, and docs.
-- **Tagline placement: landing only (Option C)** — in-app logo is just
-  "Applikon"; tagline "Aplikuj bez spiny" appears in `README.md`, in the landing
-  hero, and as `<meta name="description">`.
-- **Logo: text-only swap** — keep the current PNG logo image (briefcase
-  graphic, colours, font, shape, all visual details). Only the wordmark text
-  changes from `EasyApply` to `Applikon`. Regenerate `logo-trim.png` and
-  `logo_white.png` with identical layout/styling, just the new text. No
-  changes to the favicon or any other graphic asset.
-- **Database stays as-is** — renaming would require a migration with no
-  functional benefit.
-- **GitHub repo redirect** — GitHub auto-redirects old `EasyApply` URLs after
-  rename, so existing LinkedIn posts keep working.
-
----
-
-## Implementation
-
-### Step 1 — Backend
-
-`refactor(backend): rename module and package to applikon`
-
-1. **Folder rename**: `git mv easyapply-backend applikon-backend`.
-2. **Java package rename** (IntelliJ):
-   - Right-click `com.easyapply` → `Refactor → Rename` → `applikon`.
-   - Apply across all subpackages.
-   - Verify: search for `com.easyapply` returns zero matches.
-3. **Main class**: `EasyApplyApplication.java` → `ApplikonApplication.java`
-   (rename file + class, IDE updates references).
-4. **`applikon-backend/pom.xml`**:
-   - `<groupId>com.easyapply</groupId>` → `<groupId>com.applikon</groupId>`
-   - `<artifactId>easyapply-backend</artifactId>` → `applikon-backend`
-   - `<name>` and `<description>` — replace `EasyApply` with `Applikon`.
-5. **`application.properties`**:
-   - `spring.application.name=easyapply` → `applikon`.
-6. **`OpenApiConfig.java`** — title and description in `@OpenAPIDefinition`.
-7. **`JwtService.java`** — `.issuer("easyapply")` → `.issuer("applikon")`
-   (line ~49). Note: existing tokens in flight will be rejected after deploy;
-   acceptable since this is a portfolio project.
-8. **`V1__init_schema.sql`** — only the comment header, no schema change.
-9. **Tests** — update any test that asserts on app name (e.g.
-   `SystemControllerTest`, `WithMockAuthenticatedUser`).
-
-### Step 2 — Frontend
-
-`refactor(frontend): rename module to applikon`
-
-1. **Folder rename**: `git mv easyapply-frontend applikon-frontend`.
-2. **`package.json`** + **`package-lock.json`**:
-   `"name": "easyapply-frontend"` → `"applikon-frontend"`.
-3. **`index.html`**:
-   - `<title>` → `Applikon — Aplikuj bez spiny`
-   - `<meta name="description">` — short Polish/English line about the tracker.
-   - Add or update `<meta property="og:title">`, `og:description`, `og:url`
-     so LinkedIn previews show the new brand.
-4. **Logo image** — the logo lives as a PNG in `public/`, not as a text
-   component:
-   - `public/logo-trim.png` — used in `AppContent.tsx` header and
-     `pages/LoginPage.tsx`.
-   - `public/logo_white.png` — white-on-dark variant.
-   Regenerate both files with identical briefcase graphic, colours, font,
-   shape, and layout — only the wordmark text changes from `EasyApply` to
-   `Applikon`. Replace the files in `public/` (filenames stay the same so no
-   import paths change).
-   Update `alt` attributes in `AppContent.tsx` and `LoginPage.tsx`:
-   `alt="EasyApply logo"` → `alt="Applikon logo"`,
-   `alt="EasyApply"` → `alt="Applikon"`.
-   Favicon (`public/favicon.svg`) stays untouched.
-5. **i18n bundles**:
-   - `pl/common.json`, `en/common.json`, `pl/tour.json`, `en/tour.json` —
-     replace `EasyApply` with `Applikon`.
-6. **Code references** — replace string literals in:
-   - `AppContent.tsx`
-   - `services/api.ts`
-   - `pages/LoginPage.tsx`, `pages/Settings.tsx`
-   - `components/auth/ConsentGate.tsx`
-   - `types/domain.ts`
-7. **Privacy policy** (`src/content/privacyPolicy.ts`) — 6 occurrences;
-   replace brand name in user-facing legal text. Same data controller, brand
-   rename only.
-8. **Tests** — update assertions on rendered "EasyApply":
-   `PrivacyPolicy.test.tsx`, `App.test.tsx`, `Settings.test.tsx`,
-   `ConsentGate.test.tsx`.
-9. **Cypress** — `cypress/support/e2e.ts`.
-
-### Step 3 — Infra
-
-`chore(infra): rename services and paths to applikon`
-
-1. **`docker-compose.yml`** — service names (`easyapply-backend` →
-   `applikon-backend`, same for frontend), `container_name` if set, network
-   aliases, image references in the 13-docker-registry plan.
-2. **`.env.example`** — variable names, comments.
-3. **`.github/workflows/ci.yml`** — `working-directory: easyapply-backend` →
-   `applikon-backend`, same for frontend. Update GHCR image names if already
-   wired (`ghcr.io/jakubbone/easyapply-*` → `applikon-*`).
-4. **`.claude/commands/mentor-refactor-backend.md`**,
-   **`mentor-refactor-frontend.md`** — path references.
-5. **`.claude/skills/code-review-backend/references/java-conventions.md`** —
-   package examples.
-6. **`applikon-frontend/.claude/settings.local.json`** — relocated by folder
-   rename; verify internal paths.
-
-### Step 4 — Documentation
-
-`docs(spec): rebrand from EasyApply to Applikon`
-
-1. **`README.md`** — title, badges, project description, paths to
-   `applikon-{backend,frontend}`. Add live demo link
-   `https://aplikujbezspiny.pl` and tagline as subtitle.
-2. **`CLAUDE.md`** — first line `# EasyApply — CLAUDE.md` →
-   `# Applikon — CLAUDE.md`. Update folder paths in commands table.
-3. **`SECURITY.md`** — brand references.
-4. **`spec/README.md`** — add row for 14-rebrand-applikon, update brand references.
-5. **`spec/v1/architecture.md`**, **`security.md`**, **`as-built.md`** —
-   replace in titles + body. Add as-built entry for 14-rebrand-applikon.
-6. **`spec/v1/1.0.0/01-vision/brief.md`** — replace.
-7. **All topic docs** (`02-` through `13-`) — replace in titles, headers, body
-   text. Existing learning notes in `04-mvp-refactoring/learning/*` and
-   `05-additional-features/i18n/learning/*` get the brand replaced too.
-8. **`spec/v2/vision.md`** — replace.
-9. **`spec/deployment/deployment-intro.md`**,
-   **`deployment/deployment-hetzner.md`** — replace, including hostnames and
-   container references.
-
-### Step 5 — External (no commit)
-
-1. **GitHub** — Settings → General → Rename repository `EasyApply` → `applikon`.
-2. **Verify auto-redirect** — `github.com/jakubBone/EasyApply` should resolve to
-   the new URL.
-3. **Deploy** — pull on Hetzner, `docker-compose up`, smoke-test login +
-   navigate.
-4. **Verify production** — open `aplikujbezspiny.pl` in incognito, confirm logo,
-   title, OG preview render.
-5. **LinkedIn / portfolio** — update pinned project link if it shows old URL.
-6. **Optional** — generate a fresh OG preview image so LinkedIn shares display
-   "Applikon" rather than cached "EasyApply".
-
----
-
-## Verification (after Step 4)
-
-```bash
-# Inventory check — should print no results
-grep -ri "easyapply" . --exclude-dir=.git --exclude-dir=node_modules \
-                      --exclude-dir=target --exclude-dir=dist
-
-# Backend
-cd applikon-backend && ./mvnw test
-
-# Frontend
-cd ../applikon-frontend && npm run lint && npm run test:run && npm run build
-
-# Full stack
-cd .. && docker-compose up --build
-```
-
----
-
-## Definition of Done
-
-- ✅ Zero matches for `easyapply` (case-insensitive) outside `.git/`,
-      `node_modules/`, `target/`, `dist/`.
-- ✅ Backend tests green.
-- ✅ Frontend lint, tests, and build green.
-- ✅ `docker-compose up` brings up `applikon-backend` and `applikon-frontend`.
-- ✅ GitHub repo renamed to `applikon`.
-- ✅ `spec/README.md` updated with 14-rebrand-applikon row.
-- ✅ `spec/v1/1.0.0/as-built.md` updated.
-
----
-
-## Files to Change (summary)
+## What changes
 
 | Category | Files | Notes |
 |----------|-------|-------|
-| Java sources (package + class) | ~80 | Most resolved by IDE package rename |
-| Backend configs | 4 | `pom.xml`, `application.properties`, `OpenApiConfig`, JWT issuer |
-| Frontend code + tests | ~15 | Component + service + test refs |
+| Java sources (package and class) | ~80 | Most are handled by the IDE package rename |
+| Backend configs | 4 | `pom.xml`, `application.properties`, `OpenApiConfig`, the JWT issuer |
+| Frontend code and tests | ~15 | Component, service and test references |
 | Frontend i18n | 4 | `pl/common`, `en/common`, `pl/tour`, `en/tour` |
-| Infra | 5 | `docker-compose`, `.env.example`, CI, `.claude` configs |
+| Infrastructure | 5 | `docker-compose`, `.env.example`, CI, `.claude` configs |
 | Top-level docs | 4 | `README`, `CLAUDE.md`, `SECURITY.md`, `spec/README.md` |
 | Spec docs | ~30 | `spec/v1/**`, `spec/v2/**`, `spec/deployment/**` |
-| Claude tooling | 4 | Mentor refactor commands + skills references |
-| **Total** | **~147 files / 545 occurrences** | |
+| Claude tooling | 4 | Mentor refactor commands and skill references |
+| **Total** | **~147 files, 545 occurrences** | |
 
----
+The running application stays functionally identical.
 
-*Created: 2026-05-10*
+**Design decisions**
+
+- **The package rename goes through the IDE.** IntelliJ's Refactor, Rename
+  Package updates every import atomically, which is safer than a text replace.
+- **Folder renames go through `git mv`.** The IDE does not reliably rename
+  top-level Maven modules, so the folders are renamed explicitly and the path
+  references in `pom.xml`, `docker-compose.yml`, CI and the docs are updated by
+  hand.
+- **The logo is a text-only swap.** The PNG keeps its briefcase graphic, colours,
+  font and shape. Only the wordmark changes, and the favicon and every other
+  asset stay untouched.
+- **The database stays as it is.** Renaming would need a migration with no
+  functional benefit.
+- **The GitHub repository redirect does the rest.** GitHub auto-redirects old
+  `EasyApply` URLs after the rename, so existing LinkedIn posts keep working.
+
+## Step 1 — Backend
+
+Commit: `refactor(backend): rename module and package to applikon`
+
+**Build**
+1. `git mv easyapply-backend applikon-backend`.
+2. Java package rename in IntelliJ: right-click `com.easyapply`, Refactor,
+   Rename, to `applikon`, applied across every subpackage. Verify that searching
+   for `com.easyapply` returns nothing.
+3. `EasyApplyApplication.java` becomes `ApplikonApplication.java`, renaming both
+   the file and the class so the IDE updates references.
+4. `applikon-backend/pom.xml` — `groupId` to `com.applikon`, `artifactId` to
+   `applikon-backend`, and the brand in `<name>` and `<description>`.
+5. `application.properties` — `spring.application.name=applikon`.
+6. `OpenApiConfig.java` — the title and description in `@OpenAPIDefinition`.
+7. `JwtService.java` — `.issuer("easyapply")` becomes `.issuer("applikon")`.
+   Tokens already in flight will be rejected after deploy, which is acceptable
+   for a portfolio project.
+8. `V1__init_schema.sql` — the comment header only, no schema change.
+9. Tests — update anything asserting on the app name, such as
+   `SystemControllerTest` and `WithMockAuthenticatedUser`.
+
+**Checklist**
+- [x] Folder, package and main class renamed
+- [x] `pom.xml`, `application.properties`, `OpenApiConfig`, JWT issuer updated
+- [x] Tests asserting on the app name updated
+
+## Step 2 — Frontend
+
+Commit: `refactor(frontend): rename module to applikon`
+
+**Build**
+1. `git mv easyapply-frontend applikon-frontend`.
+2. `package.json` and `package-lock.json` — the `name` field.
+3. `index.html` — the `<title>`, a short `<meta name="description">`, and
+   `og:title`, `og:description` and `og:url` so LinkedIn previews show the new
+   brand.
+4. The logo lives as a PNG in `public/`, not as a component. Regenerate
+   `logo-trim.png` and `logo_white.png` with the identical graphic, colours,
+   font, shape and layout, changing only the wordmark. The filenames stay the
+   same, so no import path changes. Update the `alt` attributes in
+   `AppContent.tsx` and `LoginPage.tsx`. `public/favicon.svg` is untouched.
+5. i18n bundles — `pl/common.json`, `en/common.json`, `pl/tour.json`,
+   `en/tour.json`.
+6. String literals in `AppContent.tsx`, `services/api.ts`, `pages/LoginPage.tsx`,
+   `pages/Settings.tsx`, `components/auth/ConsentGate.tsx`, `types/domain.ts`.
+7. The privacy policy in `src/content/privacyPolicy.ts` — six occurrences. The
+   data controller does not change, only the brand name.
+8. Tests asserting on the rendered brand: `PrivacyPolicy.test.tsx`,
+   `App.test.tsx`, `Settings.test.tsx`, `ConsentGate.test.tsx`.
+9. `cypress/support/e2e.ts`.
+
+**Checklist**
+- [x] Folder, `package.json` and `index.html` with OG meta updated
+- [x] Logo PNGs regenerated with the new wordmark; `alt` attributes updated
+- [x] i18n bundles, code references and the privacy policy updated
+- [x] Frontend and Cypress tests updated
+
+## Step 3 — Infrastructure
+
+Commit: `chore(infra): rename services and paths to applikon`
+
+**Build**
+1. `docker-compose.yml` — service names, `container_name` where set, network
+   aliases, and the image references from topic 13.
+2. `.env.example` — variable names and comments.
+3. `.github/workflows/ci.yml` — the `working-directory` values, and the GHCR
+   image names if already wired.
+4. `.claude/commands/mentor-refactor-backend.md` and
+   `mentor-refactor-frontend.md` — path references.
+5. `.claude/skills/code-review-backend/references/java-conventions.md` — the
+   package examples.
+6. `applikon-frontend/.claude/settings.local.json` — moved by the folder rename,
+   so verify its internal paths.
+
+**Checklist**
+- [x] `docker-compose.yml`, `.env.example` and the CI workflow updated
+- [x] `.claude` commands, skills and local settings updated
+
+## Step 4 — Documentation
+
+Commit: `docs(spec): rebrand from EasyApply to Applikon`
+
+**Build**
+1. `README.md` — title, badges, description, the `applikon-{backend,frontend}`
+   paths, plus a live demo link and the tagline as a subtitle.
+2. `CLAUDE.md` — the first line and the folder paths in the commands table.
+3. `SECURITY.md` — brand references.
+4. `spec/README.md` — brand references and a row for this topic.
+5. `spec/v1/architecture.md`, `security.md` and `as-built.md` — titles and body.
+6. `spec/v1/1.0.0/01-vision/brief.md`.
+7. Every topic doc from `02-` to `13-`, including the learning notes under
+   `04-mvp-refactoring/learning/` and `05-additional-features/i18n/learning/`.
+8. `spec/v2/vision.md`.
+9. `spec/deployment/deployment-intro.md` and `deployment-hetzner.md`, including
+   hostnames and container references.
+
+**Done when** the whole verification block passes:
+
+```bash
+# Inventory check — should print nothing
+grep -ri "easyapply" . --exclude-dir=.git --exclude-dir=node_modules \
+                      --exclude-dir=target --exclude-dir=dist
+
+cd applikon-backend && ./mvnw test
+cd ../applikon-frontend && npm run lint && npm run test:run && npm run build
+cd .. && docker-compose up --build
+```
+
+**Checklist**
+- [x] All documentation rebranded
+- [x] Zero matches for `easyapply` outside `.git/`, `node_modules/`, `target/`, `dist/`
+- [x] Backend tests green; frontend lint, tests and build green
+- [x] `docker-compose up` starts `applikon-backend` and `applikon-frontend`
+
+## Step 5 — External, no commit
+
+**Build**
+1. GitHub — Settings, General, rename the repository to `applikon`.
+2. Confirm the auto-redirect resolves the old URL.
+3. Deploy: pull on Hetzner, `docker-compose up`, then smoke-test login and
+   navigation.
+4. Open `aplikujbezspiny.pl` in incognito and confirm the logo, title and OG
+   preview.
+5. Update the pinned project link on LinkedIn if it still shows the old URL.
+6. Optionally regenerate the OG preview image so LinkedIn shares stop showing a
+   cached "EasyApply".
+
+**Checklist**
+- [x] Repository renamed and the redirect verified
+- [x] Deployed, with `aplikujbezspiny.pl` showing the new branding

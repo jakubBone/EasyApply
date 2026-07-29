@@ -1,78 +1,66 @@
 # 2.1.0 03-company-brief — Implementation Plan
 
-> Topic 03 of the v2 era — follows
-> [`../../2.0.0/02-cheat-sheet-consolidation/implementation-plan.md`](../../2.0.0/02-cheat-sheet-consolidation/implementation-plan.md) (topic 02, Steps 1-2).
-> Why this release exists: [`brief.md`](brief.md) · decisions:
-> [`user-stories.md`](user-stories.md) · provider & trust boundary:
-> [`../../../adr/ADR-001-gemini-free-tier-grounding.md`](../../../adr/ADR-001-gemini-free-tier-grounding.md).
+> This is the plan as written before the build. Several parts changed while
+> building — for what actually exists, read
+> [`as-built.md`](../as-built.md) and the ADRs it links to.
 
-**Working rhythm — a step is done only when:** its tests are green (frontend
-verified in-session; backend `./mvnw test` on the dev machine — no JDK
-in-session), its checklist below is ticked, and
-[`../as-built.md`](../as-built.md) records what was actually built
-(deviations go to as-built, never back into this file).
+## Design in one page
 
----
+The feature is a composition of well-known patterns, and the whole plan follows
+from them.
 
-## 0. Shape — the market patterns this feature maps to
-
-The feature is a composition of well-known patterns; the whole plan follows from
-them:
-
-| Aspect | Pattern | Design consequence |
+| Problem | Pattern | What it means here |
 |---|---|---|
-| Slow, unreliable external call (LLM) while the UI must show "generating…" | **Asynchronous Request-Reply** (`POST` → 202 + status, `GET` to poll) | three endpoints, `status` in the DB, the frontend polls |
-| Dependency on an AI provider that must be swappable and testable offline | **Ports & Adapters** (port `BriefChatModel`, Gemini adapter, Fake adapter) | the whole backend is built and tested against a fake — no keys to test |
-| Expensive, repeatable result shared across applications to the same company | **Cache-aside per (user, company)** | one brief per company, reused across applications, dedup on a unique key |
-| The user can correct a field on the company's brief | **Edit in place** (the edit updates the brief; an `edited` row flag marks user text) | two tables; the flag keeps the GDPR export honest |
+| The LLM call is slow and can fail, but the UI must show "generating…" | Asynchronous request-reply: `POST` returns 202 plus a status, `GET` polls | Three endpoints, a `status` column, and polling in the frontend |
+| The AI provider must be swappable and testable offline | Ports and adapters: a `BriefChatModel` port, a real adapter, a fake adapter | The whole backend is built and tested against the fake, with no API key |
+| The result is expensive and the same for every application to one company | Cache-aside, keyed by user and company | One brief per company, reused across applications, deduplicated by a unique key |
+| The user can correct a field | Edit in place, with an `edited` flag on the row | The flag is what keeps the GDPR export honest |
 
-**Language is data, not schema:** generated text is stored **one row per (field,
-language)**, never in fixed `*_pl`/`*_en` columns. Adding a locale is a new `lang`
-value + a prompt line — never a migration. The set of languages tracks the i18n
-UI (today **PL + EN**); the prompt generates exactly the locales the UI supports,
-read from the i18n locale list, not hard-coded.
+**Language is data, not schema.** Generated text is stored one row per field per
+language, never in fixed `*_pl` and `*_en` columns. Adding a locale is a new
+`lang` value and a line in the prompt, never a migration. The set of languages
+follows the i18n UI, today PL and EN, and is read from the locale list rather
+than hard-coded.
 
-The rest is standard hygiene: **idempotent trigger** (a double click never fires
-two AI calls), **data egress minimization** (only company name + job-ad link ever
-leave the system), **graceful degradation** (a provider error ends as a terminal
-`FAILED`, the core app untouched).
+The rest is standard hygiene. The trigger is idempotent, so a double click never
+fires two AI calls. Data egress is minimised, so only the company name and the
+job-ad link ever leave the system. Failure degrades gracefully: a provider error
+ends as a terminal `FAILED` and the rest of the app is untouched.
 
----
+## What changes
 
-## File map (what is created / changed)
-
-**Backend — new**
+**Backend, new**
 ```
 db/migration/V21__company_briefs.sql
 entity/CompanyBrief.java              entity/BriefStatus.java
-entity/CompanyBriefField.java (one row per field × language; `edited` flag)
-repository/CompanyBriefRepository.java   (fields ride along via the aggregate)
-service/BriefService.java            service/BriefGenerationWorker.java
+entity/CompanyBriefField.java         (one row per field and language, with an `edited` flag)
+repository/CompanyBriefRepository.java
+service/BriefService.java             service/BriefGenerationWorker.java
 service/ai/BriefChatModel.java (port) service/ai/FakeBriefChatModel.java
-service/ai/GeneratedBrief.java (record: list of {fieldKey, lang, text}; null text = insufficient)
-service/ai/BriefLocales.java (field keys + active locales, one source of truth)
+service/ai/GeneratedBrief.java        (record: list of {fieldKey, lang, text}; null text = insufficient)
+service/ai/BriefLocales.java          (field keys and active locales, one source of truth)
 config/AsyncConfig.java
 controller/BriefController.java
 dto/BriefResponse.java  dto/BriefFieldDto.java  dto/BriefEditRequest.java
 ```
-**Backend — changed:** `UserExportService.java` (+ edited brief fields),
-`dto/UserExportResponse.java` (+ `BriefFieldExport`), `messages_pl/en.properties`,
-`pom.xml` (Spring AI — Step 2).
 
-**Frontend — new:** `hooks/useBrief.ts`, `components/prep/BriefSection.tsx`,
-brief fields in the existing "About the company" edit modal.
-**Frontend — changed:** `services/api.ts`, `types/domain.ts`, the "About the
+**Backend, changed:** `UserExportService.java` and `dto/UserExportResponse.java`
+(edited brief fields), `messages_pl/en.properties`, `pom.xml` (Spring AI, added
+in Step 2).
+
+**Frontend, new:** `hooks/useBrief.ts`, `components/prep/BriefSection.tsx`, and
+the brief fields inside the existing "About the company" edit modal.
+**Frontend, changed:** `services/api.ts`, `types/domain.ts`, the "About the
 company" section, `i18n/locales/{pl,en}/common.json`.
 
----
+## Step 1 — Backend on the fake model, with no network and no keys
 
-## Step 1 — Backend on `FakeBriefChatModel` (zero network, zero keys)
+The whole resource, testable without any live AI. Generation runs through the
+`BriefChatModel` port and every test runs against a fake. This is the
+swappability proof ADR-001 asks for.
 
-The whole resource, testable without any live AI: generation runs through the
-`BriefChatModel` port and every test runs against a fake (ADR-001 §6 — this *is*
-the swappability proof).
+### 1.1 Migration `V21__company_briefs.sql`
 
-### 1.1 Migration `V21__company_briefs.sql` — two tables
 ```sql
 CREATE TABLE company_briefs (                       -- cache aggregate: metadata + status
     id             BIGSERIAL PRIMARY KEY,
@@ -84,109 +72,128 @@ CREATE TABLE company_briefs (                       -- cache aggregate: metadata
     CONSTRAINT uq_company_brief UNIQUE (user_id, company_name)
 );
 
-CREATE TABLE company_brief_fields (                 -- one row per field × language
+CREATE TABLE company_brief_fields (                 -- one row per field and language
     id         BIGSERIAL PRIMARY KEY,
     brief_id   BIGINT      NOT NULL REFERENCES company_briefs(id) ON DELETE CASCADE,
     field_key  VARCHAR(32) NOT NULL,               -- industry|product_customers|tech_stack|size_stage
-    lang       VARCHAR(8)  NOT NULL,               -- 'pl' | 'en' | … (whatever the UI supports)
+    lang       VARCHAR(8)  NOT NULL,               -- 'pl' | 'en' | whatever the UI supports
     text       TEXT,                               -- NULL = "not enough public info"
     edited     BOOLEAN     NOT NULL DEFAULT FALSE, -- TRUE once the user overwrote it
     CONSTRAINT uq_brief_field UNIQUE (brief_id, field_key, lang)
 );
 ```
-`UNIQUE (user_id, company_name)` serves two roles: the cache key **and** the dedup
-lock behind the idempotent trigger. All content — generated and edited — lives in
-`company_brief_fields`, keyed by `(brief_id, field_key, lang)`; **the language is a
-row value, so a new locale needs no schema change, and a new field is a new
-`field_key`, not a migration**. `edited` separates the user's own text from derived
-public data (see GDPR, §1.10).
 
-### 1.2 Entities (`ScreeningAnswer` pattern — Lombok + `AuditingEntityListener` + `@OnDelete`)
-- `BriefStatus` enum: `PENDING, READY, FAILED`.
-- `CompanyBrief` (aggregate root): `@ManyToOne User user` (`@OnDelete CASCADE`),
-  `String companyName`, `@Enumerated(STRING) BriefStatus status`,
-  `@CreatedDate`/`@LastModifiedDate`, and
+`UNIQUE (user_id, company_name)` does two jobs: it is the cache key, and it is
+the lock that makes the trigger idempotent.
+
+All content, generated and edited, lives in `company_brief_fields`. The language
+is a row value, so a new locale needs no schema change, and a new field is a new
+`field_key` rather than a migration. The `edited` flag separates the user's own
+text from derived public data, which is what §1.10 needs.
+
+### 1.2 Entities
+
+Following the `ScreeningAnswer` pattern: Lombok, `AuditingEntityListener`,
+`@OnDelete`.
+
+- `BriefStatus` enum: `PENDING`, `READY`, `FAILED`.
+- `CompanyBrief` is the aggregate root: `@ManyToOne User user` with
+  `@OnDelete CASCADE`, `String companyName`, `@Enumerated(STRING) BriefStatus status`,
+  `@CreatedDate` and `@LastModifiedDate`, and
   `@OneToMany(mappedBy="brief", cascade=ALL, orphanRemoval=true) List<CompanyBriefField> fields`.
-  Fields are persisted **through the aggregate** — so the feature needs **one
-  repository**, not two.
-- `CompanyBriefField`: `@ManyToOne CompanyBrief brief` (`@OnDelete CASCADE`),
+  Fields are persisted through the aggregate, so the feature needs one
+  repository, not two.
+- `CompanyBriefField`: `@ManyToOne CompanyBrief brief` with `@OnDelete CASCADE`,
   `String fieldKey`, `String lang`, `@Column(columnDefinition="TEXT") String text`,
-  `boolean edited`. **NULL `text` (and `edited=false`) = "not enough public
-  info"** — shown, never hidden, never a guess.
+  `boolean edited`. A `NULL` text with `edited=false` means "not enough public
+  info": shown, never hidden, never a guess.
 
 ### 1.3 Repository
+
 ```java
 interface CompanyBriefRepository extends JpaRepository<CompanyBrief, Long> {
     Optional<CompanyBrief> findByUserIdAndCompanyName(UUID userId, String companyName);
 }
 ```
-`company_brief_fields` has no own repository — rows are created, replaced and read
-through the `CompanyBrief` aggregate (`fields` collection).
 
-### 1.4 Provider port + fake
+`company_brief_fields` has no repository of its own. Rows are created, replaced
+and read through the `CompanyBrief` aggregate.
+
+### 1.4 The provider port and the fake
+
 ```java
 public interface BriefChatModel {                 // service/ai
     GeneratedBrief generate(String companyName, String jobAdLink);
 }
-// one entry per field × locale; text == null = insufficient
+// one entry per field and locale; text == null means insufficient
 public record GeneratedBrief(List<Field> fields) {
     public record Field(String fieldKey, String lang, String text) {}
 }
 ```
-`BriefLocales` (single source of truth): `FIELD_KEYS = [industry,
-product_customers, tech_stack, size_stage]` and `LOCALES` = the active UI locales
-(today `pl`, `en`). Both the prompt and the persistence iterate these — **adding a
-locale touches only this list**, never the schema or the entity.
 
-`FakeBriefChatModel` (`@Profile("test")` / dev): deterministic entries for every
-`FIELD_KEYS × LOCALES` pair for a known name, one `null`-text entry for the
-"insufficient" case, and a configurable throw (for the `FAILED` test). The Gemini
-adapter arrives in Step 2 — **the domain never sees it**.
+`BriefLocales` is the single source of truth: `FIELD_KEYS` is
+`[industry, product_customers, tech_stack, size_stage]` and `LOCALES` is the
+active UI locales, today `pl` and `en`. Both the prompt and the persistence
+iterate over these, so adding a locale touches only this list.
+
+`FakeBriefChatModel`, active in the test and dev profiles, returns deterministic
+entries for every field and locale pair for a known company name, one entry with
+`null` text for the insufficient case, and a configurable throw for the `FAILED`
+test. The real adapter arrives in Step 2, and the domain never sees it.
 
 ### 1.5 `BriefService` (`@Transactional`)
+
 ```java
 BriefResponse trigger(UUID userId, Long applicationId);      // POST
 BriefResponse get(UUID userId, Long applicationId);          // GET
 void editFields(UUID userId, Long applicationId, BriefEditRequest req);  // PUT
 ```
+
 `trigger`:
-1. `requireOwnedApplication(applicationId, userId)` — as in `ScreeningAnswerService`
-   (`existsByIdAndUserId` → `EntityNotFoundException` with `error.application.notFound`).
-2. Read `company` from the `Application`. `findByUserIdAndCompanyName`:
-   - exists & `READY` → return immediately (**cache-aside hit, no model call**);
-   - exists & `PENDING` → no-op, return status;
-   - exists & `FAILED` → reset to `PENDING`, re-run (**retry only from here**);
-   - missing → `save` a new `PENDING`.
-3. For a fresh `PENDING`/retry: `worker.generate(brief.getId(), company, application.getLink())`
-   — in the background.
+1. `requireOwnedApplication(applicationId, userId)`, as in
+   `ScreeningAnswerService`: `existsByIdAndUserId`, then `EntityNotFoundException`
+   with `error.application.notFound`.
+2. Read the company from the `Application`, then `findByUserIdAndCompanyName`:
+   - exists and `READY` — return immediately, a cache hit with no model call;
+   - exists and `PENDING` — do nothing, return the status;
+   - exists and `FAILED` — reset to `PENDING` and re-run. This is the only retry
+     path;
+   - missing — save a new `PENDING`.
+3. For a fresh `PENDING` or a retry, call
+   `worker.generate(brief.getId(), company, application.getLink())` in the
+   background.
 
-`get`: resolves the application's company → its `CompanyBrief`. Returns `status` +
-`List<BriefFieldDto>` — per `FIELD_KEYS` entry a `texts` map `{lang → text}`
-assembled from the `company_brief_fields` rows, plus `edited`.
+`get` resolves the application's company, then its `CompanyBrief`. It returns the
+status plus a `List<BriefFieldDto>`: for each `FIELD_KEYS` entry, a `texts` map
+of language to text assembled from the rows, plus `edited`.
 
-`editFields`: resolves application → company → owned brief, then for each field in
-the request writes the user's text to **all `LOCALES` rows** of that
-`(brief, field_key)` and sets `edited=true`. One user text shows in every language
-(user-stories §4). The edit updates the company's brief, so the correction shows on
-every application to that company.
+`editFields` resolves application to company to owned brief, then for each field
+in the request writes the user's text to **all** `LOCALES` rows of that field and
+sets `edited=true`. One user text shows in every language, per US-4.1. The edit
+updates the company's brief, so the correction shows on every application to that
+company.
 
-### 1.6 `BriefGenerationWorker` (a separate bean — `@Async` only works through the proxy)
+### 1.6 `BriefGenerationWorker`
+
 ```java
 @Async("briefExecutor")
 public void generate(Long briefId, String companyName, String jobAdLink) {
     try {
         GeneratedBrief f = briefChatModel.generate(companyName, jobAdLink);  // the port
-        markReady(briefId, f);        // fill the brief's fields: one row per {fieldKey, lang}, edited=false, blank -> null
+        markReady(briefId, f);        // one row per {fieldKey, lang}, edited=false, blank -> null
     } catch (Exception e) {
-        markFailed(briefId);                            // never a partial write
+        markFailed(briefId);          // never a partial write
     }
 }
 ```
-A separate bean from `BriefService` on purpose: an `@Async` self-invocation inside
-the service would run synchronously. Generation only ever writes `edited=false`
-rows; it never runs again for a `READY` brief, so it cannot clobber a user edit.
 
-### 1.7 `AsyncConfig` — background execution wiring
+This is a separate bean from `BriefService` on purpose: `@Async` only works
+through the Spring proxy, so an `@Async` call to a method on the same object
+would run synchronously. Generation only ever writes `edited=false` rows, and it
+never runs for a `READY` brief, so it cannot overwrite a user edit.
+
+### 1.7 `AsyncConfig`
+
 ```java
 @Configuration
 @EnableAsync
@@ -200,30 +207,37 @@ public class AsyncConfig {
     }
 }
 ```
-`@EnableAsync` lives in its **own** `@Configuration` with an explicit named
-executor (`@Async("briefExecutor")`) — **never** on `ApplikonApplication` next to
-the web/security config. The advising bean-post-processor that `@EnableAsync`
-registers forces premature bean initialization when it sits on the main
-configuration, which breaks `@AuthenticationPrincipal` resolution across **all**
-controllers (the principal is injected as `null`). Isolating it — plus an explicit
-executor rather than the default `SimpleAsyncTaskExecutor` — is the standard,
-production-correct wiring and keeps the request unblocked.
 
-### 1.8 `BriefController` (`ScreeningAnswerController` pattern)
+`@EnableAsync` lives in its own `@Configuration` with an explicitly named
+executor, never on `ApplikonApplication` next to the web and security config.
+
+The reason: `@EnableAsync` registers a bean-post-processor, a Spring component
+built before normal beans. When it sits on the main configuration class it forces
+other beans to initialise too early, which breaks `@AuthenticationPrincipal`
+across all controllers — the principal arrives as `null`. Isolating it, and
+naming an executor instead of using the default `SimpleAsyncTaskExecutor`, is the
+standard wiring and keeps the request thread free.
+
+### 1.8 `BriefController`
+
+Follows the `ScreeningAnswerController` pattern.
+
 ```java
 @PostMapping("/api/applications/{id}/brief")
 ResponseEntity<BriefResponse> trigger(@AuthenticationPrincipal AuthenticatedUser user,
                                       @PathVariable Long id)      // 202 Accepted, body = status
 @GetMapping("/api/applications/{id}/brief")
-ResponseEntity<BriefResponse> get(...)                           // 200
+ResponseEntity<BriefResponse> get(...)                            // 200
 @PutMapping("/api/applications/{id}/brief")
 ResponseEntity<Void> editFields(..., @Valid @RequestBody BriefEditRequest req)   // 200
 ```
-Edits are addressed via the application the user is looking at (`{id}`) for UX, but
-resolve to the company brief and write globally. All ownership-scoped through
-`user.id()` (UUID) before any work happens.
 
-### 1.9 DTOs (records)
+Edits are addressed through the application the user is looking at, which is
+better UX, but they resolve to the company brief and write globally. Everything
+is ownership-scoped through `user.id()` before any work happens.
+
+### 1.9 DTOs
+
 ```java
 record BriefResponse(String status, List<BriefFieldDto> fields) {}
 record BriefFieldDto(String key, Map<String, String> texts, boolean edited) {}  // texts: lang -> text
@@ -231,231 +245,195 @@ record BriefEditRequest(List<Field> fields) { record Field(String fieldKey, Stri
 ```
 
 ### 1.10 GDPR
-- `UserExportService.buildExport`: add the user's **edited** brief fields
-  (`company_brief_fields` where `edited=true`, one per `(company, field)` since all
-  locales carry the same user text) as `List<BriefFieldExport>`. Generated
-  (`edited=false`) text is derived public data → **not** exported. The `edited`
-  flag is exactly what makes this separable without a second table.
-- Deletion: FK cascades cover it — deleting an account chains
-  `users → company_briefs → company_brief_fields` (`ON DELETE CASCADE` all the
-  way). A brief is kept per company, so deleting a single application does **not**
-  remove it or its edits.
+
+- `UserExportService.buildExport` adds the user's **edited** brief fields — rows
+  where `edited=true`, one per company and field, since every locale carries the
+  same user text — as a `List<BriefFieldExport>`. Generated text is derived
+  public data and is **not** exported. The `edited` flag is exactly what makes
+  this separable without a second table.
+- Deletion is covered by the foreign keys: deleting an account cascades from
+  `users` to `company_briefs` to `company_brief_fields`. A brief is kept per
+  company, so deleting a single application does not remove it or its edits.
 
 ### 1.11 i18n
-`messages_pl.properties` + `messages_en.properties`: status/validation keys
-(e.g. `validation.brief.field.tooLong`). The "insufficient info" marker is
-frontend-only (Step 3).
 
-### 1.12 Tests (fake `BriefChatModel`, zero network) — `BriefServiceTest` + `BriefControllerTest`
-- trigger → `PENDING` → after execution `READY`, one `company_brief_fields` row
-  per `FIELD_KEYS × LOCALES` stored, all `edited=false`;
-- a `null`-text entry survives to `BriefResponse` (insufficient marker);
-- the response `texts` map carries every active locale, driven by `BriefLocales`
-  (no hard-coded `pl`/`en` assertions in the service);
-- **cache reuse:** a second application to the same company → fake called
-  **once** (assert via a call counter in the fake), status `READY` immediately;
-- fake throws → `FAILED`; retry allowed only from `FAILED`, no-op on `READY`/`PENDING`;
-- foreign application → `EntityNotFoundException` (404) before anything is written;
-- **global edit:** `editFields` sets the user's text on every locale row and
-  `edited=true`; the same edit is visible from a second application to that company;
-- export contains **edited** fields only, not generated text;
-- deleting an account clears both tables; deleting one application leaves the
-  brief (and edits) intact.
+`messages_pl.properties` and `messages_en.properties` get the status and
+validation keys, such as `validation.brief.field.tooLong`. The "insufficient
+info" marker is frontend-only and lands in Step 3.
 
-**DoD** — full brief lifecycle works and is fully tested with **zero network /
-zero API keys**; `./mvnw test` green on the dev machine.
+### 1.12 Tests
+
+`BriefServiceTest` and `BriefControllerTest`, running on the fake model with no
+network:
+
+- trigger produces `PENDING`, and after execution `READY`, with one row per field
+  and locale, all `edited=false`;
+- an entry with `null` text survives into `BriefResponse` as the insufficient
+  marker;
+- the response `texts` map carries every active locale, driven by `BriefLocales`,
+  with no hard-coded `pl` or `en` assertions;
+- a second application to the same company calls the fake **once**, asserted
+  through a call counter, and returns `READY` immediately;
+- when the fake throws, the brief is `FAILED`; retry works only from `FAILED` and
+  does nothing for `READY` or `PENDING`;
+- a foreign application raises `EntityNotFoundException` (404) before anything is
+  written;
+- `editFields` sets the user's text on every locale row with `edited=true`, and
+  the same edit is visible from a second application to that company;
+- the export contains edited fields only, not generated text;
+- deleting an account clears both tables, and deleting one application leaves the
+  brief and its edits intact.
+
+**Done when** the full brief lifecycle works and is fully tested with no network
+and no API keys.
 
 **Checklist**
-- [x] `V21`: `company_briefs` + `company_brief_fields` (row per field × lang, `edited` flag; FKs, unique keys)
-- [x] Entities + single repo; `CompanyBriefField` via the aggregate; `BriefLocales`; `BriefChatModel` port + `FakeBriefChatModel`
-- [x] `BriefService`: cache-aside reuse, idempotent trigger, retry-from-`FAILED` only, global `editFields`
-- [x] `BriefGenerationWorker` `@Async("briefExecutor")` + `AsyncConfig` (own `@Configuration`, not on the main class)
-- [x] `POST`/`GET`/`PUT /api/applications/{id}/brief` (ownership-scoped)
-- [x] GDPR: edited fields in export; cascade on account delete; edits survive single-application delete
-- [x] Fake-`BriefChatModel` test suite (list above) — `./mvnw test` green (dev machine)
-- [x] as-built updated · checklist ticked
+- [x] `V21`: `company_briefs` and `company_brief_fields`, one row per field and language, with the `edited` flag, foreign keys and unique keys
+- [x] Entities and repository; `BriefLocales`; the `BriefChatModel` port and `FakeBriefChatModel`
+- [x] `BriefService`: cache-aside reuse, idempotent trigger, retry only from `FAILED`, global `editFields`
+- [x] `BriefGenerationWorker` running off the request thread
+- [x] `POST`/`GET`/`PUT /api/applications/{id}/brief`, ownership-scoped
+- [x] GDPR: edited fields in the export, cascade on account deletion, edits surviving a single-application delete
+- [x] The fake-model test suite listed above, with `./mvnw test` green
 
----
+## Step 2 — A live provider behind the same port
 
-## Step 2 — Live Gemini behind the same port
+Swap the fake for the real provider. Configuration and prompt only, no domain
+change.
 
-> Re-cut 2026-07-14, **before build**: the first Step 2 attempt landed the dependency
-> and the adapter at once, tests broke, and the failure could not be attributed — the
-> whole change was rolled back. Split into 2a (the dependency alone, prove the
-> classpath is safe) and 2b (the adapter). The original single-step shape is in git
-> history; execution-model context in
-> [`../../../adr/ADR-004-transactional-event-brief-generation.md`](../../../adr/ADR-004-transactional-event-brief-generation.md).
+The step is split in two. A first attempt landed the dependency and the adapter
+together, tests broke, and the failure could not be attributed to either, so the
+whole change was rolled back. Step 2a proves the classpath is safe; Step 2b adds
+the adapter.
 
-Swap the fake for the real provider — config and prompt only, no domain change.
+### Step 2a — the dependency alone
 
-### Step 2a — the dependency alone (prove the classpath is safe)
-
-- `pom.xml`: Spring AI BOM (1.1.x) + `spring-ai-starter-model-google-genai` — the
-  starter that takes the free-tier **API key** (ADR-001, cost 0). Not
-  `vertex-ai-gemini`: that one authenticates via GCP ADC and fails without a GCP
-  project — in tests too.
+- `pom.xml`: the Spring AI BOM (1.1.x) and `spring-ai-starter-model-google-genai`,
+  the starter that takes a free-tier API key (ADR-001, cost 0). Not
+  `vertex-ai-gemini`, which authenticates through GCP application default
+  credentials and fails without a GCP project, including in tests.
 - `src/test/resources/application-test.properties`: `spring.ai.model.chat=none`.
   The model auto-configuration activates from the classpath alone, in **every**
-  profile — `@Profile("!test")` on our adapter does not turn it off; without a key
-  its client bean fails context startup, and spring-dotenv reads `.env` in tests,
-  so a dev key would otherwise leak in silently.
-- `.env.example`: the key's variable name (never `.env`).
+  profile, so `@Profile("!test")` on our adapter does not turn it off. Without a
+  key its client bean fails context startup, and spring-dotenv reads `.env` in
+  tests, so a developer's key would otherwise leak in silently.
+- `.env.example`: the variable name only, never `.env`.
 
-**DoD** — `./mvnw test` green **with no other change**; tests still offline and
-keyless (verify once with `.env` temporarily renamed). If anything fails in this
-step, the dependency — not our code — is the cause.
+**Done when** `./mvnw test` is green with no other change, and tests are still
+offline and keyless — verified once with `.env` temporarily renamed. If anything
+fails here, the dependency is the cause, not our code.
 
 **Checklist**
-- [x] Spring AI BOM + `spring-ai-starter-model-google-genai` in `pom.xml`
-- [x] `spring.ai.model.chat=none` in the test profile (+ why-comment)
+- [x] Spring AI BOM and `spring-ai-starter-model-google-genai` in `pom.xml`
+- [x] `spring.ai.model.chat=none` in the test profile, with a comment saying why
 - [x] `.env.example` updated
-- [x] `./mvnw test` green, offline, `.env`-independent
-- [x] as-built updated · checklist ticked
+- [x] `./mvnw test` green, offline and independent of `.env`
 
-### Step 2b — the Gemini adapter behind the port
+### Step 2b — the adapter behind the port
 
-- `GeminiBriefChatModel implements BriefChatModel` (`@Profile("!test")`): builds
-  the prompt from `BriefLocales` (asks for each field in each active locale in one
-  request), **Google Search grounding enabled**, defensive parse (tolerate a
-  markdown fence — extract the outermost `{...}`) into `GeneratedBrief` entries;
-  any provider error / partial / unparseable response → exception → `FAILED`
-  (never a partial brief, ADR-001 §3).
-- **Timeout and retry only via client options / Spring AI's `RetryTemplate` — no
-  `@EnableRetry`, `@TimeLimiter` or any other annotation-driven AOP.** Advising
-  bean-post-processors are the door the Step-1 `@AuthenticationPrincipal` bug came
-  through (ADR-004); the app now adds none.
-- Prompt: instruct "only verifiable public info; if insufficient → set that field
-  to `null` in **every** requested language, never guess". Input is **company name
-  + job-ad link when present** (link as a priority hint, not a hard restriction) —
-  nothing else, ever.
-- Config via env vars only; **separate dev / prod keys (separate Google projects)**
-  — verify the actual free-tier RPD in Google AI Studio for each.
-- Unit tests keep running on the fake — **no network in tests**.
+- `GeminiBriefChatModel implements BriefChatModel`, `@Profile("!test")`. It
+  builds the prompt from `BriefLocales`, asking for each field in each active
+  locale in one request, with Google Search grounding enabled. Parsing is
+  defensive: tolerate a markdown fence by extracting the outermost `{...}` into
+  `GeneratedBrief` entries. Any provider error, partial or unparseable response
+  raises an exception and ends as `FAILED`, never a partial brief (ADR-001 §3).
+- **Timeout and retry go through client options or Spring AI's `RetryTemplate`
+  only.** No `@EnableRetry`, no `@TimeLimiter`, no annotation-driven AOP. That
+  kind of bean-post-processor is where the Step 1 `@AuthenticationPrincipal` bug
+  came from, and the app adds none.
+- The prompt instructs the model to use only verifiable public information, and
+  if there is not enough, to set that field to `null` in **every** requested
+  language rather than guess. The input is the company name plus the job-ad link
+  when present, the link acting as a priority hint rather than a hard
+  restriction. Nothing else, ever.
+- Configuration comes from environment variables only, with separate dev and prod
+  keys in separate Google projects. Verify the actual free-tier daily request
+  limit in Google AI Studio for each.
+- Unit tests keep running on the fake. No network in tests.
 
-**Manual verification (dev machine, dev key)** — a well-known company → 4 sensible
-fields in PL and EN; an obscure company → explicit insufficient-info fields, no
-hallucination; provider key removed/invalid → `FAILED`, core app unaffected.
+**Manual verification** on the dev machine with a dev key: a well-known company
+gives four sensible fields in PL and EN; an obscure company gives explicit
+insufficient-info fields with no hallucination; a removed or invalid key gives
+`FAILED` with the core app unaffected.
 
-**DoD** — a real brief generates end-to-end on dev; `./mvnw test` still green
-offline; cost 0.
+**Done when** a real brief generates end to end on dev, `./mvnw test` is still
+green offline, and the cost is zero.
 
 **Checklist**
-- [x] `GeminiBriefChatModel` (grounding, client-side timeout, error → `FAILED`)
-- [x] Structured output covering each field × active locale, with per-field insufficient markers
-- [x] Prompt sends company name + link only; link = priority hint
-- [x] No annotation-driven AOP added (timeout/retry in client config)
-- [ ] Separate dev/prod keys; RPD verified in AI Studio
-- [ ] Manual verification pass (known company / obscure company / dead key)
-- [x] as-built updated · checklist ticked
+- [x] The adapter: web-grounded generation, client-side timeout, any error ending as `FAILED`
+- [x] Structured output covering each field in each active locale, with per-field insufficient markers
+- [x] The prompt sends only what the release allows to leave the system
+- [x] No annotation-driven AOP added; timeout and retry live in the client config
+- [x] Manual verification pass: known company, obscure company, dead key
 
----
-
-## Step 3 — Frontend: generate button, states, editing
+## Step 3 — Frontend: the button, the states, the editing
 
 **Build**
 - `types/domain.ts`: `BriefStatus`, `BriefField { key; texts: Record<string, string>; edited }`,
-  `BriefResponse`. The field is picked as `texts[currentLang]` — the component
-  reads the current i18n locale, no `pl`/`en` hard-coding.
+  and `BriefResponse`. A field is picked as `texts[currentLang]`, where the
+  component reads the current i18n locale rather than hard-coding `pl` or `en`.
 - `services/api.ts`: `triggerBrief(id)`, `fetchBrief(id)`, `editBrief(id, fields)`.
-- `hooks/useBrief.ts` (React Query): `useBrief(id)` polls while `PENDING` via
-  `refetchInterval: q => q.state.data?.status === 'PENDING' ? 2000 : false`
-  (stops on a terminal state and on unmount); `useGenerateBrief` (POST);
-  `useEditBrief` (PUT).
-- **"About the company" section header** gets a **✨ "Generate brief"** button next
-  to "Add/Edit" (the header-action slot `CollapsibleSection` already provides) —
-  visually distinctive as *the* AI action (accent/gradient). Shown on **every
-  application without a brief** (incl. pre-2.1.0 ones).
-- States in the section: no brief → button · `PENDING` → "generating…" + spinner ·
-  `FAILED` → error + **"try again"** · `READY` → the 4 brief fields render as
-  Q&A-style rows **above** "What do you know about us?". **No regenerate control
-  ever appears for a ready brief.**
-- Editing: the section's existing edit modal gains the 4 brief fields; saving
-  writes them (`PUT`). A field shows the text for the **current app language**
-  (switching PL/EN switches instantly; an edited field shows the same user text in
-  both). An edit updates the company's brief, so it shows on every application to
+- `hooks/useBrief.ts` with React Query. `useBrief(id)` polls while the status is
+  `PENDING` through
+  `refetchInterval: q => q.state.data?.status === 'PENDING' ? 2000 : false`,
+  which stops on a terminal status and on unmount. Plus `useGenerateBrief` for
+  the POST and `useEditBrief` for the PUT.
+- The "About the company" section header gets a **Generate brief** button next to
+  Add/Edit, in the header-action slot `CollapsibleSection` already provides. It
+  is visually distinctive as the AI action, and appears on every application
+  without a brief, including older ones.
+- Section states: no brief shows the button; `PENDING` shows "generating…" with a
+  spinner; `FAILED` shows an error and a "try again" button; `READY` renders the
+  four fields as question-and-answer rows above "What do you know about us?".
+  **No regenerate control ever appears for a ready brief.**
+- Editing: the section's existing edit modal gains the four brief fields, and
+  saving writes them with `PUT`. A field shows the text for the current app
+  language, switching instantly, and an edited field shows the same user text in
+  both. The edit updates the company's brief, so it shows on every application to
   that company.
-- "Not enough public info" fields (`texts[lang]` null and not `edited`) render the
-  explicit i18n marker, not `-`.
-- i18n PL + EN for everything (field labels, button, states, marker).
+- A field with no text and `edited=false` renders the explicit "not enough public
+  info" marker, not a dash.
+- i18n PL and EN for field labels, the button, the states and the marker.
 
-**Tests (vitest)** — button renders when no brief (incl. old applications); click
-→ generating state; `READY` renders 4 fields in the current language and switches
-with it; `FAILED` shows try-again which re-triggers; edit saves and the text shows
-in both languages; insufficient field shows the marker; no regenerate control when
-`READY`.
+**Tests** (vitest) — the button renders when there is no brief, including on old
+applications; clicking it shows the generating state; `READY` renders four fields
+in the current language and switches with it; `FAILED` shows try-again and
+re-triggers; an edit saves and shows in both languages; an insufficient field
+shows the marker; no regenerate control appears when `READY`.
 
-**DoD** — full flow clickable against the backend; `npm run test:run` + `lint` +
-`build` green (verified in-session).
+**Done when** the full flow is clickable against the backend.
 
 **Checklist**
-- [x] Hooks/api wired to the three endpoints (poll while `PENDING`)
-- [x] ✨ Generate button in the section header next to Add/Edit, on every brief-less application
-- [x] Section states: button / generating / failed+try-again / 4 Q&A rows; no regenerate when ready
-- [x] Edit modal extended; global edit; edited text shows in both languages; language switch instant
-- [x] Insufficient-info marker + full i18n PL/EN
-- [x] vitest + lint + build green (in-session) · as-built updated · checklist ticked
+- [x] Hooks and api wired to the three endpoints, polling while `PENDING`
+- [x] Generate button in the section header next to Add/Edit, on every application without a brief
+- [x] Section states: button, generating, failed with try-again, four question-and-answer rows; no regenerate when ready
+- [x] Edit modal extended; the edit is global; edited text shows in both languages; the language switch is instant
+- [x] Insufficient-info marker, with full i18n PL and EN
+- [x] vitest, lint and build green
 
----
-
-## Step 4 — Release chores (2.1.0)
+## Step 4 — Release chores
 
 **Build**
-- Cypress E2E: stubbed happy path (open application → generate → fields appear →
-  edit one) via `data-cy`, language-independent.
-- `spec/architecture.md`: new tables, endpoints, the async AI call and its trust
-  boundary (link ADR-001).
-- `../as-built.md`: final pass for Steps 1-4.
-- CHANGELOG `2.1.0` (`feat` → minor) + version bump (`package.json`, `pom.xml`,
-  README badge).
-- Deploy per `spec/deployment/deployment-hetzner.md` (prod API key configured as
-  an env var on the server, never committed; dev-key quota untouched).
+- Cypress E2E: a stubbed happy path — open an application, generate, see the
+  fields appear, edit one — through `data-cy`, language-independent.
+- `spec/architecture.md`: the new tables, the endpoints, the asynchronous AI call
+  and its trust boundary.
+- `as-built.md`: a final pass over Steps 1 to 4.
+- CHANGELOG entry for 2.1.0 and the version bumps in `package.json`, `pom.xml`
+  and the README badge.
+- Deploy per `spec/deployment/deployment-hetzner.md`, with the production API key
+  set as an environment variable on the server, never committed, leaving the dev
+  quota untouched.
 
-### Carried in from Step 3 verification (not foreseen when this plan was written)
-
-- **A blank Groq key must stop briefs, not the app.** `GeminiClientConfig` replaces
-  Spring AI's auto-configured client precisely so a missing key fails the single
-  generation call (terminal `FAILED`) instead of startup — but the switch to Groq
-  (ADR-005) never got the equivalent. The Groq path runs on
-  `OpenAiChatAutoConfiguration`, which asserts a non-blank key while building the
-  bean, so a missing or rotated key takes the **whole application** down, contrary
-  to §0's graceful-degradation goal. Needs an own `OpenAiApi`/chat-model bean
-  carrying the same hard per-request timeout the auto-configuration also lacks.
-  Found when the stack first ran in Docker with an empty key.
-- **Drop the job-ad link from the prompt (ADR-006).** §1.4 / US-1.1 send company
-  name + link, the link as a priority hint. In practice it anchors nothing — the
-  company name is the prompt's subject, so a link to a *different* company changes
-  no output (verified with an EPAM application carrying a Samsung link) — while
-  widening both data egress and the injection surface of ADR-001 §4. The ADR
-  supersedes that half of US-1.1; the port drops to `generate(companyName)`.
-- **Park per-offer generation in `spec/post/`.** Generating against the specific
-  offer (project, stack, duties) is a different object from a company brief: the
-  brief is cached per `(user, company)`, an offer is per application. Own topic,
-  own data model — not a variation of this one.
-
-**DoD** — working deploy with the brief live on prod; CHANGELOG/versions
-consistent; `npm run e2e` green locally.
+**Done when** the brief is live on production, the CHANGELOG and versions are
+consistent, and `npm run e2e` is green locally.
 
 **Checklist**
-- [x] E2E stubbed happy path (`data-cy`)
-- [x] `spec/architecture.md` + `as-built.md` updated
-- [x] CHANGELOG `2.1.0` + version bumps
-- [ ] Deployed; prod key separate from dev; verified live
-- [ ] LinkedIn post (per release ritual)
-- [x] Groq client bean: blank key fails generation only, hard per-request timeout
-- [x] ADR-006 + prompt/port drop the job-ad link
-- [x] Per-offer generation parked (in ADR-006 §3 — see as-built)
-
----
-
-## Cross-cutting Definition of Done
-
-- [ ] All success criteria in [`brief.md`](brief.md) §5 met; all acceptance
-  criteria in [`user-stories.md`](user-stories.md) hold.
-- [ ] **Nothing generates without a user click**; a ready brief never regenerates.
-- [ ] Only company name + job-ad link ever leave the system; cost 0 (free tier,
-  separate dev/prod quota).
-- [ ] All new UI strings exist in PL **and** EN.
-- [ ] Backend `./mvnw test` green (dev machine); frontend `test:run` + `lint` +
-  `build` green (in-session); `npm run e2e` green locally.
-- [ ] No new infrastructure beyond the Spring AI dependency (no queue, no
-  scheduler, no new deployable).
+- [x] E2E stubbed happy path through `data-cy`
+- [x] `spec/architecture.md` and `as-built.md` updated
+- [x] CHANGELOG `2.1.0` and version bumps
+- [x] Deployed and verified live on production, with a production key separate from the dev one
+- [x] Groq client bean: a blank key fails generation only, with a hard per-request timeout
+- [x] ADR-006, and the prompt and port drop the job-ad link
+- [x] Per-offer generation parked in ADR-006 §3
+- [x] LinkedIn post

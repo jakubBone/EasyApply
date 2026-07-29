@@ -1,38 +1,28 @@
-# CI Implementation Plan — Applikon
+# 1.0.0 12-ci — Implementation Plan
 
-## Work Process
+## What changes
 
-1. **Implementation** — Claude creates `.github/workflows/ci.yml` and updates `README.md`
-2. **Verification** — user pushes to `master`, opens GitHub → Actions tab, confirms green
-3. **Commit suggestion** — Claude proposes commit message
-4. **Commit** — user runs `git add` + `git commit`
+| File | Change |
+|------|--------|
+| `.github/workflows/ci.yml` | New — the CI pipeline |
+| `README.md` | Add the CI badge below the title |
 
----
+**Design decisions**
 
-## Goal
+- **Parallel jobs.** Backend and frontend do not depend on each other, so running
+  them in parallel keeps total CI time down.
+- **`./mvnw test` only.** No `package`, no Docker build. The tests are the
+  signal, not the artifact.
+- **`npm ci`.** A reproducible install from `package-lock.json`, and faster than
+  `npm install`.
+- **`npm run test:run`.** A single Vitest pass, not watch mode.
+- **`npm run build`.** Catches TypeScript errors the tests might miss.
+- **No dependency caching.** It adds complexity, and CI speed is not critical for
+  a portfolio project.
 
-Two parallel CI jobs (backend + frontend) triggered on every push and PR to `master`.
-A green badge in `README.md` visible to anyone browsing the repository.
+## Step 1 — The workflow file
 
----
-
-## Design Decisions
-
-- **Parallel jobs** — backend and frontend have no dependency on each other;
-  running them in parallel keeps total CI time minimal.
-- **`./mvnw test` only** — no `package` or Docker build; tests are the signal,
-  not the artifact.
-- **`npm ci`** — reproducible install from `package-lock.json`, faster than `npm install`.
-- **`npm run test:run`** — single-pass Vitest (not watch mode).
-- **`npm run build`** — catches TypeScript errors that tests might miss.
-- **No caching of Maven/Node dependencies** — adds complexity; acceptable for
-  a portfolio project where CI speed is not critical.
-
----
-
-## Implementation
-
-### File: `.github/workflows/ci.yml` *(new)*
+**Build** — create `.github/workflows/ci.yml`:
 
 ```yaml
 name: CI
@@ -82,46 +72,19 @@ jobs:
         run: npm run build
 ```
 
----
+## Step 2 — The badge
 
-### File: `README.md` — badge
-
-Add below the project title (first line after `# Applikon` or equivalent):
+**Build** — add this to `README.md`, on the first line after the project title:
 
 ```markdown
 [![CI](https://github.com/jakubBone/applikon/actions/workflows/ci.yml/badge.svg)](https://github.com/jakubBone/applikon/actions/workflows/ci.yml)
 ```
 
-> Replace `jakubBone/applikon` with the actual GitHub org/repo slug if different.
+**Done when** a push triggers the workflow, both jobs finish green in the GitHub
+Actions tab, and the badge renders green on github.com.
 
----
-
-## Verification
-
-- [x] Push commit to `master`
-- [x] GitHub → Actions tab → workflow run appears
-- [x] Both jobs green (backend + frontend)
-- [x] Badge in README shows green on github.com
-
----
-
-## Definition of Done (DoD)
-
-- [x] `.github/workflows/ci.yml` exists and triggers on push to `master`
-- [x] Backend job: `./mvnw test` passes on GitHub runner
-- [x] Frontend job: `npm run test:run && npm run build` pass on GitHub runner
-- [x] CI badge visible and green in `README.md`
-- [x] `spec/README.md` updated with 12-ci row
-
----
-
-## Files to Change
-
-| File | Change |
-|------|--------|
-| `.github/workflows/ci.yml` | New — CI pipeline |
-| `README.md` | Add CI badge below title |
-
----
-
-*Created: 2026-05-06*
+**Checklist**
+- [x] `.github/workflows/ci.yml` exists and triggers on push
+- [x] Backend job: `./mvnw test` passes on the GitHub runner
+- [x] Frontend job: `npm run test:run && npm run build` pass on the GitHub runner
+- [x] The CI badge is visible and green in `README.md`

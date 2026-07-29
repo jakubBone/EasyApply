@@ -1,9 +1,4 @@
-# Applikon 2.2.0 — User Stories
-
-> Stories, edge cases, and acceptance criteria for the question kind.
-> Source of the feature: [`brief.md`](brief.md).
-
----
+# 2.2.0 — User Stories
 
 ## 1. Marking a question
 
@@ -25,8 +20,6 @@ when I add it, so my cheat sheet is sorted from the moment I write it down.
   no separate "move" action to learn.
 - The kind is set by the user and **never inferred**. The app does not guess, does
   not suggest, and does not silently re-classify anything.
-
----
 
 ## 2. Using the cheat sheet
 
@@ -51,8 +44,6 @@ questions, so I find "notice period" without scrolling past technical answers.
 - The chosen group does not have to persist between applications. Each application
   opens on screening, the common case.
 
----
-
 ## 3. Questions that already exist
 
 **US-3.1** — As a candidate who has been using Applikon for months, I want my
@@ -70,8 +61,6 @@ me data or a cleanup session.
 - A user with a mixed backlog sees everything under screening at first. That is
   correct-by-default, not a bug: it is exactly where those questions were
   yesterday.
-
----
 
 ## 4. Data lifecycle (GDPR)
 

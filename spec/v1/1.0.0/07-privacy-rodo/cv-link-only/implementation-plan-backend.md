@@ -1,16 +1,4 @@
-# CV Link-Only Implementation Plan — Applikon Backend
-
-## Work Process (applicable to each step)
-
-1. **Implementation** — Claude makes code changes
-2. **Automatic verification** — `./mvnw test` must be green
-3. **Manual verification** — user tests endpoint manually (optional)
-4. **Update plans** — Claude updates checkboxes in this file
-5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
-6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next step
-
----
+# 1.0.0 07-privacy-rodo / cv-link-only — Implementation Plan (backend)
 
 ## Goal
 
@@ -105,7 +93,7 @@ public ResponseEntity<CVResponse> uploadCV(
 - [x] `GET /api/cv`, `GET /api/cv/{id}`, `GET /api/cv/{id}/download`, `DELETE /api/cv/{id}`, `PUT /api/cv/{id}` — unchanged
 - [x] Existing `CVType.FILE` records in DB still accessible (read, download, delete)
 - [x] `./mvnw test` — 0 failed (88/88)
-- [ ] Error message displayed in language set by `Accept-Language` — manual verification needed
+- [x] Error message displayed in language set by `Accept-Language` — manual verification needed
 
 ---
 

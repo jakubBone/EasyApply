@@ -1,85 +1,37 @@
-# Applikon — GitHub Actions CI
+# 1.0.0 — GitHub Actions CI
 
-## 1. Context
+## 1. Problem
 
-The application is feature-complete and being prepared for public deployment.
-There is no automated check verifying that pushed code doesn't break tests.
+The application is feature-complete and being prepared for public deployment, but
+nothing automatically verifies that pushed code still passes its tests.
 
----
+Broken code on `main` goes unnoticed until somebody runs the tests locally, and
+the pre-deploy routine depends entirely on developer discipline.
 
-## 2. Problem
+## 2. Solution
 
-- Pushing broken code to `main` goes undetected until someone runs tests locally.
-- Without CI, the workflow documented in `spec/post/pre-deploy-checklist.md`
-  relies entirely on developer discipline.
+One GitHub Actions workflow, `.github/workflows/ci.yml`:
 
----
+- triggers on every push to `main`,
+- runs the backend tests on Java 21 with `./mvnw test`,
+- runs the frontend on Node 22 with `npm ci && npm run test:run && npm run build`,
+- runs both jobs in parallel, because neither depends on the other.
 
-## 3. Decision
+`README.md` gets a CI status badge at the top. No backend or frontend source
+changes.
 
-Add a single GitHub Actions workflow file (`.github/workflows/ci.yml`) that:
+## 3. Out of scope
 
-- Triggers on every push to `master`
-- Runs backend tests: Java 21, `./mvnw test`
-- Runs frontend build + unit tests: Node 22, `npm ci && npm run test:run && npm run build`
-- Both jobs run in parallel (no dependency between them)
-- Adds a CI status badge to `README.md`
+- **Continuous deployment to Hetzner.** Deploying stays a deliberate manual step:
+  SSH, then `docker-compose up`.
+- **Building a Docker image in CI.** No registry is configured yet.
+- **Dependabot and CodeQL.** Overkill for a solo portfolio project.
+- **Workflows for branches other than `main`.**
+- **Coverage reports and artifact uploads.**
 
-**What we do NOT add:**
+## 4. Done when
 
-- Continuous Deployment to Hetzner — deploy stays a deliberate manual step (SSH + `docker-compose up`)
-- Docker image build in CI — no registry configured
-- Dependabot / CodeQL — overkill for a solo portfolio project
-- Separate workflows for branches other than `main`
-
----
-
-## 4. Scope
-
-| File | Change |
-|------|--------|
-| `.github/workflows/ci.yml` | New — CI pipeline |
-| `README.md` | Add CI badge at the top |
-
-No backend or frontend source code changes.
-
----
-
-## 5. Out of Scope
-
-- CD pipeline (auto-deploy to Hetzner)
-- Docker image build or push to any registry
-- Dependabot, CodeQL, or other GitHub security features
-- Coverage reports or artifact uploads
-
----
-
-## 6. Success Criteria (Definition of Done)
-
-`12-ci` is closed when:
-
-1. ✅ Push to `main` triggers the workflow on GitHub Actions
-2. ✅ Backend job: `./mvnw test` passes on GitHub-hosted runner (Java 21)
-3. ✅ Frontend job: `npm run test:run && npm run build` passes (Node 22)
-4. ✅ CI badge in `README.md` shows green
-5. ✅ `spec/README.md` updated with 12-ci row
-
----
-
-## 7. Implementation Order
-
-Single step — create `.github/workflows/ci.yml` and add badge to `README.md`.
-No code steps; the workflow file is the entire implementation.
-
----
-
-## 8. Related Documents
-
-- `spec/v1/1.0.0/as-built.md` — update after completion
-- `spec/v1/1.0.0/12-ci/implementation-plan.md` — workflow file content + badge syntax
-- `spec/post/pre-deploy-checklist.md` — broader GitHub publication checklist
-- `spec/README.md` — add row for 12-ci
-
----
-
-*Created: 2026-05-06*
+- A push to `main` triggers the workflow on GitHub Actions.
+- The backend job passes `./mvnw test` on a GitHub-hosted runner with Java 21.
+- The frontend job passes `npm run test:run && npm run build` on Node 22.
+- The CI badge in `README.md` shows green.

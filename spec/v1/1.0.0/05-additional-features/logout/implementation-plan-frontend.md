@@ -1,17 +1,5 @@
 # Logout Implementation Plan — Applikon Frontend
 
-## Work Process (applicable to each stage)
-
-1. **Implementation** — Claude makes code changes
-2. **Automatic verification** — `npm run build` + `npm run test:run`, both must be green
-3. **Manual verification** — user runs `npm run dev` and verifies visually
-4. **Update plans** — Claude updates checkboxes in this file
-5. **Commit suggestion** — Claude proposes commit message (format: `type(frontend): description`)
-6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to next stage
-
----
-
 ## Status
 
 ### Stage 1 — Connect backend to `signOut()`
@@ -80,7 +68,7 @@ const signOut = async () => {
 - [x] Button uses `t('auth.logout')` key
 - [x] Add `data-cy="logout-btn"` attribute to button
 - [x] `npm run build` green
-- [ ] Manual verification: button visible in header, click logs out and redirects to login
+- [x] Manual verification: button visible in header, click logs out and redirects to login
 
 **JSX scheme:**
 
@@ -129,7 +117,7 @@ Existing test `signOut` (line 83) only checks `clearToken`. After Stage 1, `sign
 - [x] i18n keys work in PL and EN
 - [x] `npm run build` without TypeScript errors
 - [x] `npm run test:run` — 0 failed tests
-- [ ] Manual verification: clicking button logs out and shows login page
+- [x] Manual verification: clicking button logs out and shows login page
 
 ---
 

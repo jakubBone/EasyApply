@@ -219,7 +219,3 @@ Rename JSON keys from Polish names to English (no DB changes, frontend only):
 - **ZAKONCZONE** never exists in backend — virtual Kanban column merging `OFFER` and `REJECTED`
 - **Legacy statuses** (`ROZMOWA`, `ZADANIE`, `ODRZUCONE`) after Stage 5 can be removed from `statusConfig` if V9 migration is certain (optional in Stage 5)
 - **Frontend type mismatches** fixed in each stage (were: `ContractType` had `UOD`/`INNE` instead of `INNA`, `RejectionReason` had completely different values than backend)
-
----
-
-*Created: 2026-03-29*

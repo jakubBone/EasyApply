@@ -1,103 +1,52 @@
-# Applikon — User Data & Service Notifications
+# 1.0.0 — User Data and Service Notices
 
-## 1. Context
+## 1. Problem
 
-`07-privacy-rodo` closed minimum RODO compliance: consent flow, privacy policy,
-account deletion. Two features are missing that complete this layer:
+Topic 07 closed the minimum RODO compliance: the consent flow, the privacy
+policy, and account deletion. Two things are still missing from that layer.
 
-- **Data portability** — user can download everything we store about them.
-  RODO Art. 20 requirement, consciously omitted from 07-privacy-rodo as "outside MVP".
-- **Service notification system** — admin can display a message
-  to all users (maintenance windows, regulatory changes, updates).
+**There is no data export.** A user can delete their account but cannot download
+what we hold about them — applications, notes, CV links. That is a gap against
+RODO Article 20, deliberately left out of topic 07 as outside its scope.
 
----
+**There is no channel to reach users.** Nothing can tell them about a maintenance
+window, a regulatory change or an update without editing code and redeploying.
 
-## 2. Problem
+## 2. Solution
 
-Currently:
+**Data export.** `GET /api/auth/me/export` returns everything we store about the
+user as a JSON file: profile, applications with their fields, notes, and CV
+links. It is reachable from `/settings` through a "Download my data" button that
+saves `applikon-export.json`. No schema change is needed.
 
-1. **No data export** — user can only delete account, but cannot
-   download their data (applications, notes, CV links). Gap in RODO Art. 20.
-2. **No communication channel with users** — no mechanism to inform
-   users about service changes without code modification and redeployment.
+**Service notices.** A `service_notices` table, added by migration `V14`, holds
+an entry with text in PL and EN, an expiry date and a type. The frontend reads
+`GET /api/system/notices/active` and shows what is live. The admin manages
+entries through `POST /api/admin/notices`.
 
----
+There are two types:
 
-## 3. Architectural Decision
+- `BANNER` — a bar at the top of the UI, which the user can close.
+- `MODAL` — a popup on entry requiring "OK", which does not come back once
+  dismissed. The dismissal is remembered in `localStorage`.
 
-### Data Export
+The frontend gets `ServiceBanner` and `ServiceModal` components.
 
-Endpoint `GET /api/auth/me/export` returns all user data as JSON file:
-profile, list of applications with fields, notes, CV links. Available
-from `/settings`.
+## 3. Out of scope
 
-### Notification System
+- **Push notifications and e-mail.** Notices are in-app only.
+- **CSV export.** JSON only.
+- **An admin dashboard in the UI.** The admin works through the API.
+- **Export versioning.** One format.
+- **Export encryption.** The file is unencrypted and downloaded over HTTPS.
 
-Table `service_notices` — admin adds entry (text PL + EN, expiration date,
-type). Frontend queries `GET /api/system/notices/active` and displays active
-messages. Admin manages via `POST /api/admin/notices` (secured by ADMIN
-role).
+## 4. Done when
 
-Notification types:
-- `BANNER` — bar at top of UI, can be closed
-- `MODAL` — popup on entry, requires "OK", doesn't return after closing
-  (remembered in localStorage)
-
----
-
-## 4. Scope
-
-### 4.1. `data-export/` — user data export
-- Backend: `GET /api/auth/me/export` → JSON with profile, applications, notes, CV
-- Frontend: "Download my data" button in `/settings`, downloads `applikon-export.json`
-- Flyway: no schema changes
-
-### 4.2. `service-notices/` — service notification system
-- Backend: `service_notices` table, admin + public endpoints
-- Frontend: `ServiceBanner` + `ServiceModal`
-- Flyway: migration V14 adds `service_notices` table
-
----
-
-## 5. Out of Scope
-
-- **Push notifications / email** — notifications only in-app
-- **CSV export** — JSON only
-- **Admin dashboard in UI** — admin manages via API
-- **Export versioning** — single v1 format
-- **Export encryption** — file unencrypted, user downloads over HTTPS
-
----
-
-## 6. Success Criteria (Definition of Done)
-
-`08-user-data` is closed when:
-
-1. ✅ Logged-in user can download `applikon-export.json` from `/settings`;
-   file contains profile, all applications with notes and CV links
-2. ✅ Export doesn't leak data from other users
-3. ✅ Admin can create active notice via `POST /api/admin/notices`
-4. ✅ Active `BANNER` visible to every logged-in user at top of UI
-5. ✅ Active `MODAL` displays on entry; after "OK" doesn't return in this session
-6. ✅ Expired notices (past `expiresAt`) not returned by public endpoint
-7. ✅ `as-built.md` updated: new endpoints, new table, new components
-
----
-
-## 7. Implementation Order
-
-1. **`data-export/`** — one endpoint + one button in UI, zero DB changes
-2. **`service-notices/`** — Flyway migration + backend + two frontend components
-
----
-
-## 8. Related Documents
-
-- `spec/v1/1.0.0/as-built.md` — update after each thread
-- `spec/README.md` — add row for 08-user-data
-- `spec/v1/1.0.0/08-user-data/data-export/` — backend and frontend plans
-- `spec/v1/1.0.0/08-user-data/service-notices/` — backend and frontend plans
-
----
-
-*Created: 2026-04-26*
+- A logged-in user can download `applikon-export.json` from `/settings`, and it
+  contains their profile and all applications with notes and CV links.
+- The export never leaks another user's data.
+- An admin can create an active notice through `POST /api/admin/notices`.
+- An active `BANNER` is visible to every logged-in user at the top of the UI.
+- An active `MODAL` shows on entry and does not return after "OK" in that
+  session.
+- Notices past their `expiresAt` are not returned by the public endpoint.

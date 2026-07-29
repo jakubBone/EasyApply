@@ -1,157 +1,111 @@
-# Logging Implementation Plan — Applikon Backend
+# 1.0.0 10-logging — Implementation Plan (backend)
 
-## Work Process (applicable to each step)
+## What changes
 
-1. **Implementation** — Claude makes code changes
-2. **Manual verification** — user checks log output in console (optional)
-3. **Update plans** — Claude updates checkboxes in this file
-4. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
-5. **Commit** — user runs `git add` + `git commit`
-6. **Continue question** — Claude asks if we proceed to the next step
+| File | Change |
+|------|--------|
+| `security/AdminKeyFilter.java` | Add a logger and `log.warn` on 403 |
+| `controller/AuthController.java` | Add a logger and `log.warn` in the catch block |
+| `exception/GlobalExceptionHandler.java` | Add `log.warn` in the 404 handler |
+| `service/NoteService.java` | Remove the unused Logger field and its imports |
+| `security/JwtService.java` | Remove the unused Logger field and its imports |
 
----
+**Design decisions**
 
-## Goal
+- **No `@Slf4j`.** The project declares loggers explicitly with
+  `LoggerFactory.getLogger`, as in `UserService` and `ApplicationService`. Keep
+  that style.
+- **`WARN` for security denials, not `INFO`.** These are unexpected in normal
+  operation, and `INFO` is for expected business events.
+- **`WARN` for 404**, not `ERROR` because nothing crashed, and not `DEBUG`
+  because it is useful in production.
+- **The remote IP goes in the `AdminKeyFilter` line.** It is meaningful for
+  security. It is not logged elsewhere, because MDC already carries `userId`.
+- **Unused loggers are removed, not repurposed.** `NoteService` and `JwtService`
+  have nothing worth logging at this stage, and a placeholder log added just to
+  use the field would be noise.
 
-Add targeted `WARN`-level logging to three specific gaps in the application
-that are currently invisible in production: admin access denials, failed token
-refreshes, and 404 errors. Remove two unused `Logger` field declarations.
-
-No logging added in controllers or read-path operations — services already
-cover key mutations and the MDC infrastructure (`MdcUserFilter`) automatically
-adds `userId` to every log line.
-
----
-
-## Design Decisions
-
-- **No `@Slf4j` annotation** — project uses explicit `LoggerFactory.getLogger`
-  declarations consistently (see `UserService`, `ApplicationService` etc.).
-  Keep the same style.
-- **`WARN` for security denials** — not `INFO`, because these are unexpected
-  events in normal operation. `INFO` is for expected business events.
-- **`WARN` for 404** — not `ERROR` (no crash) and not `DEBUG` (useful in prod).
-- **IP in `AdminKeyFilter` log** — remote IP (`request.getRemoteAddr()`) is
-  meaningful for security; not logged elsewhere because MDC already has userId.
-- **Remove unused loggers, don't repurpose them** — `NoteService` and
-  `JwtService` have no operations that warrant logging at this stage.
-  Adding placeholder logs just to "use" the field would be noise.
-
----
-
-## Implementation Status
-
-### Step 1 — `AdminKeyFilter`: warn on blocked admin access
+## Step 1 — `AdminKeyFilter`: warn on blocked admin access
 
 **File:** `applikon-backend/src/main/java/com/applikon/security/AdminKeyFilter.java`
 
-- [x] Add import: `org.slf4j.Logger`, `org.slf4j.LoggerFactory`
-- [x] Add field: `private static final Logger log = LoggerFactory.getLogger(AdminKeyFilter.class);`
-- [x] Add `log.warn` before `response.setStatus(SC_FORBIDDEN)`:
-  ```java
-  log.warn("Admin access denied: uri={}, ip={}", request.getRequestURI(), request.getRemoteAddr());
-  ```
+**Build** — add the `Logger` and `LoggerFactory` imports, the
+`private static final Logger log` field, and a warning before
+`response.setStatus(SC_FORBIDDEN)`:
 
-**Resulting behaviour:**
+```java
+log.warn("Admin access denied: uri={}, ip={}", request.getRequestURI(), request.getRemoteAddr());
+```
+
+**Done when** a blocked request produces:
+
 ```
 WARN  [anonymous] c.e.s.AdminKeyFilter - Admin access denied: uri=/api/admin/users, ip=1.2.3.4
 ```
 
----
+**Checklist**
+- [x] Imports and the `log` field added
+- [x] `log.warn` with URI and remote IP before the 403
 
-### Step 2 — `AuthController`: warn on failed token refresh
+## Step 2 — `AuthController`: warn on a failed token refresh
 
 **File:** `applikon-backend/src/main/java/com/applikon/controller/AuthController.java`
 
-- [x] Add import: `org.slf4j.Logger`, `org.slf4j.LoggerFactory`
-- [x] Add field: `private static final Logger log = LoggerFactory.getLogger(AuthController.class);`
-- [x] Add `log.warn` inside the existing `catch (Exception e)` block (line 88):
-  ```java
-  } catch (Exception e) {
-      log.warn("Token refresh failed: {}", e.getMessage());
-      return ResponseEntity.status(401).body(Map.of("error", ...));
-  }
-  ```
+**Build** — add the imports and the `log` field, then log inside the existing
+`catch`:
 
-**Resulting behaviour:**
+```java
+} catch (Exception e) {
+    log.warn("Token refresh failed: {}", e.getMessage());
+    return ResponseEntity.status(401).body(Map.of("error", ...));
+}
+```
+
+**Done when** a failed refresh produces:
+
 ```
 WARN  [anonymous] c.e.c.AuthController - Token refresh failed: Refresh token not found or expired
 ```
 
----
+**Checklist**
+- [x] Imports and the `log` field added
+- [x] `log.warn` with the exception message inside the catch block
 
-### Step 3 — `GlobalExceptionHandler`: warn on 404
+## Step 3 — `GlobalExceptionHandler`: warn on 404
 
 **File:** `applikon-backend/src/main/java/com/applikon/exception/GlobalExceptionHandler.java`
 
-- [x] Add `log.warn` as first line inside `handleEntityNotFoundException`:
-  ```java
-  @ExceptionHandler(EntityNotFoundException.class)
-  public ProblemDetail handleEntityNotFoundException(EntityNotFoundException ex) {
-      log.warn("Entity not found: {}", ex.getMessage());
-      ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-      ...
-  }
-  ```
+**Build** — log as the first line of `handleEntityNotFoundException`:
 
-**Resulting behaviour:**
+```java
+@ExceptionHandler(EntityNotFoundException.class)
+public ProblemDetail handleEntityNotFoundException(EntityNotFoundException ex) {
+    log.warn("Entity not found: {}", ex.getMessage());
+    ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    ...
+}
+```
+
+**Done when** a 404 produces:
+
 ```
 WARN  [userId=abc123] c.e.e.GlobalExceptionHandler - Entity not found: Application with id=999 not found
 ```
 
----
+**Checklist**
+- [x] `log.warn` added before the `ProblemDetail` is built
 
-### Step 4 — Dead code cleanup: remove unused Logger fields
+## Step 4 — Remove the dead Logger fields
 
-**File 1:** `applikon-backend/src/main/java/com/applikon/service/NoteService.java`
+**Build**
+- `service/NoteService.java` — remove the `log` field and the `Logger` and
+  `LoggerFactory` imports.
+- `security/JwtService.java` — remove the same.
 
-- [x] Remove line 23: `private static final Logger log = LoggerFactory.getLogger(NoteService.class);`
-- [x] Remove imports: `org.slf4j.Logger`, `org.slf4j.LoggerFactory` (if no longer used)
+**Done when** neither class declares a logger it does not use, and `./mvnw test`
+is green.
 
-**File 2:** `applikon-backend/src/main/java/com/applikon/security/JwtService.java`
-
-- [x] Remove line 28: `private static final Logger log = LoggerFactory.getLogger(JwtService.class);`
-- [x] Remove imports: `org.slf4j.Logger`, `org.slf4j.LoggerFactory`
-
----
-
-## Verification
-
-- [x] `./mvnw test` — 0 failed (run once after all steps)
-
----
-
-## Definition of Done (DoD)
-
-- [x] `AdminKeyFilter` produces `WARN` log with URI and IP on every blocked admin request
-- [x] `AuthController.refresh()` produces `WARN` log with exception message on failure
-- [x] `GlobalExceptionHandler.handleEntityNotFoundException` produces `WARN` log before returning 404
-- [x] No unused `Logger` fields in `NoteService` or `JwtService`
-- [x] `./mvnw test` — 0 failed
-- [x] `as-built.md` updated: logging coverage section reflects changes
-
----
-
-## Out of Scope
-
-- **Controller logging for read operations** — too noisy; services cover mutations
-- **`ConsentRequiredFilter` logging** — consent denials are expected flow; deferred
-- **Structured JSON logging** — Logback pattern sufficient for v1
-- **Log aggregation (ELK/Loki)** — post-v1
-- **`JwtAuthenticationConverter`, `TokenHasher` logging** — no observable failure modes
-
----
-
-## Files to Change
-
-| File | Change |
-|------|--------|
-| `security/AdminKeyFilter.java` | Add logger + `log.warn` on 403 |
-| `controller/AuthController.java` | Add logger + `log.warn` in catch block |
-| `exception/GlobalExceptionHandler.java` | Add `log.warn` in 404 handler |
-| `service/NoteService.java` | Remove unused Logger field + imports |
-| `security/JwtService.java` | Remove unused Logger field + imports |
-
----
-
-*Created: 2026-05-06*
+**Checklist**
+- [x] `NoteService`: field and imports removed
+- [x] `JwtService`: field and imports removed
+- [x] `./mvnw test` green, run once after all four steps

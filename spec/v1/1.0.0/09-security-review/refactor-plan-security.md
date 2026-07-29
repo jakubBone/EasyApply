@@ -1,18 +1,6 @@
-# Security Refactoring Plan
+# 1.0.0 09-security-review — Refactor Plan
 
 Based on `code-review-security.md` findings.
-
-## Work Process (applicable to each stage)
-
-1. **Implementation** — Claude makes code changes (backend and/or frontend depending on stage)
-2. **Automatic verification** — `mvn test` must be green; stage 2 also requires `npm run build`
-3. **Manual verification** — confirm fix in browser DevTools or via `curl -I` (see per-stage notes)
-4. **Update plans** — Claude updates checkboxes in this file
-5. **Commit suggestion** — Claude proposes commit message (format: `fix(backend): description`)
-6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next stage
-
----
 
 ## HIGH Priority (fix immediately)
 

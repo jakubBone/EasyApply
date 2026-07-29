@@ -1,193 +1,123 @@
-# Swagger Implementation Plan — Applikon Backend
+# 1.0.0 11-swagger — Implementation Plan (backend)
 
-## Work Process (applicable to each step)
-
-1. **Implementation** — Claude makes code changes
-2. **Manual verification** — user opens `/swagger-ui.html` in browser (where noted)
-3. **Update plans** — Claude updates checkboxes in this file
-4. **Commit suggestion** — Claude proposes commit message (`type(backend): description`)
-5. **Commit** — user runs `git add` + `git commit`
-6. **Continue question** — Claude asks if we proceed to the next step
-
----
-
-## Goal
-
-Add Swagger UI backed by OpenAPI 3 spec generated automatically from existing
-code. Recruiters and developers can browse all endpoints, read request/response
-shapes, and call authenticated endpoints directly from the UI using a JWT token.
-
----
-
-## Design Decisions
-
-- **`springdoc-openapi-starter-webmvc-ui` 2.8.x** — the version compatible with
-  Spring Boot 3.4. No manual spec writing.
-- **Swagger always enabled** — no prod/dev split. This is a portfolio project;
-  visibility is the goal.
-- **JWT Bearer scheme** — a single `Authorize` button in the UI accepts the
-  access token returned by the login flow. Users paste it once, all subsequent
-  calls include `Authorization: Bearer <token>`.
-- **`@Tag` on controllers, `@Operation` only where non-obvious** — avoids
-  annotation noise while still grouping endpoints clearly.
-- **No `@Schema` on DTOs** — springdoc infers field names and types from
-  the class automatically. Good enough for a portfolio.
-
----
-
-## Implementation Status
-
-### Step 1 — Dependency + properties + security permit
-
-**File 1:** `applikon-backend/pom.xml`
-
-- [x] Add dependency inside `<dependencies>`:
-  ```xml
-  <dependency>
-      <groupId>org.springdoc</groupId>
-      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-      <version>2.8.8</version>
-  </dependency>
-  ```
-
-**File 2:** `applikon-backend/src/main/resources/application.properties`
-
-- [x] Add at the end:
-  ```properties
-  # Swagger / OpenAPI
-  springdoc.swagger-ui.path=/swagger-ui.html
-  springdoc.api-docs.path=/v3/api-docs
-  springdoc.swagger-ui.operations-sorter=alpha
-  springdoc.swagger-ui.tags-sorter=alpha
-  ```
-
-**File 3:** `applikon-backend/src/main/java/com/applikon/config/SecurityConfig.java`
-
-- [x] Add Swagger paths to the public `requestMatchers` block (alongside `/privacy`, `/api/auth/**` etc.):
-  ```java
-  "/swagger-ui/**",
-  "/swagger-ui.html",
-  "/v3/api-docs/**"
-  ```
-- [x] Relax CSP to allow Swagger UI inline scripts/styles
-
-**Verification:** `./mvnw spring-boot:run` → open `http://localhost:8080/swagger-ui.html` — UI loads, all endpoints visible.
-
----
-
-### Step 2 — Global API info + JWT security scheme
-
-**File:** `applikon-backend/src/main/java/com/applikon/config/OpenApiConfig.java` *(new file)*
-
-- [x] Create the config class:
-  ```java
-  @Configuration
-  @OpenAPIDefinition(
-      info = @Info(
-          title = "Applikon API",
-          description = "Job application tracker for IT candidates in Poland.",
-          version = "1.0.0",
-          contact = @Contact(name = "Jakub Bone", email = "jakub.bone1990@gmail.com")
-      ),
-      security = @SecurityRequirement(name = "bearerAuth")
-  )
-  @SecurityScheme(
-      name = "bearerAuth",
-      type = SecuritySchemeType.HTTP,
-      scheme = "bearer",
-      bearerFormat = "JWT"
-  )
-  public class OpenApiConfig {}
-  ```
-
-**Verification:** Swagger UI shows an "Authorize" button in the top-right corner.
-Paste a valid access token → subsequent calls to authenticated endpoints return 200.
-
----
-
-### Step 3 — Controller annotations
-
-Add `@Tag` to every controller and `@Operation` to non-obvious endpoints.
-
-**File 1:** `controller/ApplicationController.java`
-
-- [x] Add `@Tag(name = "Applications", description = "CRUD and duplicate detection for job applications")`
-
-**File 2:** `controller/AuthController.java`
-
-- [x] Add `@Tag(name = "Auth", description = "Google OAuth2 login, JWT refresh, consent, account management")`
-- [x] `POST /api/auth/refresh` → `@Operation(summary = "Refresh access token using a valid refresh token")`
-- [x] `POST /api/auth/consent` → `@Operation(summary = "Record user consent (required once after first login)")`
-- [x] `DELETE /api/auth/me` → `@Operation(summary = "Permanently delete the authenticated user's account and all their data")`
-- [x] `GET /api/auth/me/export` → `@Operation(summary = "Export all user data as JSON (RODO Art. 20)")`
-
-**File 3:** `controller/AdminController.java`
-
-- [x] Add `@Tag(name = "Admin", description = "Service notices management — requires X-Admin-Key header")`
-- [x] `POST /api/admin/notices` → `@Operation(summary = "Create a service notice (BANNER or MODAL)", description = "Requires X-Admin-Key header. Active notices are shown to all logged-in users.")`
-
-**File 4:** `controller/CVController.java`
-
-- [x] Add `@Tag(name = "CV", description = "CV versions — link and note types")`
-
-**File 5:** `controller/NoteController.java`
-
-- [x] Add `@Tag(name = "Notes", description = "Notes per application — Questions, Feedback, Other")`
-
-**File 6:** `controller/StatisticsController.java` *(not in original plan — added for completeness)*
-
-- [x] Add `@Tag(name = "Statistics", description = "Badge stats and application metrics")`
-
-**File 7:** `controller/SystemController.java` *(not in original plan — added for completeness)*
-
-- [x] Add `@Tag(name = "System", description = "Active service notices shown to logged-in users")`
-
-**Verification:** Swagger UI groups endpoints under named tags. Non-obvious endpoints have summaries.
-
----
-
-## Verification
-
-- [ ] `./mvnw test` — 0 failed (run once after all steps)
-
----
-
-## Definition of Done (DoD)
-
-- [ ] `/swagger-ui.html` loads and displays all controllers grouped by tag
-- [ ] "Authorize" button accepts a JWT Bearer token
-- [ ] Authenticated endpoint called from Swagger UI returns 200 (not 401)
-- [ ] Swagger paths are not blocked by Spring Security
-- [ ] `./mvnw test` — 0 failed
-- [ ] `as-built.md` updated
-
----
-
-## Out of Scope
-
-- `@Schema` on DTOs — springdoc inference is sufficient
-- `@ApiResponse` per endpoint — too verbose
-- Disabling Swagger in production
-- OpenAPI spec export as static file
-
----
-
-## Files to Change
+## What changes
 
 | File | Change |
 |------|--------|
-| `pom.xml` | Add springdoc dependency |
-| `application.properties` | Add springdoc config |
-| `config/SecurityConfig.java` | Permit Swagger paths + relax CSP |
-| `config/OpenApiConfig.java` | New — API info + JWT security scheme |
+| `pom.xml` | Add the springdoc dependency |
+| `application.properties` | Add the springdoc config |
+| `config/SecurityConfig.java` | Permit the Swagger paths and relax the CSP |
+| `config/OpenApiConfig.java` | New — API info and the JWT security scheme |
 | `controller/ApplicationController.java` | `@Tag` |
-| `controller/AuthController.java` | `@Tag` + `@Operation` on 4 endpoints |
-| `controller/AdminController.java` | `@Tag` + `@Operation` |
+| `controller/AuthController.java` | `@Tag` plus `@Operation` on four endpoints |
+| `controller/AdminController.java` | `@Tag` plus `@Operation` |
 | `controller/CVController.java` | `@Tag` |
 | `controller/NoteController.java` | `@Tag` |
 | `controller/StatisticsController.java` | `@Tag` |
 | `controller/SystemController.java` | `@Tag` |
 
----
+**Design decisions**
 
-*Created: 2026-05-06*
+- **`springdoc-openapi-starter-webmvc-ui` 2.8.x**, the version compatible with
+  Spring Boot 3.4. Nothing is written by hand.
+- **Swagger is always enabled**, with no prod/dev split. This is a portfolio
+  project and visibility is the goal.
+- **A JWT Bearer scheme**, so one "Authorize" button in the UI takes the access
+  token and every later call carries `Authorization: Bearer <token>`.
+- **`@Tag` on controllers, `@Operation` only where the purpose is not obvious.**
+  That avoids annotation noise while still grouping endpoints clearly.
+- **No `@Schema` on DTOs.** springdoc infers field names and types from the
+  class, which is good enough here.
+
+## Step 1 — Dependency, properties, security permit
+
+**Build**
+
+`pom.xml`:
+
+```xml
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.8.8</version>
+</dependency>
+```
+
+`application.properties`:
+
+```properties
+# Swagger / OpenAPI
+springdoc.swagger-ui.path=/swagger-ui.html
+springdoc.api-docs.path=/v3/api-docs
+springdoc.swagger-ui.operations-sorter=alpha
+springdoc.swagger-ui.tags-sorter=alpha
+```
+
+`SecurityConfig` — add `/swagger-ui/**`, `/swagger-ui.html` and `/v3/api-docs/**`
+to the public `requestMatchers` block, next to `/privacy` and `/api/auth/**`, and
+relax the CSP so Swagger UI's inline scripts and styles load.
+
+**Done when** `./mvnw spring-boot:run` then `http://localhost:8080/swagger-ui.html`
+loads the UI with every endpoint visible.
+
+**Checklist**
+- [x] Dependency added
+- [x] springdoc properties added
+- [x] Swagger paths permitted and the CSP relaxed
+
+## Step 2 — Global API info and the JWT scheme
+
+**Build** — a new `config/OpenApiConfig.java`:
+
+```java
+@Configuration
+@OpenAPIDefinition(
+    info = @Info(
+        title = "Applikon API",
+        description = "Job application tracker for IT candidates in Poland.",
+        version = "1.0.0",
+        contact = @Contact(name = "Jakub Bone", email = "jakub.bone1990@gmail.com")
+    ),
+    security = @SecurityRequirement(name = "bearerAuth")
+)
+@SecurityScheme(
+    name = "bearerAuth",
+    type = SecuritySchemeType.HTTP,
+    scheme = "bearer",
+    bearerFormat = "JWT"
+)
+public class OpenApiConfig {}
+```
+
+**Done when** Swagger UI shows an "Authorize" button, and pasting a valid access
+token makes calls to authenticated endpoints return 200.
+
+**Checklist**
+- [x] `OpenApiConfig` created with the API info and the Bearer scheme
+- [x] "Authorize" accepts a token and authenticated calls return 200
+
+## Step 3 — Controller annotations
+
+**Build** — `@Tag` on every controller, and `@Operation` where the purpose is not
+obvious.
+
+| Controller | Annotations |
+|---|---|
+| `ApplicationController` | `@Tag(name = "Applications", …)` |
+| `AuthController` | `@Tag(name = "Auth", …)` plus `@Operation` on `POST /api/auth/refresh`, `POST /api/auth/consent`, `DELETE /api/auth/me`, `GET /api/auth/me/export` |
+| `AdminController` | `@Tag(name = "Admin", …)` plus `@Operation` on `POST /api/admin/notices` |
+| `CVController` | `@Tag(name = "CV", …)` |
+| `NoteController` | `@Tag(name = "Notes", …)` |
+| `StatisticsController` | `@Tag(name = "Statistics", …)` |
+| `SystemController` | `@Tag(name = "System", …)` |
+
+`StatisticsController` and `SystemController` were not in the original list and
+were added for completeness.
+
+**Done when** Swagger UI groups endpoints under named tags and the non-obvious
+ones carry a summary.
+
+**Checklist**
+- [x] `@Tag` on all seven controllers
+- [x] `@Operation` on the five non-obvious endpoints
+- [x] `./mvnw test` green, run once after all three steps

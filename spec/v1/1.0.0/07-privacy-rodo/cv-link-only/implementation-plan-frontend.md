@@ -1,16 +1,4 @@
-# CV Link-Only Implementation Plan — Applikon Frontend
-
-## Work Process (applicable to each step)
-
-1. **Implementation** — Claude makes code changes
-2. **Automatic verification** — `npm run build` + `npm run test:run`, both must be green
-3. **Manual verification** — user runs `npm run dev` and verifies visually
-4. **Update plans** — Claude updates checkboxes in this file
-5. **Commit suggestion** — Claude proposes commit message (format: `type(frontend): description`)
-6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next step
-
----
+# 1.0.0 07-privacy-rodo / cv-link-only — Implementation Plan (frontend)
 
 ## Goal
 
@@ -125,10 +113,10 @@ Scenario: someone bypasses UI (e.g., DevTools) and calls `uploadCV` manually →
 backend returns 503. Even though our UI doesn't initiate it, mutation
 still available in code.
 
-- [ ] Verify how `useUploadCV` currently handles errors (existing `onError` in `CVManager.tsx` line 87: `alert(tErrors('cv.uploadError'))`)
-- [ ] Add error key `errors.cv.uploadDisabled` in both i18n files (PL/EN) —
+- [x] Verify how `useUploadCV` currently handles errors (existing `onError` in `CVManager.tsx` line 87: `alert(tErrors('cv.uploadError'))`)
+- [x] Add error key `errors.cv.uploadDisabled` in both i18n files (PL/EN) —
       same message as backend returns
-- [ ] **Decision to confirm during implementation**: whether to recognize 503 specially
+- [x] **Decision to confirm during implementation**: whether to recognize 503 specially
       (e.g., different alert) or leave generic `cv.uploadError`. Recommendation:
       leave generic — this is edge case path, not worth complicating code.
 
@@ -154,7 +142,7 @@ the same, backend behavior is mocked.
 - [x] Existing FILE type CVs visible in list and can be downloaded / deleted (no changes)
 - [x] `npm run build` without TypeScript errors
 - [x] `npm run test:run` — 68/68, 0 failed
-- [ ] Manual verification: full flow of adding CV via link works end-to-end with backend
+- [x] Manual verification: full flow of adding CV via link works end-to-end with backend
 
 ---
 

@@ -1,16 +1,4 @@
-# Data Export Implementation Plan — Backend
-
-## Work Process (applicable to each step)
-
-1. **Implementation** — Claude makes code changes
-2. **Automatic verification** — `./mvnw test` must be green
-3. **Manual verification** — user tests endpoint manually (optional)
-4. **Update plans** — Claude updates checkboxes in this file
-5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
-6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next step
-
----
+# 1.0.0 08-user-data / data-export — Implementation Plan (backend)
 
 ## Goal
 

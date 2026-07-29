@@ -1,17 +1,5 @@
 # i18n Implementation Plan — Applikon Backend
 
-## Work Process (applicable to each step)
-
-1. **Implementation** — Claude makes code changes
-2. **Automatic verification** — `mvn test` must be green
-3. **Manual verification** — user tests endpoint manually (optional)
-4. **Update plans** — Claude updates checkboxes in this file
-5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
-6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next step
-
----
-
 ## Implementation Status
 
 ### Step 0 — Setup

@@ -1,35 +1,46 @@
-# Applikon 2.0.0 — Cheat-sheet consolidation
+# 2.0.0 — Cheat-Sheet Consolidation
 
-## 1. What triggered this topic
+## 1. Problem
 
-`01-screening-companion` shipped a working Screening Companion: a global "My answers" page, a
-per-application cheat-sheet modal composing salary + one company note + the global
-answers, and board cleanup. Dogfooding it before the first v2 release — actually
-using it to prep for a call — surfaced two separate problems:
+Topic 01 shipped a working Screening Companion: a global "My answers" page, a
+per-application cheat-sheet modal, and board cleanup. Using it for real before
+the release — actually preparing for a call with it — surfaced two problems.
 
-**a) The UX was scattered.** The global answers lived on their own tab, the
-per-application note in a details-header modal, board cleanup on the cards
-themselves — three different surfaces for one job ("get ready for this call"), with
-inline autosave everywhere. Reaching the cheat sheet under time pressure (the
-recruiter-just-called scenario this whole version exists for) took too many steps,
-and it wasn't obvious what was global vs per-application.
+**The UX was scattered.** The global answers lived on their own tab, the
+per-application note in a modal opened from the details header, and board cleanup
+on the cards themselves. That is three surfaces for one job: get ready for this
+call. Reaching the cheat sheet under time pressure took too many steps, and it
+was not obvious which part was global and which was per application.
 
-**b) The per-application company note was too thin.** `Application.companyResearch`
-(01-screening-companion Step 3) is a single text field. It works for one free-form note, but "About the
-company" needed the same shape as "My answers" — a fixed question **plus the user's
-own custom questions** — which a single TEXT column can't represent.
+**The per-application company note was too thin.** `Application.companyResearch`
+is a single text field. It works for one free-form note, but "About the company"
+needs the same shape as "My answers": a fixed question **plus the user's own
+custom questions**. A single TEXT column cannot represent that.
 
-## 2. What this topic does
+## 2. Solution
 
-- **Consolidates the prep UX into one cheat-sheet hub**: pick an application, read
-  its prep in two collapsible, colour-coded sections ("About the company" /
-  "General"), everything read-only with editing moved to an explicit Save modal
-  (replacing inline autosave). The same content becomes the default-open section in
-  application details, replacing the separate modal/tab entry points.
-- **Replaces the single `companyResearch` field with per-application rows** in the
-  existing `screening_answers` table (new nullable `application_id`), so "About the
-  company" supports custom questions exactly like "General" does.
+**One cheat-sheet hub.** The user picks an application and reads its prep in two
+collapsible, colour-coded sections: "About the company" and "General". Everything
+is read-only, and editing moves into an explicit Save modal instead of inline
+autosave. The same content becomes the default-open section in application
+details, which replaces the separate modal and tab entry points.
 
-Full step breakdown, backend/frontend build steps, and DoD: see
-[`implementation-plan.md`](implementation-plan.md).
+**Per-application question rows.** The single `companyResearch` field is replaced
+by rows in the existing `screening_answers` table, using a new nullable
+`application_id`. "About the company" then supports custom questions exactly like
+"General" does.
 
+## 3. Out of scope
+
+- **No new dependency, module split, or infrastructure**, same as topic 01.
+- **No data migration.** v2 is not released yet, so the old `companyResearch`
+  column is dropped rather than migrated into rows.
+
+## 4. Done when
+
+- The cheat-sheet hub is the single preparation surface: pick an application,
+  read both sections, edit through a modal.
+- "About the company" carries a fixed question plus the user's own custom
+  questions, per application, consistent with "General".
+- Application details show the same content as a default-open accordion section,
+  with no separate modal or tab.

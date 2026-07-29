@@ -1,16 +1,9 @@
-# Retention & Hygiene Implementation Plan — Applikon Backend
+# 1.0.0 07-privacy-rodo / retention-hygiene — Implementation Plan (backend)
 
-## Work Process (applicable to each step)
-
-1. **Implementation** — Claude makes code changes
-2. **Automatic verification** — `./mvnw test` must be green
-3. **Manual verification** — user tests endpoint manually (optional)
-4. **Update plans** — Claude updates checkboxes in this file
-5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
-6. **Commit** — user runs `git add` + `git commit`
-7. **Continue question** — Claude asks if we proceed to the next step
-
----
+> **Deferred. This plan was never executed.** The RODO minimum was met by
+> `cv-link-only` and `rodo-minimum`, so retention was moved past publication.
+> Its checklist is open because the work genuinely is not done — see
+> [`as-built.md`](../../as-built.md) §3.
 
 ## Goal
 

@@ -1,93 +1,69 @@
-# Applikon 2.0.0 — Screening Companion
+# 2.0.0 — Screening Companion
 
-# 1. Problem
+## 1. Problem
 
-v1 records what the candidate does — applications, Kanban, notes, CVs — but it does
-not help them *get through* the recruitment process. The first painful moment after
-applying is the **screening call**: an HR recruiter calls (often unexpectedly) or
-schedules a short call asking the same handful of questions — *"tell me about
-yourself", "why are you changing jobs", "salary expectations", "notice period"*.
-Juniors often don't know what to expect and improvise badly under pressure.
+v1 records what the candidate does: applications, Kanban, notes, CVs. It does not
+help them get through the recruitment process.
 
-A second, quieter problem: boards fill with **dead cards**. Applications sit in
-`SENT` for weeks; most companies never respond, so the board stops reflecting
-reality.
+The first painful moment after applying is the **screening call**. An HR recruiter
+calls, often without warning, and asks the same handful of questions: tell me
+about yourself, why are you changing jobs, what salary do you expect, what is
+your notice period. Juniors rarely know what is coming, so they improvise badly
+under pressure.
 
-v2 addresses exactly these two moments — and nothing else. It ships entirely on the
-existing v1 monolith, with **no new technology, no AI, and no new infrastructure**.
+There is a second, quieter problem. Boards fill up with **dead cards**.
+Applications sit in `SENT` for weeks, most companies never reply, and the board
+stops reflecting reality.
 
----
+This release addresses those two moments and nothing else. It runs on the
+existing v1 monolith: no new technology, no AI, no new infrastructure.
 
-# 2. User
+## 2. Solution
 
-Same as v1: Polish IT candidates (junior/mid) applying to 10–20 jobs per month,
-almost exclusively through job boards (pracuj.pl, justjoin.it, nofluffjobs). They
-state their salary expectation in the board's form (their own proposal). Screening
-calls can come at any time; most applications end in silence.
+**A screening cheat sheet**, in two parts.
 
----
+*"My answers"* is global and written by the user. One page holds a template of
+the standard screening questions, each with a text field: tell me about yourself,
+why are you changing jobs, describe a project, salary expectations. The template
+itself is the value, because it tells a junior which questions to expect. The app
+generates nothing here. The experience and the motivation are the user's own.
 
-# 3. Features
+*The cheat sheet view* is per application. It assembles what already exists and
+adds one company-specific field:
 
-## 3.1 Screening cheat sheet
+1. the salary the user proposed in **this** application (stored since v1, and
+   three weeks later nobody remembers what they typed into the form),
+2. a per-application **"What do you know about this company"** note, edited
+   inline,
+3. the global "My answers", read-only with a link to edit them.
 
-**Moment:** the unexpected HR call (or a scheduled HR screening — same content).
+So every application shows the global answers plus its own company note. Most of
+the prep is written once; only the company-specific part repeats. When the
+recruiter calls out of nowhere, the candidate opens the application and
+everything is on one screen.
 
-**a) "My answers" — global, per user, written by the user.**
-A page with a template of the standard *global* screening questions, each with a text
-field: tell me about yourself · why are you changing jobs · briefly describe a project ·
-salary expectations. The value is the **template itself** — it tells the junior which
-questions to expect. The app generates nothing: the experience and motivation are the
-user's own. *"What do you know about the company" is deliberately NOT global* — it is
-per-application (see below), because the answer differs for every company.
+"What do you know about the company" is deliberately **not** global, because the
+answer is different for every company.
 
-**b) "Cheat sheet" view — per application, composition + one per-application field.**
-One screen in application details that assembles what already exists, plus the single
-company-specific note:
+**Board cleanup.** An application sitting in `SENT` for more than 60 days is
+almost certainly dead. The UI suggests archiving it as `REJECTED` with the reason
+`NO_RESPONSE`, in one click. Both enum values exist since v1.
 
-1. the **salary the user proposed in THIS application** (stored since v1 — three
-   weeks later nobody remembers what they typed into the form),
-2. a **per-application "What do you know about this company"** field
-   (`Application.companyResearch`), edited inline right in the cheat sheet,
-3. the **global "My answers"** (read view, with an edit link).
+## 3. Out of scope
 
-So every application shows the **global answers + its own company note**: most of the
-prep is written once, only the company-specific part is per application.
+- **Scheduled e-mails or notifications.**
+- **Any new dependency, module split, or infrastructure.** This release builds on
+  the v1 monolith as it is.
+- **A separate architecture document.** The only new resource is "My answers",
+  fully described in the implementation plan, and the release adds no new
+  technology. There is nothing left to design.
 
-Scenario: the recruiter calls out of nowhere → open the application → everything is
-on one screen. The call stops being an ambush.
+## 4. Done when
 
-## 3.2 Board cleanup
-
-**Moment:** silence. An application sitting in `SENT` for more than ~60 days is
-almost certainly dead.
-
-- The UI suggests archiving such applications as `REJECTED` / `NO_RESPONSE` (enum
-  exists since v1) with one click.
-- Keeps the Kanban honest and the board clean.
-
----
-
-# 4. Out of scope for v2
-
-Deliberately excluded — v2 is the smallest release that delivers real value:
-
-- **Scheduled e-mails / notifications.**
-- **Any new dependency, module split, or infrastructure.** v2 builds on the v1
-  monolith as-is.
-- **No separate `architecture.md`:** the only new resource ("My answers") is fully
-  specified in [`implementation-plan.md`](implementation-plan.md), and v2 adds no new technology — there is
-  nothing left to design.
-
----
-
-# 5. Success Criteria
-
-v2 is successful when:
-
-- ✅ The global "My answers" page lets the user fill and edit the standard
-  screening-question template (4 global questions + custom).
-- ✅ The per-application cheat-sheet view composes the proposed salary + a
-  per-application "what do you know about this company" field (edited inline) + the
-  global "My answers" on one screen, with an edit link.
-- ✅ Stale applications (>60 days in `SENT`) get a one-click archive suggestion.
+- The global "My answers" page lets the user fill and edit the standard template
+  of four questions, and add custom ones.
+- The per-application cheat sheet shows the proposed salary, the per-application
+  company note (editable inline), and the global answers on one screen, with a
+  link to edit them.
+- Applications stuck in `SENT` for more than 60 days get a one-click archive
+  suggestion.

@@ -1,124 +1,75 @@
-# Applikon — Landing Page
+# 1.1.0 — Landing Page
 
-## 1. Context
+## 1. Problem
 
-The application is publicly published and promoted on LinkedIn as a portfolio project.
-Current entry point: user visits the URL → immediate redirect to `/login`
-with only a logo, tagline, and "Sign in with Google" button.
+The application is published and promoted on LinkedIn as a portfolio project.
+Today a visitor opens the URL and is redirected straight to `/login`, where there
+is a logo, a tagline and a "Sign in with Google" button — and nothing else.
 
-Feedback received on LinkedIn:
+The feedback from LinkedIn was direct:
 
-> "You should make a HomePage/landing page roughly describing the app,
-> problems it solves, features — some sneak peek of what's inside,
-> because you enter the link and immediately have to log in via Google
-> without knowing what for."
+> "You should make a HomePage/landing page roughly describing the app, problems
+> it solves, features — some sneak peek of what's inside, because you enter the
+> link and immediately have to log in via Google without knowing what for."
 
-The user has a Privacy Policy page at `/privacy`, but it is currently
-unreachable before login — the user never sees it until after registering.
+Three things are wrong with that entry point.
 
----
+**There is no context before login.** A visitor sees a login button with no
+explanation of what the app does, what problem it solves, or why they should hand
+over their Google account.
 
-## 2. Problem
+**The privacy policy is unreachable.** `/privacy` exists, but no path leads to it
+from the login screen, so the user cannot make an informed consent decision until
+after they have registered.
 
-1. **No context before login** — visitor sees only a login button with no
-   explanation of what the app does, what problem it solves, or why they
-   should share their Google account.
-2. **Privacy policy inaccessible** — `/privacy` exists but no path leads
-   to it from the login screen; user can't make an informed consent decision.
-3. **Zero conversion** — without context, visitors leave without logging in.
+**Conversion is zero.** Without context, visitors leave instead of logging in.
 
----
+## 2. Solution
 
-## 3. Architectural Decision
+**A new public route `/` rendering a `LandingPage`.** It is static, public and
+needs no auth. Today `/` redirects to `/dashboard`, which in turn redirects to
+`/login` when nobody is signed in. Instead:
 
-**New public route `/` — Landing Page.**
+- an unauthenticated visitor on `/` sees the landing page,
+- an authenticated user on `/` is still redirected to `/dashboard`,
+- `/login` stays a valid route. Whether it aliases the landing page or stands
+  alone is resolved in the plan.
 
-Currently `/` redirects to `/dashboard` (which redirects to `/login` if
-unauthenticated). Instead, `/` will render a `LandingPage` component:
-static, public, no auth required.
+Frontend only, no backend change. The sections, responsive on desktop and mobile:
 
-- Authenticated user visiting `/` → redirect to `/dashboard` (unchanged behavior)
-- Unauthenticated user visiting `/` → sees the landing page
-- `/login` remains as a valid route (aliased to landing, or standalone — resolved in plan)
+- **Nav** — logo, language switcher, privacy policy link.
+- **Hero** — headline, a subtitle stating the problem, the Google login call to
+  action, and a trust note linking the privacy policy.
+- **App preview** — a screenshot of the Kanban board.
+- **Features** — three cards: Kanban board, list view, CV manager.
+- **Footer CTA** — a second login button and a privacy policy link.
 
-**Screenshot approach for Kanban preview.**
-The landing page shows a real screenshot of the Applikon UI (supplied by the user
-as a PNG in `public/`) rather than a hardcoded HTML mock. This is the standard
-pattern used by production SaaS products (Notion, Linear, Vercel).
-The screenshot is a static `<img>` tag — no runtime dependency on app state.
+**The preview is a real screenshot**, supplied as a PNG in `public/`, not a
+hardcoded HTML mock. That is the standard pattern for production SaaS products
+such as Notion, Linear and Vercel, and a static `<img>` has no runtime dependency
+on app state.
 
----
+All text is translated PL and EN, consistent with the existing
+`src/i18n/locales/` structure. On mobile the nav collapses, the hero stacks into
+one column with the text above the screenshot, the feature cards stack, and the
+screenshot goes full width with a capped height and `object-fit: contain`.
 
-## 4. Scope
+## 3. Out of scope
 
-**Frontend only.** No backend changes required.
+- **Backend changes.** None are needed.
+- **Animations and scroll effects.** Static CSS only, no JS animation libraries.
+- **A video demo.** The screenshot is enough.
+- **A/B testing.** One layout.
+- **Analytics and tracking.** No new tracking pixels.
+- **Removing the `/login` route.** It stays; that is a separate decision.
+- **Changes to `LoginPage.tsx`.** Untouched in this topic.
 
-### 4.1. Routing change
-- `App.tsx`: `/` → `<LandingPage />` instead of `<Navigate to="/dashboard" />`
+## 4. Done when
 
-### 4.2. LandingPage component
-Sections (desktop + mobile responsive):
-- **Nav** — logo, language switcher, privacy policy link
-- **Hero** — headline, subtitle (problem statement), Google login CTA, trust note with privacy policy link
-- **App preview** — screenshot of Kanban board (`public/screenshot-kanban.png`)
-- **Features** — 3 cards: Kanban board / List view / CV manager
-- **Footer CTA** — second login button, privacy policy link
-
-### 4.3. i18n
-All text on the landing page translated PL + EN, consistent with existing
-`src/i18n/locales/` structure.
-
-### 4.4. Mobile responsiveness
-- Nav: logo left, links collapse or stack
-- Hero: single column (text above screenshot)
-- Features: single column
-- Screenshot: full width, capped height, `object-fit: contain`
-
----
-
-## 5. Out of Scope
-
-- **Backend changes** — none needed
-- **Animations / scroll effects** — static CSS only, no JS animation libraries
-- **Video demo** — screenshot only
-- **A/B testing** — single layout
-- **Analytics / tracking** — not adding new tracking pixels
-- **Removing `/login` route** — kept as-is, separate decision
-- **`LoginPage.tsx` changes** — untouched in this topic
-
----
-
-## 6. Success Criteria (Definition of Done)
-
-`15-landing-page` is closed when:
-
-1. ✅ Unauthenticated user visiting `/` sees the landing page (not a login form)
-2. ✅ Authenticated user visiting `/` is redirected to `/dashboard`
-3. ✅ Privacy policy link visible on landing page **before** any login prompt
-4. ✅ "Sign in with Google" button present and functional on landing page
-5. ✅ Real Kanban screenshot visible in the app preview section
-6. ✅ Landing page fully responsive: mobile (≤768px) and desktop (≥1024px)
-7. ✅ All text available in PL and EN, language switcher works
-8. ✅ `npm run build` passes without TypeScript errors
-9. ✅ `npm run test:run` — 0 failed tests (routing tests updated)
-10. ✅ `spec/v1/1.1.0/as-built.md` updated: new route, new component
-
----
-
-## 7. Implementation Order
-
-Single feature, frontend only — one implementation plan:
-
-1. **`implementation-plan-frontend.md`** — routing + component + i18n + responsive + tests
-
----
-
-## 8. Related Documents
-
-- `spec/v1/1.1.0/as-built.md` — update after completion
-- `spec/README.md` — add row for 15-landing-page
-- `spec/v1/1.1.0/15-landing-page/implementation-plan-frontend.md` — step-by-step plan
-
----
-
-*Created: 2026-05-28*
+- An unauthenticated visitor on `/` sees the landing page, not a login form.
+- An authenticated user on `/` is redirected to `/dashboard`.
+- The privacy policy link is visible **before** any login prompt.
+- The "Sign in with Google" button is present and works.
+- The real Kanban screenshot shows in the preview section.
+- The page is responsive on mobile (≤768px) and desktop (≥1024px).
+- All text exists in PL and EN, and the language switcher works.

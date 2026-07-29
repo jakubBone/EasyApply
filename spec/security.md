@@ -1,4 +1,4 @@
-# Applikon v1 — Security Reference
+# Applikon — Security Reference
 
 > Source of truth: the code. This document reflects the actual implemented state.
 

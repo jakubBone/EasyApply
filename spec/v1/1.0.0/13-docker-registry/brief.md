@@ -1,98 +1,58 @@
-# Applikon — Docker Registry (GHCR)
+# 1.0.0 — Docker Registry (GHCR)
 
-## 1. Context
+## 1. Problem
 
-`12-ci` added CI: every push to `master` runs tests and verifies the build.
+Topic 12 added CI, so every push to `main` runs the tests and verifies the build.
 The application is ready for production deployment on a Hetzner VPS.
-Currently `docker-compose.yml` uses `build:` — the server would need to build
-images locally from source, requiring Maven, Node.js, and JDK on the VPS.
 
----
+But `docker-compose.yml` still uses `build:`, which means the server would build
+its images from source and would therefore need Maven, Node.js and a JDK
+installed. The server should run pre-built images, not be a build machine.
+Rebuilding there is slow, fragile, and pollutes the production environment. And
+without a registry there is no way to hand a built image from CI to the server at
+all.
 
-## 2. Problem
+## 2. Solution
 
-- The server should not be a build machine — it should only run pre-built images.
-- Without a registry, there is no way to deliver a built image from CI to the server.
-- Rebuilding on the server is slow, fragile, and pollutes the production environment.
+Extend the CI pipeline to build Docker images and push them to **GHCR**, the
+GitHub Container Registry, once the tests pass. The server then pulls the ready
+image and starts it with `docker-compose`.
 
----
-
-## 3. Decision
-
-Extend the existing CI pipeline to build Docker images and push them to
-**GHCR (GitHub Container Registry)** after tests pass.
-The server pulls the ready image and starts it with `docker-compose`.
-
-**Flow:**
 ```
-git push master
+git push main
     → CI: tests pass (backend + frontend jobs)
     → CI: docker build + push to ghcr.io  (docker job)
     → Server: docker-compose pull + up -d  ← manual deploy step
 ```
 
-**Tagging strategy:**
-- `:latest` — always points to the most recent image from `master`
-- `:<short-sha>` — immutable tag per commit (e.g. `:abc1234`); allows pinning an exact version
+Two tags per image:
 
-**What we do NOT add:**
-- Automatic deployment to the server (CD) — deploy stays a deliberate manual SSH step
-- Multiple environment images (staging/prod) — single `master` branch, single image
-- Docker image vulnerability scanning or SBOM generation
+- `:latest` always points at the most recent image from `main`,
+- `:<short-sha>` is immutable per commit, for example `:abc1234`, so an exact
+  version can be pinned.
 
----
+What changes: the `docker` job in `.github/workflows/ci.yml`; an `image:` field
+on the `backend` and `frontend` services in `docker-compose.yml`, keeping
+`build:` for local development; and a `VITE_API_URL` repository secret, because
+the production API URL is baked into the frontend image at CI build time. No
+backend or frontend source changes.
 
-## 4. Scope
+## 3. Out of scope
 
-| File | Change |
-|------|--------|
-| `.github/workflows/ci.yml` | Add `docker` job — build + push both images to GHCR |
-| `docker-compose.yml` | Add `image:` field to `backend` and `frontend` services (keep `build:` for local dev) |
-| GitHub repo settings | Add secret `VITE_API_URL` (production API URL baked into frontend image at CI build time) |
+- **Automatic deployment to Hetzner.** Deploying stays a deliberate manual SSH
+  step.
+- **Separate staging and production images.** One branch, one image.
+- **Image vulnerability scanning or SBOM generation.**
+- **A GitHub Packages retention policy.** It can be set by hand once images
+  accumulate.
+- **PR builds.** The docker job runs only on a push to `main`.
 
-No backend or frontend source code changes.
+## 4. Done when
 
----
-
-## 5. Out of Scope
-
-- Automatic deploy (CD) to Hetzner
-- Staging environment or branch-based images
-- Image vulnerability scanning (Trivy, Snyk)
-- GitHub Packages retention policy — can be configured manually after first images accumulate
-- PR builds — docker job only runs on `push` to `master`, not on pull requests
-
----
-
-## 6. Success Criteria (Definition of Done)
-
-`13-docker-registry` is closed when:
-
-1. [ ] Push to `master` triggers the `docker` CI job after `backend` and `frontend` jobs pass
-2. [ ] Two packages appear in GitHub → Packages: `applikon-backend` and `applikon-frontend`
-3. [ ] Each image has both `:latest` and `:<short-sha>` tags
-4. [ ] `docker-compose pull` on the server downloads the new images without error
-5. [ ] `docker-compose up -d` starts the application from the pulled images
-
----
-
-## 7. Implementation Order
-
-1. Add `VITE_API_URL` secret in GitHub repo settings (Settings → Secrets → Actions)
-2. Extend `.github/workflows/ci.yml` with the `docker` job
-3. Add `image:` fields to `docker-compose.yml`
-4. Push to `master`, verify images appear in GitHub → Packages
-5. On server: `docker-compose pull && docker-compose up -d`
-
----
-
-## 8. Related Documents
-
-- `spec/v1/1.0.0/12-ci/brief.md` — previous topic, CI pipeline foundation
-- `spec/v1/1.0.0/13-docker-registry/implementation-plan.md` — exact file changes
-- `spec/deployment/deployment-hetzner.md` — server setup and deploy commands
-- `spec/README.md` — spec index
-
----
-
-*Created: 2026-05-07*
+- A push to `main` triggers the `docker` job after the backend and frontend jobs
+  pass.
+- Two packages appear under GitHub Packages: `applikon-backend` and
+  `applikon-frontend`.
+- Each image carries both `:latest` and `:<short-sha>`.
+- `docker-compose pull` on the server downloads the new images without error, and
+  `docker-compose up -d` starts the application from them.
