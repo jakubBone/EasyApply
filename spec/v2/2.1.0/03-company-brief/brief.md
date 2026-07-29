@@ -1,12 +1,5 @@
 # Applikon 2.1.0 — Company Brief
 
-> **Status:** Vision. Pending.
-> **Process & artifacts for this version:** [`../../../PROCESS.md`](../../../PROCESS.md).
-> Release `2.1.0` of the v2 era — a single feature on the existing monolith,
-> no new architecture (see PROCESS.md §Numbering).
-
----
-
 # 1. Problem
 
 The cheat sheet (2.0.0) gave every application an **"About the company"** section —

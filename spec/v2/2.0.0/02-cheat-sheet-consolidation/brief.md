@@ -1,12 +1,5 @@
 # Applikon 2.0.0 — Cheat-sheet consolidation
 
-> **Status:** Built (2026-07-02).
-> Follows [`../01-screening-companion/implementation-plan.md`](../01-screening-companion/implementation-plan.md) (Screening Companion, Steps 1-4, shipped
-> 2026-06-30). Not a new version — v2 was not yet released, so this topic still
-> ships inside v2.
-
----
-
 ## 1. What triggered this topic
 
 `01-screening-companion` shipped a working Screening Companion: a global "My answers" page, a

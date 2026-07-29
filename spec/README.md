@@ -57,7 +57,10 @@ spec/
     │   ├── 01-screening-companion/       ← cheat sheet, board cleanup
     │   ├── 02-cheat-sheet-consolidation/ ← post-dogfooding UX, per-app questions
     │   └── as-built.md
-    └── 2.1.0/
-        ├── 03-company-brief/            ← on-demand AI company brief
+    ├── 2.1.0/
+    │   ├── 03-company-brief/            ← on-demand AI company brief
+    │   └── as-built.md
+    └── 2.2.0/
+        ├── 04-question-kind/           ← screening vs technical questions
         └── as-built.md
 ```

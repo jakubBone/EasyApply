@@ -1,10 +1,5 @@
 # Applikon 2.0.0 — Screening Companion
 
-> **Status:** Vision. Pending.
-> **Process & artifacts for this version:** [`../PROCESS.md`](../PROCESS.md).
-
----
-
 # 1. Problem
 
 v1 records what the candidate does — applications, Kanban, notes, CVs — but it does
