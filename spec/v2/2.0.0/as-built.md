@@ -29,10 +29,10 @@ No new dependency, module or infrastructure was added.
 
 | Where | Planned | Built | Why |
 |-------|---------|-------|-----|
-| 01, Step 1 | Migration `V16` | `V17` | `V16__add_salary_field.sql` already existed |
-| 01, Step 1 | `ScreeningAnswerRequest`/`Response` only | Added a wrapper, `ScreeningAnswersRequest` | Lets `@Valid` cascade into the list items, so an over-long answer returns a clean 400 |
-| 01, Step 3 | Per-application company knowledge as one `companyResearch` TEXT field, with `PATCH .../company-research` (`V18`) | Per-application rows in `screening_answers` (`V19`); the `V18` column and its endpoint dropped (`V20`) | One text field could not hold multiple custom questions. It needed the same row model as General. This is what topic 02 exists for |
-| 01, Step 2 | A "My answers" page | Replaced by the cheat-sheet hub in 02, Step 1 | The backend resource is unchanged; only the surface moved |
-| 02, Step 1 | Inline autosave everywhere | Read-only sections, with editing in a Save modal | Using it for real showed that inline editing during a call is worse than an explicit save |
-| 02, Step 1 | Cheat sheet reached by a per-card icon and a details-header button | One hub tab with a company picker, plus a default-open section in details; the per-card icon dropped | Scattered entry points were confusing. One hub is the fast path during a recruiter call |
-| 01, Step 1 | Tests switch the authenticated user mid-test | Isolation tests switch the user once, before the request | The suite holds the user in a thread-local `SecurityContextHolder`, so a switch after `mockMvc.perform` has no effect |
+| Step 1 | Migration `V16` | `V17` | `V16__add_salary_field.sql` already existed |
+| Step 1 | `ScreeningAnswerRequest`/`Response` only | Added wrapper `ScreeningAnswersRequest` | Lets `@Valid` cascade into list items for clean 400 on invalid answer |
+| Step 3 | Company knowledge as one `companyResearch` TEXT field | Per-application rows in `screening_answers`; dropped `V18` column and endpoint | One text field cannot hold multiple custom questions; needed same row model as General |
+| Step 2 (01) | A "My answers" page | Replaced by cheat-sheet hub (topic 02) | Backend resource unchanged; only surface moved |
+| Step 1 (02) | Inline autosave everywhere | Read-only sections, Save modal | Real usage showed inline editing mid-call worse than explicit save |
+| Step 1 (02) | Cheat sheet: per-card icon + details-header button | One hub tab with picker + default-open in details | Scattered entry points confusing; one hub is fast path during call |
+| Step 1 (01) | Tests switch user mid-test | Switch once before request | Thread-local `SecurityContextHolder` switch after `mockMvc.perform` has no effect |
