@@ -119,7 +119,7 @@ Two document types number differently, for a reason:
 ### `brief.md`
 
 ```markdown
-# 2.2.0 — Question Kind
+# 2.1.0 — Company Brief
 
 ## 1. Problem
 What hurts, and for whom. Two or three short paragraphs.
@@ -139,7 +139,7 @@ What it deliberately does not do, and why. Bullets.
 ### `user-stories.md`
 
 ```markdown
-# 2.2.0 — User Stories
+# 2.1.0 — User Stories
 
 ## 1. Marking a question
 
@@ -157,7 +157,7 @@ What it deliberately does not do, and why. Bullets.
 ### `implementation-plan.md`
 
 ```markdown
-# 2.2.0 04-question-kind — Implementation Plan
+# 2.1.0 03-company-brief — Implementation Plan
 
 ## What changes
 **Backend:** files created and changed.
@@ -183,7 +183,7 @@ What it deliberately does not do, and why. Bullets.
 ### `as-built.md`
 
 ```markdown
-# 2.2.0 — As-Built
+# 2.1.0 — As-Built
 
 Source of truth is the code. What exists now: [architecture.md](../../architecture.md).
 
