@@ -5,22 +5,9 @@
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4-6DB33F?style=flat&logo=springboot&logoColor=white)
 ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=flat&logo=springsecurity&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat&logo=postgresql&logoColor=white)
-![Flyway](https://img.shields.io/badge/Flyway-CC0200?style=flat&logo=flyway&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat&logo=tailwindcss&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)
-![React Query](https://img.shields.io/badge/React_Query-FF4154?style=flat&logo=reactquery&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white)
-![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=flat&logo=swagger&logoColor=black)
-![Cypress](https://img.shields.io/badge/Cypress-69D3A7?style=flat&logo=cypress&logoColor=white)
-![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat&logo=vitest&logoColor=white)
 [![CI](https://github.com/jakubBone/applikon/actions/workflows/ci.yml/badge.svg)](https://github.com/jakubBone/applikon/actions/workflows/ci.yml)
-
-
-![Claude Code](https://img.shields.io/badge/Claude_Code-D97706?style=flat&logo=anthropic&logoColor=white)
-![Spec-Driven](https://img.shields.io/badge/Spec--Driven-1F2937?style=flat)
 
 **Applikon** is a job application tracker for IT candidates in Poland. One place for applications, CVs, and interview notes, instead of scattered spreadsheets and expired links. Designed for anyone actively applying to multiple positions at once.
 
@@ -35,54 +22,6 @@
 
 > 📌 **Quick note**: This video uses the former name **EasyApply**, now rebranded to **💼 Applikon**.
 </div>
-
-## 🧠 Spec-Driven Development with AI
-
-Built with **Claude Code** using a strict spec-first approach. No code was written
-without a plan first; no plan was written without knowing what *not* to do.
-
-Currently on **v2 - Screening Companion** (`spec/v2/`): a screening cheat sheet,
-board cleanup, and an AI company brief, built on top of the **v1 MVP** (`spec/v1/`).
-
-🟦 **Specify** → 🟪 **Plan** → 🟧 **Implement** → 🟥 **Use it for real** → back to 🟦 ↺
-*(🟨 Review and 🟩 Refactor ran once, for the v1 MVP - available anytime since via dedicated skills.)*
-
-|     | Stage          | What it produces                                                                                                       |
-|-----|----------------|--------------------------------------------------------------------------------------------------------------------------|
-| 🟦  | **Specify**    | The idea, user, scope, **out of scope**, user stories with acceptance criteria.                                          |
-| 🟪  | **Plan**       | Implementation steps with tests batched at the end of each stage.                                                        |
-| 🟧  | **Implement**  | Code against the plan - each step with tests, DoD, and a Conventional Commit.                                            |
-| 🟥  | **Use it for real** | Ship it, then dogfood it. If reality disagrees, that's the next **Specify** - never a rewrite of the last one.      |
-| 🟨  | **Review**     | Findings classified **Critical / Important / Nice-to-have** until each is closed.                                        |
-| 🟩  | **Refactor**   | Fixes applied alongside learning: explain → fix → control questions → notes (mentor mode).                               |
-
-## 🤖 Specs & Config
-
-- **`spec/README.md`** - start here: the spec map
-- **`spec/PROCESS.md`**- the spec-driven process
-- **`.claude/`** - config directory (commands + skills), shown below:
-
-```
-.claude/
-├── commands/
-│   ├── commit-assistant.md                ← propose Conventional Commit
-│   ├── changelog-manager.md               ← automated CHANGELOG.md
-│   ├── mentor-refactor-backend.md         ← backend refactor + learning (**AI mentor mode**)
-│   └── mentor-refactor-frontend.md        ← frontend refactor + learning (**AI mentor mode**)
-└── skills/
-    ├── spec-assistant/                    ← spec-driven planning: idea → user stories → plan
-    │   ├── SKILL.md
-    │   └── references/
-    ├── code-review-backend/               ← Java 21 / Spring Boot 3.4 reviewer
-    │   ├── SKILL.md
-    │   └── references/
-    ├── code-review-frontend/              ← React 19 / TypeScript reviewer
-    │   ├── SKILL.md
-    │   └── references/
-    └── security-auditor/                  ← OWASP Top 10 read-only auditor (no code modifications)
-        └── SKILL.md
-```
-
 
 ## ✨ Features
 
@@ -103,6 +42,76 @@ board cleanup, and an AI company brief, built on top of the **v1 MVP** (`spec/v1
 - **Board cleanup** - flags applications stuck in "Sent" for 60+ days with no response, with one-click archiving
 - **Company brief** - AI-generated summary of the company (industry, product and customers, tech stack, size and stage), generated once per company, reused across applications and editable by hand
 
+
+## 🏗 Architecture
+
+A layered Spring Boot monolith - `controller → service → repository` - with PostgreSQL behind
+Flyway migrations and a React SPA talking to it over REST. One deployable unit, one database,
+on purpose.
+
+```
+Browser  ·  React 19 + React Query
+   │ HTTPS
+Caddy  ·  reverse proxy, TLS
+   │
+Spring Boot 3.4
+   ├─ filters      CORS → AdminKeyFilter → JWT validation → JwtAuthenticationConverter → ConsentRequiredFilter
+   ├─ controller   @Valid on the request DTO - rejected input never reaches the service
+   ├─ service      @Transactional; every query scoped by the authenticated user id
+   └─ repository   Spring Data JPA
+   │
+PostgreSQL 16  ·  schema owned by Flyway; Hibernate runs in `validate` mode only
+```
+
+**One request, end to end.** The access token is validated before any application code runs;
+the converter turns its `sub` claim into an `AuthenticatedUser` principal, and `MdcUserFilter`
+puts that user id into the logging context - so every log line for the request is attributable
+without an email ever reaching the logs. Responses are DTO records; entities never leave the
+service layer.
+
+Full reference - packages, every endpoint, schema, component tree:
+[`spec/architecture.md`](spec/architecture.md).
+
+## ⚖️ Engineering decisions & trade-offs
+
+Recorded as ADRs, with context, decision and consequences:
+
+| Decision | Why | What it costs |
+|---|---|---|
+| [Google OAuth2 + JWT](spec/adr/ADR-v1-001-oauth2-jwt.md) | no passwords stored, no reset flow, no credential breach surface | a hard dependency on one provider; no Google account, no login |
+| [Flyway, `ddl-auto=validate`](spec/adr/ADR-v1-002-flyway-versioned-migrations.md) | every schema change is a reviewable commit; checksums stop silent edits | a deployed migration is immutable - a fix has to be a new one |
+| [React Query for server state](spec/adr/ADR-v1-003-react-query.md) | caching, retries and invalidation are the usual bug source when hand-rolled | one more library, and a cache to reason about |
+| [Groq behind a `ChatModel` port](spec/adr/ADR-001-brief-provider-strategy.md) | free tiers move; the provider had to be swappable by config, not by code | a second, dormant adapter to keep working |
+| [In-process async, no broker](spec/adr/ADR-003-in-process-async-brief-generation.md) | one deliberate click per brief - a queue would be infrastructure without a reason | a brief in flight is lost if the process dies; it ends `FAILED` and the user retries |
+| [Job-ad link dropped from the prompt](spec/adr/ADR-006-drop-job-ad-link-from-brief-prompt.md) | measured: the link changed nothing, the company name drives the result | briefs are per company, not per posting |
+
+Decisions taken without an ADR, stated here because they shape everything above:
+
+| Decision | Why | What it costs |
+|---|---|---|
+| Monolith + one Postgres on a single VPS | splitting it buys the user nothing at this size | a single point of failure and no horizontal scaling - revisited when the traffic stops fitting on one box |
+| Layered, not hexagonal | one database, one entry channel; ports and adapters would be ceremony | business logic knows about JPA. A second entry channel is the trigger to change this |
+| RSA signing key generated in memory at startup | no key management needed for a single instance | a restart invalidates every access token (they live 15 minutes) - **and it breaks outright on a second instance** |
+| Account deletion really deletes - no soft delete | GDPR Art. 17 asks for erasure, not a flag | no undo, which is why data export exists first |
+
+## 🧪 Testing
+
+Tested at four levels, each answering a different question:
+
+| Level | Tooling | What it covers |
+|---|---|---|
+| Unit | JUnit 5 + Mockito | service logic in isolation, collaborators mocked |
+| Web layer | MockMvc | status codes, validation, JSON contract - no server, no network |
+| Integration | `@SpringBootTest` + H2 | the wired context: security, transactions, repositories |
+| Frontend | Vitest + Testing Library | components and hooks |
+| End to end | Cypress | application CRUD, badges, cheat sheet, company brief |
+
+`DataIsolationTest` is the one worth singling out: it creates data as user A, authenticates as
+user B, and asserts every route refuses. Multi-tenant leakage is the failure this project can
+least afford, so it is tested explicitly rather than assumed.
+
+CI runs backend tests, frontend tests and a production build on every push, then publishes both
+images to GHCR - [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ## 🐳 Run it yourself (Docker)
 
@@ -177,10 +186,62 @@ deployment runbook is in [`spec/deployment/deployment-hetzner.md`](spec/deployme
 
 ## 🔒 Privacy & Data
 
-- **Refresh tokens** stored as HMAC-SHA256 hashes - a stolen database cannot be used to hijack sessions
+- **Refresh tokens** are stored only as HMAC-SHA256 digests, keyed with a server-side secret - the stored value cannot be replayed, so a database dump yields no usable tokens. Access tokens are stateless and never stored at all
 - **Logs** contain UUIDs only - no emails, names, or tokens in plaintext
 - **Account deletion** permanently removes all data; inactive accounts purged after 12 months
 - **Company brief** sends only the company name to the AI provider - never your notes, applications, or personal data
 
 Full design rationale: [`spec/v1/1.0.0/07-privacy-rodo/`](spec/v1/1.0.0/07-privacy-rodo/)
+
+## 🧠 How this was built
+
+Written with **Claude Code** in a spec-first loop: nothing was implemented before a plan
+existed, and no plan was written without stating what was **out of scope**. The specs live in
+the repo rather than in a chat log - `spec/` holds the vision, the per-release plans, the ADRs
+linked above, and an `as-built.md` per release recording where reality diverged from the plan.
+
+Currently on **v2 - Screening Companion** (`spec/v2/`), built on top of the **v1 MVP**
+(`spec/v1/`).
+
+🟦 **Specify** → 🟪 **Plan** → 🟧 **Implement** → 🟥 **Use it for real** → back to 🟦 ↺
+
+|     | Stage | What it produces |
+|-----|-------|------------------|
+| 🟦  | **Specify** | the idea, user, scope, **out of scope**, user stories with acceptance criteria |
+| 🟪  | **Plan** | implementation steps, with tests batched at the end of each stage |
+| 🟧  | **Implement** | code against the plan - each step with tests, a DoD and a Conventional Commit |
+| 🟥  | **Use it for real** | ship it, then dogfood it. If reality disagrees, that is the next **Specify** - never a rewrite of the last one |
+| 🟨  | **Review** | findings classified Critical / Important / Nice-to-have until each is closed |
+| 🟩  | **Refactor** | fixes applied alongside learning: explain → fix → control questions → notes |
+
+Review and Refactor ran once, for the v1 MVP; both stay available as dedicated skills.
+
+Start with [`spec/README.md`](spec/README.md) for the map and
+[`spec/PROCESS.md`](spec/PROCESS.md) for the process itself.
+
+<details>
+<summary><b>Repo tooling (<code>.claude/</code>)</b></summary>
+
+```
+.claude/
+├── commands/
+│   ├── commit-assistant.md                ← propose Conventional Commit
+│   ├── changelog-manager.md               ← automated CHANGELOG.md
+│   ├── mentor-refactor-backend.md         ← backend refactor + learning (**AI mentor mode**)
+│   └── mentor-refactor-frontend.md        ← frontend refactor + learning (**AI mentor mode**)
+└── skills/
+    ├── spec-assistant/                    ← spec-driven planning: idea → user stories → plan
+    │   ├── SKILL.md
+    │   └── references/
+    ├── code-review-backend/               ← Java 21 / Spring Boot 3.4 reviewer
+    │   ├── SKILL.md
+    │   └── references/
+    ├── code-review-frontend/              ← React 19 / TypeScript reviewer
+    │   ├── SKILL.md
+    │   └── references/
+    └── security-auditor/                  ← OWASP Top 10 read-only auditor (no code modifications)
+        └── SKILL.md
+```
+
+</details>
 
