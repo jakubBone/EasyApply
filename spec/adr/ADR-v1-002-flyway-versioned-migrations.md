@@ -1,7 +1,5 @@
 # ADR-v1-002 — Flyway for versioned schema migrations
 
-**Status:** Accepted
-
 ## Context
 
 Schema needed to evolve through development and across deployments. Hibernate's `ddl-auto=update` automates it, but migrations are not versioned and changes are not auditable.

@@ -74,25 +74,30 @@ Full reference - packages, every endpoint, schema, component tree:
 
 ## ⚖️ Engineering decisions & trade-offs
 
-Recorded as ADRs, with context, decision and consequences:
+A row gets in only if I can name what I rejected and what the choice costs me. Each links to
+its ADR in [`spec/adr/`](spec/adr/).
 
-| Decision | Why | What it costs |
+**The system:**
+
+| Decision | Rejected alternative, and why | What it costs |
 |---|---|---|
-| [Google OAuth2 + JWT](spec/adr/ADR-v1-001-oauth2-jwt.md) | no passwords stored, no reset flow, no credential breach surface | a hard dependency on one provider; no Google account, no login |
-| [Flyway, `ddl-auto=validate`](spec/adr/ADR-v1-002-flyway-versioned-migrations.md) | every schema change is a reviewable commit; checksums stop silent edits | a deployed migration is immutable - a fix has to be a new one |
-| [React Query for server state](spec/adr/ADR-v1-003-react-query.md) | caching, retries and invalidation are the usual bug source when hand-rolled | one more library, and a cache to reason about |
-| [Groq behind a `ChatModel` port](spec/adr/ADR-001-brief-provider-strategy.md) | free tiers move; the provider had to be swappable by config, not by code | a second, dormant adapter to keep working |
-| [In-process async, no broker](spec/adr/ADR-003-in-process-async-brief-generation.md) | one deliberate click per brief - a queue would be infrastructure without a reason | a brief in flight is lost if the process dies; it ends `FAILED` and the user retries |
-| [Job-ad link dropped from the prompt](spec/adr/ADR-006-drop-job-ad-link-from-brief-prompt.md) | measured: the link changed nothing, the company name drives the result | briefs are per company, not per posting |
+| [**Monolith + one Postgres on a single VPS**](spec/adr/ADR-v1-004-monolith-single-vps.md) | Microservices / managed cloud - rejected: cost and ops with no user-facing benefit at this scale | Single point of failure, no horizontal scaling. I change this when traffic stops fitting on one machine - not earlier |
+| [**Layered architecture, not hexagonal**](spec/adr/ADR-v1-005-layered-not-hexagonal.md) | Ports and adapters - rejected: one database, one entry channel, it would be ceremony | Business logic knows about JPA |
+| [**Google OAuth2, no passwords of my own**](spec/adr/ADR-v1-001-oauth2-jwt.md) | Own accounts - rejected: password storage, reset flow, breach surface | Hard dependency on one provider; nobody without a Google account can register. A second provider if I needed corporate users |
+| [**Two tokens: 15-min JWT + 7-day refresh in an HttpOnly cookie**](spec/adr/ADR-v1-001-oauth2-jwt.md) | A session in the database (server-side state), or one long-lived JWT | More moving parts. Refresh tokens are stored as HMAC digests, so a database leak yields no usable tokens |
+| [**RSA key generated in memory at startup**](spec/adr/ADR-v1-006-in-memory-rsa-key.md) | Key from env as PEM - rejected: no key management needed for a single instance | Restart invalidates every JWT (acceptable - access tokens live 15 min). **Breaks on a second instance** |
+| [**Flyway migrations, Hibernate in `validate` mode**](spec/adr/ADR-v1-002-flyway-versioned-migrations.md) | `ddl-auto=update` - rejected: the schema becomes whatever Hibernate inferred last, reviewed by nobody | A shipped migration is immutable. Every fix is a new migration, including the trivial ones |
+| [**`EnumType.STRING` everywhere**](spec/adr/ADR-v1-007-enum-type-string.md) | `ORDINAL` - rejected: reordering an enum rewrites the meaning of numbers in existing rows | Slightly more storage. Worth it |
+| [**No soft delete - account deletion really deletes**](spec/adr/ADR-v1-008-no-soft-delete.md) | A `deleted` flag - rejected: GDPR Art. 17 requires actual erasure | No undo. Data export before deletion covers the user |
+| [**React Query for server state**](spec/adr/ADR-v1-003-react-query.md) | `useEffect` + `useState` per screen - rejected: caching, retries and invalidation are where hand-rolled fetching breaks | One more library, and a cache to reason about |
 
-Decisions taken without an ADR, stated here because they shape everything above:
+**The company brief**, the one feature that calls an LLM:
 
-| Decision | Why | What it costs |
+| Decision | Rejected alternative, and why | What it costs |
 |---|---|---|
-| Monolith + one Postgres on a single VPS | splitting it buys the user nothing at this size | a single point of failure and no horizontal scaling - revisited when the traffic stops fitting on one box |
-| Layered, not hexagonal | one database, one entry channel; ports and adapters would be ceremony | business logic knows about JPA. A second entry channel is the trigger to change this |
-| RSA signing key generated in memory at startup | no key management needed for a single instance | a restart invalidates every access token (they live 15 minutes) - **and it breaks outright on a second instance** |
-| Account deletion really deletes - no soft delete | GDPR Art. 17 asks for erasure, not a flag | no undo, which is why data export exists first |
+| [**AI provider behind a `BriefChatModel` port**](spec/adr/ADR-v2-001-brief-provider-strategy.md) | The vendor SDK called straight from the service - rejected: free tiers move, and Gemini's closed mid-build | A dormant second adapter that still has to compile. Switching provider is one property, not a rewrite |
+| [**Brief generation async via a transactional event**](spec/adr/ADR-v2-002-in-process-async-brief-generation.md) | A queue (Kafka/Rabbit) - rejected: separate infrastructure to run for a single use case | An event published outside a transaction is silently dropped. No retries - a failed brief is marked `FAILED` and the user retries |
+| [**Job-ad link dropped from the brief prompt**](spec/adr/ADR-v2-003-drop-job-ad-link-from-brief-prompt.md) | Keeping the link - rejected after measuring: output unchanged, the company name carries the result | Briefs are per company, not per posting. Two roles at one company share one |
 
 ## 🧪 Testing
 

@@ -1,6 +1,4 @@
-# ADR-001 — Brief provider strategy: Groq with fallback plan
-
-**Status:** Accepted · provider is Groq after Gemini free tier closed
+# ADR-v2-001 — Brief provider strategy: Groq with fallback plan
 
 ## Context
 

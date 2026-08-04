@@ -1,6 +1,4 @@
-# ADR-003 — In-process brief generation, no durable job machinery
-
-**Status:** Accepted · execution mechanism superseded by ADR-004; the no-broker and durability decision stands
+# ADR-v2-002 — In-process brief generation, no durable job machinery
 
 ## Context
 
@@ -43,8 +41,8 @@ beyond the brief's own status row.**
   workaround is a manual re-click. If that risk ever bites, **this is the change
   to make** — not a broker.
 - **Spring events.** Not an alternative on this axis. They change who *starts*
-  the work, not where it *runs*, so they add no durability at all. ADR-004 later
-  adopted them for code-quality reasons, which left this decision untouched.
+  the work, not where it *runs*, so they add no durability at all. They replaced
+  `@Async` later, for code-quality reasons, which left this decision untouched.
 
 ## Consequences
 

@@ -113,8 +113,8 @@ Two document types number differently, for a reason:
 - The **plan** numbers by `Step N`, and the orientation sections before Step 1
   carry no number.
 - An **ADR** leaves its sections unnumbered, because `§N` there already means a
-  numbered clause inside `## Decision` — "ADR-001 §5" is the quota-discipline
-  clause, not the fifth section.
+  numbered clause inside `## Decision` — "ADR-v2-003 §3" is the clause parking
+  per-offer generation, not the third section.
 
 ### `brief.md`
 
@@ -206,9 +206,7 @@ alone.
 ### ADR
 
 ```markdown
-# ADR-005 — Groq compound replaces Gemini as the brief provider
-
-**Status:** Accepted · supersedes ADR-001 §1-2
+# ADR-v2-003 — The job-ad link leaves the brief prompt
 
 ## Context
 What forced a choice.

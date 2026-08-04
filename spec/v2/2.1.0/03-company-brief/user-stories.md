@@ -34,7 +34,7 @@ minutes before a call.
   job-ad link.
 
 > Superseded in part: the job-ad link was dropped from the prompt during the
-> build. See [ADR-006](../../../adr/ADR-006-drop-job-ad-link-from-brief-prompt.md).
+> build. See [ADR-v2-003](../../../adr/ADR-v2-003-drop-job-ad-link-from-brief-prompt.md).
 
 ## 2. Status and failures
 

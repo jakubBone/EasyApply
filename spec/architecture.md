@@ -48,7 +48,7 @@ com.applikon/
   entity/
     Application.java               — @Entity, table: applications
     CompanyBrief.java              — @Entity, table: company_briefs (v2 03-company-brief)
-    CompanyBriefField.java         — @Entity, table: company_brief_fields; child side, @ManyToOne CompanyBrief (ADR-002)
+    CompanyBriefField.java         — @Entity, table: company_brief_fields; child side, @ManyToOne CompanyBrief
     CV.java                        — @Entity, table: cvs
     Note.java                      — @Entity, table: notes
     ServiceNotice.java             — @Entity, table: service_notices (08-user-data)
@@ -69,7 +69,7 @@ com.applikon/
   repository/
     ApplicationRepository.java     — JpaRepository; custom queries: findByUserId, findByIdAndUserId, existsByIdAndUserId, findByUserIdAndCompanyIgnoreCaseAndPositionIgnoreCase, getApplicationStats, clearCVReferences
     CompanyBriefRepository.java    — JpaRepository; findByUserIdAndCompanyName (the cache key) (v2 03-company-brief)
-    CompanyBriefFieldRepository.java — JpaRepository; findByBriefId, deleteByBriefId (child-side access, ADR-002)
+    CompanyBriefFieldRepository.java — JpaRepository; findByBriefId, deleteByBriefId (child-side access)
     CVRepository.java              — JpaRepository
     NoteRepository.java            — JpaRepository; findByApplicationIdAndApplicationUserIdOrderByCreatedAtDesc, findByIdAndApplicationUserId, etc.
     ServiceNoticeRepository.java   — JpaRepository; JPQL findActive(@Param("now") LocalDateTime now) — WHERE active=true AND (expiresAt IS NULL OR expiresAt > :now) (08-user-data)
@@ -86,13 +86,13 @@ com.applikon/
     AccountRetentionService.java   — @Scheduled(cron daily 3:00): deletes accounts inactive > 12 months via UserService.deleteAccount; threshold from app.retention.inactive-months (07-privacy-rodo)
     ApplicationService.java        — create, findAllByUserId, findById, updateStatus, updateStage, addStage, findDuplicates, delete, update
     BriefService.java              — (v2 03-company-brief) trigger (cache-aside per company, retry only from FAILED), get, editFields, markReady, markFailed
-    BriefGenerationRequested.java  — record (briefId, companyName) — the event trigger publishes (ADR-004)
+    BriefGenerationRequested.java  — record (briefId, companyName) — the event trigger publishes (ADR-v2-002)
     BriefGenerationWorker.java     — @TransactionalEventListener(AFTER_COMMIT); hands the model call to `applicationTaskExecutor`, writes back through BriefService
     ai/
-      BriefChatModel.java          — port: `GeneratedBrief generate(String companyName)` — the company name is all that leaves the system (ADR-006)
+      BriefChatModel.java          — port: `GeneratedBrief generate(String companyName)` — the company name is all that leaves the system (ADR-v2-003)
       BriefLocales.java            — FIELD_KEYS (industry, product_customers, tech_stack, size_stage) + active LOCALES; one source of truth for prompt and persistence
       GeneratedBrief.java          — record (fields: List<Field{fieldKey, lang, text}>); null text = "not enough public info"
-      GroqBriefChatModel.java      — active adapter, `groq/compound-mini` via the OpenAI-compatible API (ADR-005)
+      GroqBriefChatModel.java      — active adapter, `groq/compound-mini` via the OpenAI-compatible API (ADR-v2-001)
       GeminiBriefChatModel.java    — dormant adapter, Google Search grounding; kept as the documented return path
     CVService.java                 — uploadCV, findAllByUserId, findById, downloadCV, deleteCV, createCV, updateCV, assignCVToApplication, removeCVFromApplication
     NoteService.java               — create, findByApplicationId, findById, update, delete, deleteByApplicationId, createSalaryChangeNote (⚠️ dead code — never called)
@@ -199,14 +199,13 @@ POST /brief ──► BriefService.trigger  (@Transactional)
 GET /brief ◄── the frontend polls every 2 s while the status is PENDING
 ```
 
-**Trust boundary** ([ADR-001](adr/ADR-001-gemini-free-tier-grounding.md) §4): the text
+**Trust boundary** ([ADR-v2-001](adr/ADR-v2-001-brief-provider-strategy.md)): the text
 comes from web pages the provider searched, so it is **untrusted input**. The brief is
 **display-only** — its content never triggers an action, a tool call, or another feature.
 Anything that later wants to *act* on brief content needs a new decision.
 Outbound, only the company name ever leaves the system
-([ADR-006](adr/ADR-006-drop-job-ad-link-from-brief-prompt.md)). No annotation-driven AOP is
-involved: timeouts live in the client beans, retry in Spring AI's `RetryTemplate`
-([ADR-004](adr/ADR-004-transactional-event-brief-generation.md)).
+([ADR-v2-003](adr/ADR-v2-003-drop-job-ad-link-from-brief-prompt.md)). No annotation-driven AOP is
+involved: timeouts live in the client beans, retry in Spring AI's `RetryTemplate`.
 
 **SystemController — `/api/system`** (08-user-data)
 
@@ -244,7 +243,7 @@ involved: timeouts live in the client beans, retry in Spring AI's `RetryTemplate
 | `spring-dotenv` | `.env` file support |
 | `springdoc-openapi-starter-webmvc-ui 2.8.8` | Swagger UI + OpenAPI 3 spec generation (11-swagger) |
 | `spring-ai-bom 1.1.8` | Version management for the Spring AI starters (v2 03-company-brief) |
-| `spring-ai-starter-model-openai` | The active brief provider — Groq via its OpenAI-compatible API (ADR-005) |
+| `spring-ai-starter-model-openai` | The active brief provider — Groq via its OpenAI-compatible API (ADR-v2-001) |
 | `spring-ai-starter-model-google-genai` | The dormant Gemini return path; application code only ever sees `ChatModel` |
 | No Lombok | All getters/setters written manually |
 

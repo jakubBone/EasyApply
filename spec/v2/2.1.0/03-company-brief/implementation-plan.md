@@ -57,7 +57,7 @@ company" section, `i18n/locales/{pl,en}/common.json`.
 
 The whole resource, testable without any live AI. Generation runs through the
 `BriefChatModel` port and every test runs against a fake. This is the
-swappability proof ADR-001 asks for.
+swappability proof ADR-v2-001 asks for.
 
 ### 1.1 Migration `V21__company_briefs.sql`
 
@@ -309,7 +309,7 @@ the adapter.
 ### Step 2a — the dependency alone
 
 - `pom.xml`: the Spring AI BOM (1.1.x) and `spring-ai-starter-model-google-genai`,
-  the starter that takes a free-tier API key (ADR-001, cost 0). Not
+  the starter that takes a free-tier API key (ADR-v2-001, cost 0). Not
   `vertex-ai-gemini`, which authenticates through GCP application default
   credentials and fails without a GCP project, including in tests.
 - `src/test/resources/application-test.properties`: `spring.ai.model.chat=none`.
@@ -336,7 +336,7 @@ fails here, the dependency is the cause, not our code.
   locale in one request, with Google Search grounding enabled. Parsing is
   defensive: tolerate a markdown fence by extracting the outermost `{...}` into
   `GeneratedBrief` entries. Any provider error, partial or unparseable response
-  raises an exception and ends as `FAILED`, never a partial brief (ADR-001 §3).
+  raises an exception and ends as `FAILED`, never a partial brief (ADR-v2-001).
 - **Timeout and retry go through client options or Spring AI's `RetryTemplate`
   only.** No `@EnableRetry`, no `@TimeLimiter`, no annotation-driven AOP. That
   kind of bean-post-processor is where the Step 1 `@AuthenticationPrincipal` bug
@@ -434,6 +434,6 @@ consistent, and `npm run e2e` is green locally.
 - [x] CHANGELOG `2.1.0` and version bumps
 - [x] Deployed and verified live on production, with a production key separate from the dev one
 - [x] Groq client bean: a blank key fails generation only, with a hard per-request timeout
-- [x] ADR-006, and the prompt and port drop the job-ad link
-- [x] Per-offer generation parked in ADR-006 §3
+- [x] ADR-v2-003, and the prompt and port drop the job-ad link
+- [x] Per-offer generation parked in ADR-v2-003 §3
 - [x] LinkedIn post

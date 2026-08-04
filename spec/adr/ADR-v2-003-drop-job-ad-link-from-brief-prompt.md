@@ -1,7 +1,4 @@
-
-# ADR-006 — The job-ad link leaves the brief prompt
-
-**Status:** Accepted · supersedes the job-ad-link clause of US-1.1, ADR-001 §4 and ADR-005 §4
+# ADR-v2-003 — The job-ad link leaves the brief prompt
 
 ## Context
 
@@ -22,13 +19,13 @@ The link is not free, though.
 
 **It is data egress.** User-pasted text leaves the system on every generation.
 Job-ad URLs routinely carry tracking and referral parameters, and a link can
-identify a specific recruiter or an internal posting. ADR-001 §4 minimised egress
-to what the feature needs, and an input with no effect on the output no longer
+identify a specific recruiter or an internal posting. Egress stays at what the
+feature actually needs, and an input with no effect on the output no longer
 qualifies.
 
 **It widens the injection surface.** A URL in the prompt invites the provider's
 server-side search to fetch and act on a page nobody vetted, which stretches the
-untrusted-input boundary ADR-001 §4 draws, for no gain.
+untrusted-input boundary for no gain.
 
 ## Decision
 

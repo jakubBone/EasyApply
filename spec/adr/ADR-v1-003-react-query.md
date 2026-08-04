@@ -1,7 +1,5 @@
 # ADR-v1-003 — React Query for data fetching
 
-**Status:** Accepted
-
 ## Context
 
 The frontend needed to fetch API data: applications, notes, answers. Plain `fetch()` works, but requires custom logic for caching, retries, and optimistic updates — each a common source of bugs.

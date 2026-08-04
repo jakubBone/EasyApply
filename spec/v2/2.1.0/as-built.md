@@ -49,7 +49,7 @@ from the development one, so the two never share a quota.
 | Step 2a | Spring AI BOM "1.1.x" | Pinned 1.1.8 | Latest stable 1.1.x at build time |
 | Step 2a | Chat bean fails startup without key | 69 controller tests failed on auth | Spring AI dependencies changed security test behavior; fixed with `TestSecurityContextHolder` |
 | Step 2a | Verify `.env` independence by renaming it | Verified by inspection | Test properties override all placeholders |
-| Step 2b | Gemini free tier | Groq `compound-mini` | Gemini grounding disappeared; switched per [ADR-001](../../adr/ADR-001-brief-provider-strategy.md) |
+| Step 2b | Gemini free tier | Groq `compound-mini` | Gemini grounding disappeared; switched per [ADR-v2-001](../../adr/ADR-v2-001-brief-provider-strategy.md) |
 | Step 2b | Spring AI auto-config | Custom `GroqClientConfig`, unused starters disabled | Blank key must fail generation only, not app startup |
 | Step 2b | — | Cache setting pinned in config | Spring AI 1.1.8 requires it for Gemini adapter |
 | Step 3 | DTO sketch with no null case | Maps 404 → `null` to show "Generate brief" | DTO lacked unprepared state |
@@ -59,15 +59,15 @@ from the development one, so the two never share a quota.
 | Step 3 | — | `pool: 'threads'` in `vite.config.ts` | Test file 18 exposed vitest CJS interop race |
 | Step 3, verification | Marker shows for any empty text | Only untouched fields show it | Was conflating "no data" with "user cleared answer" |
 | Step 3, verification | — | Unanswered screening Q hidden when brief `READY` | Display rule; data stays in export and save payload |
-| Step 4 | Prompt includes company name + job-ad link | Company name only | Link had no effect on output; widened injection surface — [ADR-006](../../adr/ADR-006-drop-job-ad-link-from-brief-prompt.md) |
+| Step 4 | Prompt includes company name + job-ad link | Company name only | Link had no effect on output; widened injection surface — [ADR-v2-003](../../adr/ADR-v2-003-drop-job-ad-link-from-brief-prompt.md) |
 | Step 4 | Write E2E happy path | Fix harness first: `cy.login()` mock missing `privacyPolicyAcceptedAt` | `ConsentGate` blocked every test's `beforeEach` |
-| Step 4 | Park per-offer generation in `spec/post/` | Parked in [ADR-006](../../adr/ADR-006-drop-job-ad-link-from-brief-prompt.md) §3 | `spec/post/` is gitignored, no published references |
+| Step 4 | Park per-offer generation in `spec/post/` | Parked in [ADR-v2-003](../../adr/ADR-v2-003-drop-job-ad-link-from-brief-prompt.md) §3 | `spec/post/` is gitignored, no published references |
 | Docs | Blank `GROQ_API_KEY` prevents startup | Corrected | False after `GroqClientConfig` existed; verified live |
 
 ## 3. Not done
 
 | Item | Why not |
 |------|---------|
-| Regenerating a ready brief, whole or per field | Contradicts US-2.1 and ADR-001 §5. The quota argument weakened with the move to Groq, but `markReady` deletes and rewrites every field, so a naive regeneration would destroy user edits. It needs its own ADR settling the edit-collision policy first |
+| Regenerating a ready brief, whole or per field | Contradicts US-2.1 and ADR-v2-001. The quota argument weakened with the move to Groq, but `markReady` deletes and rewrites every field, so a naive regeneration would destroy user edits. It needs its own ADR settling the edit-collision policy first |
 | Removing "What do you know about us?" outright | US-3.1 keeps it, and it holds user-written text from v1 that must stay reachable. The hidden-when-empty rule already covers the actual complaint |
 | "RPD verified in AI Studio" (Step 2b) | Moot. The Gemini adapter is dormant, so Groq's limits are the operative ones |

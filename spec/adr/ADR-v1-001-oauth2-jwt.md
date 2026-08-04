@@ -1,7 +1,5 @@
 # ADR-v1-001 — OAuth2 + JWT authentication
 
-**Status:** Accepted
-
 ## Context
 
 The MVP needed authentication. Options: session-based (traditional) or stateless (OAuth2 + JWT).
