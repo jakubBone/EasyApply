@@ -37,6 +37,3 @@ export function buildItems(server: ScreeningAnswer[]): Item[] {
 
 export const toRequest = (items: Item[]): ScreeningAnswerRequest[] =>
   items.map((i) => ({ questionKey: i.questionKey, label: i.label, answer: i.answer, custom: i.custom }))
-
-export const hasContent = (items: Item[]): boolean =>
-  items.some((i) => i.answer.trim() !== '' || (i.custom && (i.label ?? '').trim() !== ''))

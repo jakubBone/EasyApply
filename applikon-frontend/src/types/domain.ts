@@ -124,8 +124,6 @@ export type BriefStatus = 'PENDING' | 'READY' | 'FAILED'
 // The brief's four fields, in render order. Mirrors BriefLocales.FIELD_KEYS.
 export const BRIEF_FIELD_KEYS = ['industry', 'product_customers', 'tech_stack', 'size_stage'] as const
 
-export type BriefFieldKey = (typeof BRIEF_FIELD_KEYS)[number]
-
 // Mirrors BriefFieldResponse.java — one text per active locale; null = "not enough public info"
 export interface BriefField {
   key: string
