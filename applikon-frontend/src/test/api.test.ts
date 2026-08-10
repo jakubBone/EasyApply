@@ -4,12 +4,10 @@ import {
   createApplication,
   updateApplicationStatus,
   updateApplicationStage,
-  addStage,
   checkDuplicate,
   updateApplication,
   deleteApplication,
   fetchCVs,
-  uploadCV,
   deleteCV,
   assignCVToApplication,
   downloadCV,
@@ -111,28 +109,6 @@ describe('API Service', () => {
       expect(result).toEqual(updatedApp)
     })
 
-    it('addStage - adds new stage to application', async () => {
-      const updatedApp = { id: 1, currentStage: 'Rozmowa techniczna' }
-      mockFetch(updatedApp)
-
-      const result = await addStage(1, 'Rozmowa techniczna')
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${API_URL}/applications/1/stage`,
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({ stageName: 'Rozmowa techniczna' }),
-        })
-      )
-      expect(result).toEqual(updatedApp)
-    })
-
-    it('addStage - throws error on failed request', async () => {
-      global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 400 })
-
-      await expect(addStage(1, 'Test')).rejects.toThrow('api.addStage')
-    })
-
     it('checkDuplicate - checks duplicates', async () => {
       const duplicates = [{ id: 1, company: 'Google', position: 'Dev' }]
       mockFetch(duplicates)
@@ -192,20 +168,6 @@ describe('API Service', () => {
         expect.objectContaining({ headers: expect.any(Object) })
       )
       expect(result).toEqual(mockCVs)
-    })
-
-    it('uploadCV - uploads CV file', async () => {
-      const file = new File(['content'], 'test.pdf', { type: 'application/pdf' })
-      const uploadedCV = { id: 1, originalFileName: 'test.pdf', type: 'FILE' }
-      mockFetch(uploadedCV)
-
-      const result = await uploadCV(file)
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${API_URL}/cv/upload`,
-        expect.objectContaining({ method: 'POST' })
-      )
-      expect(result).toEqual(uploadedCV)
     })
 
     it('deleteCV - deletes CV', async () => {

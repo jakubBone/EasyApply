@@ -5,7 +5,6 @@ import {
   updateApplication,
   updateApplicationStatus,
   updateApplicationStage,
-  addStage,
   deleteApplication,
   checkDuplicate,
   assignCVToApplication,
@@ -99,17 +98,6 @@ export function useUpdateStage() {
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: applicationKeys.all })
       void queryClient.invalidateQueries({ queryKey: ['badgeStats'] })
-    },
-  })
-}
-
-export function useAddStage() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, stageName }: { id: number; stageName: string }) =>
-      addStage(id, stageName),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: applicationKeys.all })
     },
   })
 }

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchCVs, uploadCV, createCV, updateCV, deleteCV } from '../services/api'
+import { fetchCVs, createCV, updateCV, deleteCV } from '../services/api'
 import { applicationKeys } from './useApplications'
 
 export const cvKeys = {
@@ -10,16 +10,6 @@ export function useCVs() {
   return useQuery({
     queryKey: cvKeys.all,
     queryFn: fetchCVs,
-  })
-}
-
-export function useUploadCV() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (file: File) => uploadCV(file),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: cvKeys.all })
-    },
   })
 }
 

@@ -28,7 +28,6 @@ vi.mock('../../services/api', () => ({
   deleteApplication: vi.fn(),
   fetchBadgeStats: vi.fn(),
   fetchCVs: vi.fn(),
-  uploadCV: vi.fn(),
   deleteCV: vi.fn(),
   assignCVToApplication: vi.fn(),
   getToken: vi.fn(() => null),

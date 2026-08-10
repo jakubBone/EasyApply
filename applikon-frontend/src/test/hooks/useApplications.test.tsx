@@ -15,7 +15,6 @@ vi.mock('../../services/api', () => ({
   updateApplication: vi.fn(),
   updateApplicationStatus: vi.fn(),
   updateApplicationStage: vi.fn(),
-  addStage: vi.fn(),
   deleteApplication: vi.fn(),
   checkDuplicate: vi.fn(),
   assignCVToApplication: vi.fn(),

@@ -207,16 +207,6 @@ export const editBrief = async (applicationId: number, fields: BriefFieldEdit[])
   if (!response.ok) throw new Error('api.editBrief')
 }
 
-export const addStage = async (id: number, stageName: string): Promise<Application> => {
-  const response = await apiFetch(`${API_URL}/applications/${id}/stage`, {
-    method: 'POST',
-    headers: getHeaders('application/json'),
-    body: JSON.stringify({ stageName }),
-  })
-  if (!response.ok) throw new Error('api.addStage')
-  return response.json() as Promise<Application>
-}
-
 export const checkDuplicate = async (company: string, position: string): Promise<Application[]> => {
   const params = new URLSearchParams({ company, position })
   const response = await apiFetch(`${API_URL}/applications/check-duplicate?${params}`, {
@@ -234,18 +224,6 @@ export const fetchCVs = async (): Promise<CV[]> => {
   const response = await apiFetch(`${API_URL}/cv`, { headers: getHeaders() })
   if (!response.ok) throw new Error('api.fetchCVs')
   return response.json() as Promise<CV[]>
-}
-
-export const uploadCV = async (file: File): Promise<CV> => {
-  const formData = new FormData()
-  formData.append('file', file)
-  const response = await apiFetch(`${API_URL}/cv/upload`, {
-    method: 'POST',
-    headers: getHeaders(), // no Content-Type — browser sets multipart/form-data with boundary
-    body: formData,
-  })
-  if (!response.ok) throw new Error('api.uploadCV')
-  return response.json() as Promise<CV>
 }
 
 export const createCV = async (data: { originalFileName: string; type: string; externalUrl?: string }): Promise<CV> => {
