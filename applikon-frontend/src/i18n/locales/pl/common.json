@@ -108,10 +108,6 @@
     }
   },
   "tagline": "Aplikuj bez spiny!",
-  "login": {
-    "headline": "Zarządzaj swoją rekrutacją",
-    "googleBtn": "Zaloguj się przez Google"
-  },
   "form": {
     "titleCreate": "Dodaj nową aplikację",
     "titleEdit": "Edytuj aplikację",
@@ -270,16 +266,6 @@
     "appCount": "{{count}} aplikacji",
     "cancel": "Anuluj",
     "move": "Przenieś"
-  },
-  "onboarding": {
-    "title": "Witaj w Kanban Mobile!",
-    "swipeTitle": "Przesuń palcem",
-    "swipeDesc": "Swipe w lewo/prawo aby zobaczyć inne kolumny",
-    "holdTitle": "Przytrzymaj kartę",
-    "holdDesc": "Long press (0.5s) aby przenieść do innej sekcji",
-    "vibrationTitle": "Wibracja",
-    "vibrationDesc": "Poczujesz wibrację gdy karta będzie gotowa do przeniesienia",
-    "understood": "Rozumiem, zaczynamy!"
   },
   "landing": {
     "badge": "Darmowe · Bez rejestracji emailem",

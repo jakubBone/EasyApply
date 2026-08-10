@@ -108,10 +108,6 @@
     }
   },
   "tagline": "Apply, no stress!",
-  "login": {
-    "headline": "Manage your recruitment",
-    "googleBtn": "Sign in with Google"
-  },
   "form": {
     "titleCreate": "Add new application",
     "titleEdit": "Edit application",
@@ -268,16 +264,6 @@
     "appCount": "{{count}} applications",
     "cancel": "Cancel",
     "move": "Move"
-  },
-  "onboarding": {
-    "title": "Welcome to Kanban Mobile!",
-    "swipeTitle": "Swipe",
-    "swipeDesc": "Swipe left/right to see other columns",
-    "holdTitle": "Hold card",
-    "holdDesc": "Long press (0.5s) to move to another section",
-    "vibrationTitle": "Vibration",
-    "vibrationDesc": "You will feel vibration when the card is ready to move",
-    "understood": "Got it, let's go!"
   },
   "landing": {
     "badge": "Free · No email registration",
