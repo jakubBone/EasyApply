@@ -5,7 +5,6 @@ import type { ReactNode } from 'react'
 import {
   useApplications,
   useCreateApplication,
-  useCheckDuplicate,
 } from '../../hooks/useApplications'
 import { createTestQueryClient } from '../test-utils'
 
@@ -16,7 +15,6 @@ vi.mock('../../services/api', () => ({
   updateApplicationStatus: vi.fn(),
   updateApplicationStage: vi.fn(),
   deleteApplication: vi.fn(),
-  checkDuplicate: vi.fn(),
   assignCVToApplication: vi.fn(),
 }))
 
@@ -82,59 +80,5 @@ describe('useCreateApplication', () => {
       company: 'Apple',
       position: 'iOS Dev',
     })
-  })
-})
-
-describe('useCheckDuplicate', () => {
-  beforeEach(() => { vi.resetAllMocks() })
-
-  it('does not send query when company is empty', () => {
-    vi.mocked(api.checkDuplicate).mockResolvedValue([])
-
-    const { result } = renderHook(
-      () => useCheckDuplicate('', 'Dev'),
-      { wrapper: createWrapper() }
-    )
-
-    // fetchStatus: 'idle' means the query is disabled (enabled: false)
-    expect(result.current.fetchStatus).toBe('idle')
-    expect(api.checkDuplicate).not.toHaveBeenCalled()
-  })
-
-  it('does not send query when position is empty', () => {
-    vi.mocked(api.checkDuplicate).mockResolvedValue([])
-
-    const { result } = renderHook(
-      () => useCheckDuplicate('Google', ''),
-      { wrapper: createWrapper() }
-    )
-
-    expect(result.current.fetchStatus).toBe('idle')
-    expect(api.checkDuplicate).not.toHaveBeenCalled()
-  })
-
-  it('sends query when both fields are filled', async () => {
-    vi.mocked(api.checkDuplicate).mockResolvedValue([])
-
-    const { result } = renderHook(
-      () => useCheckDuplicate('Google', 'Dev'),
-      { wrapper: createWrapper() }
-    )
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(api.checkDuplicate).toHaveBeenCalledWith('Google', 'Dev')
-  })
-
-  it('returns duplicates when company and position already exists', async () => {
-    const duplicate = [{ id: 1, company: 'Google', position: 'Dev', status: 'SENT' }]
-    vi.mocked(api.checkDuplicate).mockResolvedValue(duplicate as any)
-
-    const { result } = renderHook(
-      () => useCheckDuplicate('Google', 'Dev'),
-      { wrapper: createWrapper() }
-    )
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data).toEqual(duplicate)
   })
 })

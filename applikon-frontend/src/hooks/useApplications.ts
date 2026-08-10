@@ -6,7 +6,6 @@ import {
   updateApplicationStatus,
   updateApplicationStage,
   deleteApplication,
-  checkDuplicate,
   assignCVToApplication,
 } from '../services/api'
 import type { Application, ApplicationRequest, StageUpdateRequest } from '../types/domain'
@@ -14,8 +13,6 @@ import type { Application, ApplicationRequest, StageUpdateRequest } from '../typ
 // Query keys — central location, eliminates typos when invalidating cache
 export const applicationKeys = {
   all: ['applications'] as const,
-  duplicates: (company: string, position: string) =>
-    ['applications', 'duplicates', company, position] as const,
 }
 
 /**
@@ -123,12 +120,3 @@ export function useAssignCV() {
   })
 }
 
-export function useCheckDuplicate(company: string, position: string) {
-  return useQuery({
-    queryKey: applicationKeys.duplicates(company, position),
-    queryFn: () => checkDuplicate(company, position),
-    // Query only when both fields are filled
-    enabled: company.length > 0 && position.length > 0,
-    staleTime: 0, // Always check duplicates fresh
-  })
-}
