@@ -6,7 +6,6 @@ import {
   downloadCV
 } from '../../services/api'
 import { isSafeUrl } from '../../utils/urlValidator'
-import { isMobile } from '../kanban/types'
 import { useCVs, useCreateCV, useUpdateCV, useDeleteCV } from '../../hooks/useCV'
 import type { Application, CV, CVType } from '../../types/domain'
 
