@@ -38,8 +38,9 @@ beyond the brief's own status row.**
   reuse Postgres and the existing `PENDING` row, and add a scheduled job that
   picks up orphaned briefs and either re-runs them or marks them `FAILED`. No new
   deployable. It is premature because the risk below is unlikely and the
-  workaround is a manual re-click. If that risk ever bites, **this is the change
-  to make** — not a broker.
+  workaround is a manual DB update to flip the stuck row to `FAILED` — there is
+  no in-app recovery, re-clicking does nothing (see Consequences). If that risk
+  ever bites, **this is the change to make** — not a broker.
 - **Spring events.** Not an alternative on this axis. They change who *starts*
   the work, not where it *runs*, so they add no durability at all. They replaced
   `@Async` later, for code-quality reasons, which left this decision untouched.
