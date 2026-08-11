@@ -14,7 +14,9 @@ import {
   fetchNotes,
   createNote,
   deleteNote,
-  fetchBadgeStats
+  fetchBadgeStats,
+  getToken,
+  setToken,
 } from '../services/api'
 import type { StageUpdateRequest } from '../types/domain'
 
@@ -293,6 +295,88 @@ describe('API Service', () => {
       global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 })
 
       await expect(fetchBadgeStats()).rejects.toThrow('api.fetchStats')
+    })
+  })
+
+  // ==================== apiFetch — refresh flow ====================
+
+  describe('apiFetch refresh flow', () => {
+    it('retries with the new token after a 401, then succeeds', async () => {
+      setToken('old-token')
+      const applications = [{ id: 1, company: 'Google', position: 'Dev' }]
+
+      global.fetch = vi.fn()
+        .mockResolvedValueOnce({ ok: false, status: 401 }) // original request
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ accessToken: 'new-token' }) }) // /auth/refresh
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(applications) }) // retried request
+
+      const result = await fetchApplications()
+
+      expect(result).toEqual(applications)
+      expect(global.fetch).toHaveBeenCalledTimes(3)
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        2,
+        `${API_URL}/auth/refresh`,
+        expect.objectContaining({ method: 'POST', credentials: 'include' })
+      )
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        3,
+        `${API_URL}/applications`,
+        expect.objectContaining({ headers: expect.objectContaining({ Authorization: 'Bearer new-token' }) })
+      )
+      expect(getToken()).toBe('new-token')
+    })
+
+    it('clears the token and stops when the refresh call itself fails', async () => {
+      setToken('old-token')
+
+      global.fetch = vi.fn()
+        .mockResolvedValueOnce({ ok: false, status: 401 }) // original request
+        .mockResolvedValueOnce({ ok: false, status: 401 }) // /auth/refresh — no valid refresh cookie
+
+      await expect(fetchApplications()).rejects.toThrow('Unauthorized')
+
+      expect(global.fetch).toHaveBeenCalledTimes(2)
+      expect(getToken()).toBeNull()
+    })
+
+    it('clears the token and stops when the retried request is still a 401', async () => {
+      setToken('old-token')
+
+      global.fetch = vi.fn()
+        .mockResolvedValueOnce({ ok: false, status: 401 }) // original request
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ accessToken: 'new-token' }) }) // /auth/refresh
+        .mockResolvedValueOnce({ ok: false, status: 401 }) // retried request — still unauthorized
+
+      await expect(fetchApplications()).rejects.toThrow('Unauthorized')
+
+      expect(global.fetch).toHaveBeenCalledTimes(3)
+      expect(getToken()).toBeNull()
+    })
+
+    it('shares one refresh call across two requests that 401 concurrently', async () => {
+      setToken('old-token')
+      const applications = [{ id: 1, company: 'Google', position: 'Dev' }]
+      const cvs = [{ id: 1, originalFileName: 'cv.pdf', type: 'FILE' }]
+
+      global.fetch = vi.fn().mockImplementation((url: string) => {
+        if (url === `${API_URL}/auth/refresh`) {
+          return Promise.resolve({ ok: true, json: () => Promise.resolve({ accessToken: 'new-token' }) })
+        }
+        const token = getToken()
+        if (token !== 'new-token') {
+          return Promise.resolve({ ok: false, status: 401 })
+        }
+        const body = url === `${API_URL}/applications` ? applications : cvs
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(body) })
+      })
+
+      const [appsResult, cvsResult] = await Promise.all([fetchApplications(), fetchCVs()])
+
+      expect(appsResult).toEqual(applications)
+      expect(cvsResult).toEqual(cvs)
+      const refreshCalls = vi.mocked(global.fetch).mock.calls.filter(([url]) => url === `${API_URL}/auth/refresh`)
+      expect(refreshCalls).toHaveLength(1)
     })
   })
 })

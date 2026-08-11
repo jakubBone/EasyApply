@@ -41,18 +41,46 @@ const getHeaders = (contentType?: string): HeadersInit => {
   return headers
 }
 
-/**
- * Performs a fetch and on 401 clears the token (expired or invalid).
- * Throws an error — handled in the calling code or ErrorBoundary.
- */
-const apiFetch = async (input: string, init?: RequestInit): Promise<Response> => {
-  const response = await fetch(input, init)
-  if (response.status === 401) {
-    clearToken()
-    window.location.href = '/login'
-    throw new Error('Unauthorized')
+// Concurrent 401s share one in-flight refresh instead of each calling /auth/refresh.
+let refreshingPromise: Promise<string> | null = null
+
+const refreshAccessToken = (): Promise<string> => {
+  if (!refreshingPromise) {
+    refreshingPromise = refreshToken().finally(() => {
+      refreshingPromise = null
+    })
   }
-  return response
+  return refreshingPromise
+}
+
+/**
+ * Performs a fetch. On 401, tries a silent refresh (via the httpOnly refresh-token
+ * cookie) and retries the request once with the new access token. If the refresh
+ * fails too — or the retried request still gets a 401 — clears the token and
+ * sends the user to log in again.
+ */
+const apiFetch = async (input: string, init?: RequestInit, isRetry = false): Promise<Response> => {
+  const response = await fetch(input, init)
+  if (response.status !== 401) return response
+
+  if (!isRetry) {
+    try {
+      const newToken = await refreshAccessToken()
+      return apiFetch(input, {
+        ...init,
+        headers: {
+          ...(init?.headers as Record<string, string> | undefined),
+          Authorization: `Bearer ${newToken}`,
+        },
+      }, true)
+    } catch {
+      // Refresh failed (no valid refresh-token cookie) — fall through to logout.
+    }
+  }
+
+  clearToken()
+  window.location.href = '/login'
+  throw new Error('Unauthorized')
 }
 
 // ============================================================
