@@ -98,7 +98,7 @@ com.applikon/
     NoteService.java               — create, findByApplicationId, findById, update, delete, deleteByApplicationId, createSalaryChangeNote (⚠️ dead code — never called)
     ServiceNoticeService.java      — findActive(), create(ServiceNoticeRequest) (08-user-data)
     StatisticsService.java         — getBadgeStats: computes rejection/ghosting badges + sweet revenge unlock
-    UserService.java               — findOrCreateUser (calls recordLogin), getById, getByGoogleId, saveRefreshToken (hashes token via TokenHasher), clearRefreshToken, findByValidRefreshToken (hashes + bumps lastLoginAt), acceptPrivacyPolicy, deleteAccount + createDemoApplication (new user only)
+    UserService.java               — findOrCreateUser (calls recordLogin), getById, saveRefreshToken (hashes token via TokenHasher), clearRefreshToken, findByValidRefreshToken (hashes + bumps lastLoginAt), acceptPrivacyPolicy, deleteAccount + createDemoApplication (new user only)
 ```
 
 ### All REST endpoints
