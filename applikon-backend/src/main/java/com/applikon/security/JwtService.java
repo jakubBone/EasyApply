@@ -1,7 +1,6 @@
 package com.applikon.security;
 
 import com.applikon.entity.User;
-import com.nimbusds.jose.jwk.RSAKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;

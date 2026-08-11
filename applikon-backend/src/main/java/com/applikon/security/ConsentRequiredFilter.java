@@ -14,7 +14,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Guard filter: Ensures user has accepted the privacy policy.
