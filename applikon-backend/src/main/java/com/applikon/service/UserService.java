@@ -81,12 +81,6 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public User getByGoogleId(String googleId) {
-        return userRepository.findByGoogleId(googleId)
-                .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.user.notFound", null, LocaleContextHolder.getLocale())));
-    }
-
-    @Transactional(readOnly = true)
     public User getById(UUID id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.user.notFound", null, LocaleContextHolder.getLocale())));
