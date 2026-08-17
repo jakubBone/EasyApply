@@ -41,13 +41,23 @@ appears on every row. Deleting a question that has an answer asks for
 confirmation first, because there is no undo.
 
 **Fewer built-in questions.** "General" keeps two: "Tell us about yourself" and
-"Why are you changing jobs?". "About the company" keeps none at all, holding the
-generated pitch and whatever the candidate adds. Questions already answered under
-the retired keys keep showing, keep their text, and can now be removed by hand.
+"Why are you changing jobs?". "About the company" keeps one: "What do you know
+about us?". "Tell us about your project" is retired, and a migration deletes it
+along with anything answered under it. That deletion is done in the open rather
+than by letting the rows fall out of the next save, so it happens at once and the
+history says who did it and why.
+
+The pitch and that question look like a repetition and are not. The pitch is what
+the model found about the company. The question is what the candidate will say:
+why this company, what appealed to them. The pitch is the raw material for it.
+Because the question is now deletable, the 2.1.0 rule that hid it while
+unanswered goes away. A candidate who does not want it removes it.
 
 **The pitch does not look like a question.** It is the one block of prose among
-short answers, so it gets its own style and clamps to about three lines with an
-expand control, instead of pushing everything below it off the screen.
+short answers, so it gets its own style, carries no question header, and clamps
+to about three lines with an expand control instead of pushing everything below
+it off the screen. Without a header there are no two identical titles stacked on
+each other.
 
 ## 3. Out of scope
 
@@ -68,6 +78,8 @@ expand control, instead of pushing everything below it off the screen.
 - **Rescuing the four old fields into the new one.** Generated text is derived
   public data and is thrown away. Only text the user edited by hand survives the
   migration, because that text is theirs and is part of the data export.
+- **Keeping answers to the retired question.** They go with it. There is no undo
+  and no export of them beforehand.
 
 ## 4. Done when
 
@@ -77,8 +89,8 @@ expand control, instead of pushing everything below it off the screen.
   one.
 - Every question can be removed in both scopes, and removing an answered one asks
   first.
-- "About the company" starts with no built-in questions and "General" with two,
-  while every answer written before this release is still visible and still
-  editable.
+- "About the company" starts with one built-in question and "General" with two,
+  and the retired question is gone from the database rather than lingering
+  unreachable.
 - The "About the company" block fits on a phone screen without scrolling past the
   first two cards to reach an answer.
