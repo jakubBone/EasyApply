@@ -1,4 +1,4 @@
-# i18n Implementation Plan — Applikon Backend
+# 1.0.0 05-additional-features / i18n — Implementation Plan (backend)
 
 ## Implementation Status
 
@@ -233,7 +233,3 @@ String content = messageSource.getMessage(
 - Badge names (`"Rękawica"`, `"Widmo"` etc.) — returned by API as keys, translated by frontend via `badges.json`
 - Domain values in DB (`"Wysłane"` as `StageHistory.stageName`) — data migration, separate task
 - `RejectionReason` enum labels — translated by frontend (see decision above)
-
----
-
-*Last update: 2026-03-29*

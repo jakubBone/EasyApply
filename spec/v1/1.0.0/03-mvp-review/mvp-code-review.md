@@ -1,17 +1,11 @@
-# Code Review: Applikon Project (2026-03-01)
+# 1.0.0 03-mvp-review — Code Review
 
-### 👤 Basic Information
-**Author:** Jakub  
-**Project:** Applikon — job application tracker for junior IT candidates  
-**Review Date:** 2026-03-01  
-**Reviewers:** DR & AI  
-**Skill Level:** Beginner/Intermediate — solid foundations and ambition in architecture visible, but typical gaps for someone without commercial experience  
+Review of the MVP after the first implementation pass, before the refactoring in
+topic 04.
 
----
+## Part I: General summary
 
-## 🌟 PART I: GENERAL SUMMARY
-
-### ✅ What Deserves Praise
+### What Deserves Praise
 
 1. **Mature full-stack architecture** — the project combines Spring Boot (Java 21) with React + TypeScript, PostgreSQL, and Docker Compose. This is not trivial and shows courage and ambition. Clear separation into backend/frontend with proper layers (controller → service → repository → entity) is textbook approach.
 
@@ -29,9 +23,9 @@
 
 ---
 
-## 🎓 PART II: LEARNING AND EDUCATION
+## Part II: Learning and education
 
-### 💭 Questions to Consider
+### Questions to Consider
 
 1. **What happens when user clicks "Login with Google" and backend is unavailable?** Look at `LoginPage.tsx` — should backend URL be hardcoded in code? How will that affect deployment?
 
@@ -43,7 +37,7 @@
 
 5. **What data will attacker see if they manage to inject JavaScript into page with job posting links?** Think about URL validation in `ApplicationDetails.tsx` and `CVManager.tsx`.
 
-### 📚 Concepts to Study
+### Concepts to Study
 
 | Concept | Why Important | Where in Your Code |
 |---------|---------------|--------------------|
@@ -57,7 +51,7 @@
 | **HTTP Interceptor (retry after token refresh)** | Transparent session refresh without interruption | `api.ts` — currently redirects on 401 |
 | **Data Integrity (NOT NULL constraints)** | Guarantees every record has owner | Migration V4 — `user_id` column without NOT NULL |
 
-### 📖 Terminology Glossary
+### Terminology Glossary
 
 | Term | Explanation | Learning Materials |
 |------|-------------|-------------------|
@@ -79,7 +73,7 @@
 | **JaCoCo** | Tool measuring code test coverage in Java projects | [JaCoCo Documentation](https://www.jacoco.org/jacoco/trunk/doc/) |
 | **HTTP Interceptor** | Mechanism intercepting HTTP requests/responses to add logic (e.g., token refresh) | [Axios Interceptors](https://axios-http.com/docs/interceptors) |
 
-### 🔍 Areas for Self-Analysis
+### Areas for Self-Analysis
 
 1. **Look at `KanbanBoard.tsx`** — nearly 1000 lines of code. How many components, hooks, and modals are nested in it? Read about Single Responsibility Principle and try extracting at least 3 independent files.
 
@@ -87,7 +81,7 @@
 
 3. **Analyze endpoint `/api/applications`** — returns all user applications without pagination. Imagine user has 2000 records with stage history. Read about Spring Data `Pageable` and its performance impact.
 
-### 🎯 Knowledge Gaps to Fill
+### Knowledge Gaps to Fill
 
 1. **Web application security** — URL validation, XSS protection, proper cookie attributes (SameSite), Content Security Policy. Absolute foundation before entering job market.
 
@@ -99,11 +93,11 @@
 
 ---
 
-## ⚙️ PART III: TECHNICAL CODE REVIEW
+## Part III: Technical code review
 
-### 📊 Thematic Analysis
+### Thematic Analysis
 
-#### 1️⃣ Algorithm Correctness
+#### 1. Algorithm Correctness
 
 Overall logic is correct — CRUD applications, CV management, notes, badge system work as specified. OAuth2 flow follows specification. Few observations:
 
@@ -131,7 +125,7 @@ Overall logic is correct — CRUD applications, CV management, notes, badge syst
 💡 Hint: Read about State Machine pattern — it lets you define allowed transitions and accompanying actions declaratively. Spring Statemachine or even simple enum with canTransitionTo() method would significantly simplify code.
 ```
 
-#### 2️⃣ Critical Problems
+#### 2. Critical Problems
 
 ```
 ⚠️ Problem: [CRITICAL] Backend URL hardcoded to "http://localhost:8080" in login component
@@ -169,7 +163,7 @@ Overall logic is correct — CRUD applications, CV management, notes, badge syst
 💡 Hint: If frontend sends request without status field (or with null), service calls setStatus(null) on entity, resulting in 500 error instead of readable 400. Add @NotNull annotation and consider business rules — e.g., should rejectionReason be required when status is REJECTION.
 ```
 
-#### 3️⃣ KISS Principle (Simplicity)
+#### 3. KISS Principle (Simplicity)
 
 ```
 ⚠️ Problem: KanbanBoard.tsx has nearly 1000 lines with multiple nested components, modals, and drag & drop logic
@@ -189,7 +183,7 @@ Overall logic is correct — CRUD applications, CV management, notes, badge syst
 💡 Hint: One element shifted by index breaks all badges. Consider class or record Badge grouping this data together.
 ```
 
-#### 4️⃣ Code Readability
+#### 4. Code Readability
 
 ```
 ⚠️ Problem: Statistical query returns Object[] — loss of type safety and readability
@@ -203,7 +197,7 @@ Overall logic is correct — CRUD applications, CV management, notes, badge syst
 💡 Hint: Check MapStruct library or consider factory method Application.fromRequest(). Manual mapping of 12+ fields is error-prone and misses new fields.
 ```
 
-#### 5️⃣ Style and Conventions
+#### 5. Style and Conventions
 
 Polish UI messages are good choice for target user. Few observations:
 
@@ -219,7 +213,7 @@ Polish UI messages are good choice for target user. Few observations:
 💡 Hint: Read about data migration strategies — if old values aren't used anymore, consider Flyway migration replacing them, then remove from enum.
 ```
 
-#### 6️⃣ Structure and Organization
+#### 6. Structure and Organization
 
 Positive:
 - Separation into layers (controller/service/repository/entity) is textbook
@@ -244,7 +238,7 @@ Positive:
 💡 Hint: Migration adds user_id as nullable ("for now, existing rows have null"), but never adds final NOT NULL constraint. Result: database allows records without owner — such "orphaned" data will be invisible in queries filtered by user. Add another Flyway migration setting NOT NULL after cleaning any null values.
 ```
 
-#### 7️⃣ Documentation and Comments
+#### 7. Documentation and Comments
 
 Positive:
 - Comments in `OAuth2AuthenticationSuccessHandler` explain "why" (e.g., why token in URL)
@@ -257,7 +251,7 @@ Positive:
 💡 Hint: Complex conditional logic (what happens when transitioning from REJECTION to IN_PROGRESS?) should have comments explaining business rules. Future "you" will thank present "you".
 ```
 
-#### 8️⃣ Testability
+#### 8. Testability
 
 ```
 ⚠️ Problem: Test infrastructure exists (Vitest, Cypress, test-utils.tsx), but code coverage is limited
@@ -271,7 +265,7 @@ Positive:
 💡 Hint: Good that service tests exist — important foundation. Check if they cover edge cases: what if status is null in updateStage()? Is path traversal in filename tested? Read about JaCoCo — tool measuring code test coverage.
 ```
 
-#### 9️⃣ Error Handling
+#### 9. Error Handling
 
 ```
 ⚠️ Problem: [IMPORTANT] Missing global Error Boundary in React app
@@ -305,7 +299,7 @@ Positive:
 
 ---
 
-## ⚖️ PART IV: SOLUTION ANALYSIS
+## Part IV: Solution analysis
 
 ### Approach Comparison
 
@@ -323,7 +317,7 @@ Positive:
 
 ---
 
-## 📊 PART V: METRICS AND STANDARDS
+## Part V: Metrics and standards
 
 ### Convention Compliance
 
@@ -369,7 +363,7 @@ Positive:
 
 ---
 
-## 🎯 PART VI: ACTION PLAN
+## Part VI: Action plan
 
 ### To Do Now (Before Merge)
 
@@ -423,7 +417,7 @@ Positive:
 
 ---
 
-## 💬 FINAL MOTIVATION
+## Closing note
 
 This project makes a real impression for someone at the beginning of programming journey. It's not just another "to-do list" — it's a full-stack application with OAuth2, JWT, database, Docker Compose, and gamification system. Architecture is well-thought-out, layer separation correct, technology choices sound.
 
@@ -432,7 +426,3 @@ Notes in this review aren't criticism — they're signposts for next level. Most
 Focus on 🔴 red-marked items — these are security and correctness issues worth fixing before sharing app. Rest are growth directions you'll naturally explore as you gain experience.
 
 Good luck on your path to your first job in IT — with such a project in portfolio you have solid argument for job interviews! 💪
-
----
-
-*Review Date: 2026-03-01*

@@ -266,7 +266,3 @@ For matters related to personal data, write to:
 
 I respond when I can - this is not a commercial project, so response times
 may be a few days.
-
----
-
-*Last update of this file: 2026-04-22*

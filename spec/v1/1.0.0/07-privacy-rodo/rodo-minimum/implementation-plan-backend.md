@@ -281,7 +281,3 @@ fully handled in frontend plan.
 | `config/SecurityConfig.java` | Register filter in chain |
 | `test/controller/AuthControllerTest.java` | New tests + setup fixes |
 | `test/controller/*ControllerTest.java` (others) | Setup creates user with consent |
-
----
-
-*Last updated: 2026-04-23 — COMPLETE ✅*

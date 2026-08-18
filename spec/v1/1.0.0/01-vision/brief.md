@@ -1,4 +1,4 @@
-# Applikon – Job Application Tracker
+# 1.0.0 01-vision — Brief
 
 > *Note: this is the **original product vision**, written at the start of the
 > project when it was named **EasyApply**. The product was renamed to
@@ -115,11 +115,11 @@ Job candidates actively seeking work, applying to 10-20 offers per month, primar
 ---
 
 
-# 7. TECHNOLOGY
+# 7. Technology
 
 ## Libraries
 
-### STDLIB (built-in, preferred):
+### Standard library (preferred)
 
 **Backend (Java 21):**
 - `java.util.*`: Collections (List, Map, Set) for in-memory data management
@@ -131,7 +131,7 @@ Job candidates actively seeking work, applying to 10-20 offers per month, primar
 - `fetch API`: HTTP communication with backend
 - `localStorage`: Optional user data caching
 
-### EXTERNAL (only if stdlib is insufficient):
+### External (only if the standard library is insufficient)
 
 **Backend:**
 - **Spring Boot 3.4**: Web framework (stdlib lacks REST API / dependency injection)

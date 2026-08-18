@@ -1,8 +1,8 @@
-# Logout Implementation Plan — Applikon Frontend
+# 1.0.0 05-additional-features / logout — Implementation Plan (frontend)
 
-## Status
+## Implementation Status
 
-### Stage 1 — Connect backend to `signOut()`
+### Step 1 — Connect backend to `signOut()`
 
 **Problem:** `AuthProvider.signOut()` only clears localStorage and resets React state.
 Does not call `POST /api/auth/logout`, so refresh token stays in database.
@@ -32,7 +32,7 @@ const signOut = async () => {
 
 ---
 
-### Stage 2 — i18n keys for logout button
+### Step 2 — i18n keys for logout button
 
 **Files:** `src/i18n/locales/pl/common.json`, `src/i18n/locales/en/common.json`
 
@@ -57,7 +57,7 @@ const signOut = async () => {
 
 ---
 
-### Stage 3 — Logout button in header
+### Step 3 — Logout button in header
 
 **File:** `src/AppContent.tsx`
 
@@ -89,7 +89,7 @@ const signOut = async () => {
 
 ---
 
-### Stage 4 — Update tests
+### Step 4 — Update tests
 
 **File:** `src/test/auth/AuthProvider.test.tsx`
 
@@ -149,7 +149,3 @@ ProtectedRoute detects no user → redirect to /login
 | `src/i18n/locales/en/common.json` | Key `auth.logout` |
 | `src/AppContent.tsx` | Logout button in header |
 | `src/test/auth/AuthProvider.test.tsx` | Mock `api.logout`, new assertions |
-
----
-
-*Last update: 2026-04-07*

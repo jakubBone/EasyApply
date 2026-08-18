@@ -1,4 +1,4 @@
-# i18n Implementation Plan — Applikon Frontend
+# 1.0.0 05-additional-features / i18n — Implementation Plan (frontend)
 
 ## Implementation Status
 
@@ -313,7 +313,3 @@ Step 5 (full E2E — to verify)
 - [x] `npm run test:run` — 0 failed tests
 - [x] Language change in UI works immediately and persists after refresh
 - [x] Backend receives `Accept-Language` header with every request
-
----
-
-*Last update: 2026-03-29*

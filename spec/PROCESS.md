@@ -21,6 +21,14 @@ changes them:
 - `architecture.md` — packages, endpoints, database schema, frontend components
 - `security.md` — login flow, tokens, filter chain
 
+Two more document types exist and are not planned for — they appear when the work
+calls for them:
+
+- **A review report** (`code-review-*.md`) — findings from a review pass. Title,
+  one line of scope, then the findings. No auditor, no date, no status block.
+- **A refactor plan** (`refactor-plan-*.md`) — how a review's findings get fixed.
+  The findings table with a status per item, then the steps that close them.
+
 ADRs live at `spec/adr/`, numbered `ADR-NNN-*.md`. One is written when a
 decision was genuinely contested: real alternatives, consequences that outlive
 the release. A conventional choice does not get an ADR — its reason belongs in
@@ -54,6 +62,16 @@ second language should get through it without stopping.
 
 **No process ceremony inside documents.** The working rhythm is written here,
 once. A brief or a plan does not restate it.
+
+**One title format.** `# <version> <NN-topic> — <Document type>`, and nothing
+between it and the first section: no author, no date, no status, no skill level,
+no description of how the work is run. A brief and an `as-built.md` cover a whole
+release rather than one topic, so they drop the topic: `# 2.1.0 — Company Brief`.
+
+**v1 plans nest their steps.** Topics 05 to 15 put `### Step N` under a
+`## Implementation Status` wrapper, instead of the `## What changes` plus
+top-level `## Step N` used from v2 on. Both are readable and neither is edited
+into the other; new plans use the template below.
 
 **Every step keeps its checklist**, in every release, shipped or not. A ticked
 list is the record that the step actually passed, and it is what makes a plan

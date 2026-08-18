@@ -1,8 +1,8 @@
-# Logout Implementation Plan — Applikon Backend
+# 1.0.0 05-additional-features / logout — Implementation Plan (backend)
 
-## Status
+## Implementation Status
 
-### Stage 0 — State Verification (no implementation required)
+### Step 0 — State Verification (no implementation required)
 
 - [x] `controller/AuthController.java` — endpoint `POST /api/auth/logout` exists
 - [x] Endpoint: removes `refreshToken` from DB via `userService.clearRefreshToken(user)`
@@ -37,7 +37,3 @@ Frontend deletes access token from localStorage immediately after logout.
 
 - Blacklisting access tokens — unnecessary for this application
 - Logout from all devices — separate feature
-
----
-
-*Last update: 2026-04-07*

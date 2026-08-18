@@ -1,12 +1,8 @@
-# Security Audit Report — Applikon (v09)
+# 1.0.0 09-security-review — Security Audit
 
-**Auditor:** Claude Security Auditor  
-**Scope:** Last 5 commits + full security-critical surface  
-**Status:** Ready for fix
+Scope: the last five commits plus the full security-critical surface.
 
----
-
-## WARNINGS (should fix)
+## Warnings (should fix)
 
 ### 1. Timing Attack on Admin Key Comparison
 
@@ -153,7 +149,7 @@
 
 ---
 
-## Good Practices Found ✓
+## Good Practices Found
 
 - **No SQL injection** — Spring Data JPA with parameterized queries used throughout; no raw SQL concatenation found.
 - **Consistent IDOR protection** — every service method uses `findByIdAndUserId()` or equivalent, so users cannot access each other's data. (`ApplicationService`, `CVService`, `NoteService`)

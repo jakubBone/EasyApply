@@ -230,7 +230,3 @@ user.privacyPolicyAcceptedAt = "2026-04-22T10:30:00Z"
        ↓
 <ConsentGate> renders children (normal app)
 ```
-
----
-
-*Last updated: 2026-04-23 — COMPLETE ✅*

@@ -1,8 +1,8 @@
-# Applikon — MVP Implementation Plan (Updated)
+# 1.0.0 02-mvp-implementation — Implementation Plan
 
 ---
 
-## STEP 1: Backend API
+## Step 1 — Backend API
 
 **Goal:** Working REST API returning and saving applications to PostgreSQL with support for salary ranges, contract types, and job posting content.
 
@@ -153,7 +153,7 @@ curl "http://localhost:8080/api/applications/check-duplicate?company=Google&posi
 
 ---
 
-## STEP 2: Frontend - Form and List
+## Step 2 — Frontend - Form and List
 
 **Goal:** React UI displaying application list, form for adding with salary ranges and duplicate warning.
 
@@ -236,7 +236,7 @@ npm run dev
 
 ---
 
-## STEP 3: Kanban Board with Flexible Stages
+## Step 3 — Kanban Board with Flexible Stages
 
 **Goal:** Kanban board with 3 columns, drag & drop with stage selection and completion modals.
 
@@ -319,7 +319,7 @@ npm run dev
 
 ---
 
-## STEP 4: CV Management (3 Types)
+## Step 4 — CV Management (3 Types)
 
 **Goal:** CV management with 3 types: PDF file, external link, note. Assign CV to applications.
 
@@ -424,7 +424,7 @@ curl http://localhost:8080/api/cv/1/download --output downloaded.pdf
 
 ---
 
-## STEP 5: Notes with Categories
+## Step 5 — Notes with Categories
 
 **Goal:** Add text notes to applications with categories (Questions, Feedback, Other). Edit and delete notes.
 
@@ -519,7 +519,7 @@ curl -X POST http://localhost:8080/api/applications/1/notes \
 
 ---
 
-## STEP 6: Table View
+## Step 6 — Table View
 
 **Goal:** Alternative list view of applications in table form with sorting, filtering, and bulk deletion.
 
@@ -566,7 +566,7 @@ curl -X POST http://localhost:8080/api/applications/1/notes \
 
 ---
 
-## STEP 7: Gamification (Badges)
+## Step 7 — Gamification (Badges)
 
 **Goal:** Motivation badge system for rejections and ghosting. Widget displaying progress.
 
@@ -634,7 +634,7 @@ curl http://localhost:8080/api/statistics/badges
 
 ---
 
-## INTEGRATION TEST MVP
+## Integration test — MVP
 
 ### Success Scenario (happy path):
 
@@ -710,7 +710,7 @@ curl http://localhost:8080/api/statistics/badges
 - Result: Backend returns validation error: "Salary must be positive"
 - Application NOT saved
 
-### Final MVP Verification:
+### Final MVP verification
 
 **Acceptance criteria:**
 - ✅ User can add 20 applications with various data
@@ -767,7 +767,7 @@ npm run dev
 ---
 
 
-## FINAL ARCHITECTURE
+## Final architecture
 
 ### Backend (Spring Boot 3.4, Java 21)
 

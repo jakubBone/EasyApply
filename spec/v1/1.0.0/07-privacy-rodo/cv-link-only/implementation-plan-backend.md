@@ -116,7 +116,3 @@ public ResponseEntity<CVResponse> uploadCV(
 | `controller/CVController.java` | `uploadCV` throws `ResponseStatusException(503)`, inject `MessageSource` |
 | `resources/messages*.properties` | New key `error.cv.uploadDisabled` (PL/EN) |
 | `test/controller/CVControllerTest.java` | Upload test expects 503 instead of 201 |
-
----
-
-*Last updated: 2026-04-22*

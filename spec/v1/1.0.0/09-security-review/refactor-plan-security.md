@@ -44,32 +44,32 @@ Based on `code-review-security.md` findings.
 
 ## Implementation Progress
 
-### Stage 1 — Timing attack on admin key
+### Step 1 — Timing attack on admin key
 - [x] Replace `String.equals()` with `MessageDigest.isEqual()` in `AdminKeyFilter.java`
 - [x] `mvn test` green
 
-### Stage 2 — Move access token from URL query to fragment
+### Step 2 — Move access token from URL query to fragment
 - [x] Update redirect in `OAuth2AuthenticationSuccessHandler.java` (`?token=` → `#token=`)
 - [x] Update frontend to read token from URL fragment (`AuthCallbackPage.tsx`)
 - [x] `mvn test` green
 - [x] `npm run build` passing
 - [x] Manual: verify in browser that redirect URL uses `#token=` not `?token=`
 
-### Stage 3 — Add HTTP security headers
+### Step 3 — Add HTTP security headers
 - [x] Add CSP, X-Frame-Options, HSTS to `SecurityConfig.java`
 - [x] `mvn test` green
 - [x] Manual: `curl -I http://localhost:8080/api/health` — confirm headers present in response
 
-### Stage 4 — Sanitize filename in Content-Disposition *(do before re-enabling CV upload)*
+### Step 4 — Sanitize filename in Content-Disposition *(do before re-enabling CV upload)*
 - [x] Add filename sanitization in `CVController.java`
 - [x] `mvn test` green
 
-### Stage 5 — Add HMAC to TokenHasher
+### Step 5 — Add HMAC to TokenHasher
 - [x] Implement HmacSHA256 in `TokenHasher.java`
 - [x] Update all call sites (`UserService.java` and others)
 - [x] Add `APP_TOKEN_HMAC_SECRET` to `.env.example` and `application.properties`
 - [x] `mvn test` green
 
-### Stage 6 — Audit log for retention deletions
+### Step 6 — Audit log for retention deletions
 - [x] Log individual user UUIDs before deletion in `AccountRetentionService.java`
 - [x] `mvn test` green

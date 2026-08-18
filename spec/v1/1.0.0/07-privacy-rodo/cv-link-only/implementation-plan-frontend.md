@@ -191,7 +191,3 @@ Modal with two options:
                               ↓
                            CV added, modal closed
 ```
-
----
-
-*Last updated: 2026-04-22*

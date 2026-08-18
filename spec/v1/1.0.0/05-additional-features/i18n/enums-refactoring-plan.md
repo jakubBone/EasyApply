@@ -1,13 +1,4 @@
-# Plan: English Enum Codes + ContractType Bugfix
-
-## Work Principle (each stage)
-
-1. **Implementation** — Claude makes changes
-2. **Tests** — `mvn test` + `npm run test:run` — both must be green
-3. **Commit** — Claude proposes in project convention
-4. **Continue** — Claude asks if we proceed
-
----
+# 1.0.0 05-additional-features / enums — Refactor Plan
 
 ## Mapping: Old → New Values
 
@@ -58,7 +49,7 @@
 
 ---
 
-## ✅ Stage 1 — RejectionReason — COMPLETED
+## Step 1 — RejectionReason
 
 ### Backend
 - [x] `entity/RejectionReason.java` — change enum values
@@ -88,7 +79,7 @@ UPDATE applications SET rejection_reason = 'OTHER'                   WHERE rejec
 
 ---
 
-## ✅ Stage 2 — NoteCategory — COMPLETED
+## Step 2 — NoteCategory
 
 ### Backend
 - [x] `entity/NoteCategory.java` — `PYTANIA`→`QUESTIONS`, `INNE`→`OTHER`, removed legacy `PYTANIE`, `KONTAKT`
@@ -109,7 +100,7 @@ UPDATE applications SET rejection_reason = 'OTHER'                   WHERE rejec
 
 ---
 
-## ✅ Stage 3 — SalaryType — COMPLETED
+## Step 3 — SalaryType
 
 ### Backend
 - [x] `entity/SalaryType.java` — `BRUTTO`→`GROSS`, `NETTO`→`NET`
@@ -129,7 +120,7 @@ UPDATE applications SET rejection_reason = 'OTHER'                   WHERE rejec
 
 ---
 
-## ✅ Stage 4 — ContractType + Display Bugfix — COMPLETED
+## Step 4 — ContractType + Display Bugfix
 
 ### Backend
 - [x] `entity/ContractType.java` — `UOP`→`EMPLOYMENT`, `UZ`→`MANDATE`, `INNA`→`OTHER`
@@ -151,7 +142,7 @@ UPDATE applications SET rejection_reason = 'OTHER'                   WHERE rejec
 
 ---
 
-## ✅ Stage 5 — ApplicationStatus — COMPLETED
+## Step 5 — ApplicationStatus
 
 ### Backend
 - [x] `entity/ApplicationStatus.java` — WYSLANE→SENT, W_PROCESIE→IN_PROGRESS, OFERTA→OFFER, ODMOWA→REJECTED
@@ -181,7 +172,7 @@ UPDATE applications SET rejection_reason = 'OTHER'                   WHERE rejec
 
 ---
 
-## ✅ Stage 6 — i18n key cleanup — COMPLETED
+## Step 6 — i18n key cleanup
 
 Rename JSON keys from Polish names to English (no DB changes, frontend only):
 
@@ -191,17 +182,17 @@ Rename JSON keys from Polish names to English (no DB changes, frontend only):
 | `notes.catInne` | `notes.catOther` |
 | `salary.brutto` | `salary.gross` |
 | `salary.netto` | `salary.net` |
-| `kanban.statusWYSLANE` | `kanban.statusSENT` _(already after Stage 5)_ |
-| `kanban.statusW_PROCESIE` | `kanban.statusIN_PROGRESS` _(already after Stage 5)_ |
-| `kanban.statusZAKONCZONE` | `kanban.statusFINISHED` _(already after Stage 5)_ |
+| `kanban.statusWYSLANE` | `kanban.statusSENT` _(already after Step 5)_ |
+| `kanban.statusW_PROCESIE` | `kanban.statusIN_PROGRESS` _(already after Step 5)_ |
+| `kanban.statusZAKONCZONE` | `kanban.statusFINISHED` _(already after Step 5)_ |
 | `kanban.rejectionBrakOdpowiedzi` | `kanban.rejectionNoResponse` |
 | `kanban.rejectionOdmowaMailowa` | `kanban.rejectionEmailRejection` |
 | `kanban.rejectionOdrzuceniePo` | `kanban.rejectionAfterInterview` |
 | `kanban.rejectionInne` | `kanban.rejectionOther` |
-| `statusConfig.WYSLANE` | `statusConfig.SENT` _(already after Stage 5)_ |
-| `statusConfig.W_PROCESIE` | `statusConfig.IN_PROGRESS` _(already after Stage 5)_ |
-| `statusConfig.OFERTA` | `statusConfig.OFFER` _(already after Stage 5)_ |
-| `statusConfig.ODMOWA` | `statusConfig.REJECTED` _(already after Stage 5)_ |
+| `statusConfig.WYSLANE` | `statusConfig.SENT` _(already after Step 5)_ |
+| `statusConfig.W_PROCESIE` | `statusConfig.IN_PROGRESS` _(already after Step 5)_ |
+| `statusConfig.OFERTA` | `statusConfig.OFFER` _(already after Step 5)_ |
+| `statusConfig.ODMOWA` | `statusConfig.REJECTED` _(already after Step 5)_ |
 
 - [x] `en/common.json` + `pl/common.json` — rename keys
 - [x] `notes/NotesList.tsx` — `CATEGORIES` and `LEGACY_CATEGORY_MAP` labelKey
