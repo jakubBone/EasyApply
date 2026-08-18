@@ -34,7 +34,7 @@ spec/
 │   │   ├── 01-vision/               MVP scope
 │   │   ├── 02-mvp-implementation/   build plan
 │   │   ├── 03-mvp-review/           code review
-│   │   ├── 04-mvp-refactoring/      refactor + learning
+│   │   ├── 04-mvp-refactoring/      fixes for the review findings
 │   │   ├── 05-additional-features/  i18n, logout
 │   │   ├── 06-cleanup/              stage-history removal
 │   │   ├── 07-privacy-rodo/         consent, account deletion, CV link-only
@@ -63,11 +63,8 @@ ALL-CAPS filenames are entry points; lowercase files are content.
 
 ## A note on v1 topics 01-06
 
-Those folders are the first, organic pass, written while I was learning
-spec-driven development. They do not follow the templates in `PROCESS.md`,
-because the templates came out of that experience. They are kept as they were
-written.
-
-The `learning/` folders inside them are something else again: a personal
-learning journal from mentor-mode refactoring sessions, not specification. The
+Those folders are the first, organic pass, written before the templates in
+`PROCESS.md` existed — the templates came out of that experience. Their content
+is as it was written; only the format was later brought onto the convention:
+titles, step headings, and the removal of per-file dates and status blocks. The
 process itself starts at `07-privacy-rodo` and settles in v2.

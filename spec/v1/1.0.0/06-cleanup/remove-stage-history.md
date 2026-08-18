@@ -1,4 +1,4 @@
-# Plan to Remove stage_history — Applikon
+# 1.0.0 06-cleanup — Remove stage_history
 
 ## Problem
 
@@ -145,4 +145,4 @@ After all steps:
 ## When to Do This
 
 This plan is ready to execute at any time as a separate session.
-It's not part of Step 4 learning — it's independent cleanup.
+It's not part of the Step 4 refactor — it's independent cleanup.

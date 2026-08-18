@@ -123,8 +123,7 @@ Commit: `docs(spec): rebrand from EasyApply to Applikon`
 4. `spec/README.md` — brand references and a row for this topic.
 5. `spec/v1/architecture.md`, `security.md` and `as-built.md` — titles and body.
 6. `spec/v1/1.0.0/01-vision/brief.md`.
-7. Every topic doc from `02-` to `13-`, including the learning notes under
-   `04-mvp-refactoring/learning/` and `05-additional-features/i18n/learning/`.
+7. Every topic doc from `02-` to `13-`.
 8. `spec/v2/vision.md`.
 9. `spec/deployment/deployment-intro.md` and `deployment-hetzner.md`, including
    hostnames and container references.
