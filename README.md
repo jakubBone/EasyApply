@@ -9,7 +9,10 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
 [![CI](https://github.com/jakubBone/applikon/actions/workflows/ci.yml/badge.svg)](https://github.com/jakubBone/applikon/actions/workflows/ci.yml)
 
-**Applikon** is a job application tracker for IT candidates in Poland. One place for applications, CVs, and interview notes, instead of scattered spreadsheets and expired links. Designed for anyone actively applying to multiple positions at once.
+**Applikon** is a job application tracker for IT candidates in Poland. One place for applications,
+CVs and interview notes, instead of scattered spreadsheets and expired links.
+
+`162 backend tests` · `21 Flyway migrations` · `4 releases since May 2026` · `deployed on a VPS behind HTTPS`
 
 <div align="center">
 
@@ -25,29 +28,21 @@
 
 ## ✨ Features
 
-- **Application registry** - company, position, salary, job source, link to posting
-- **Kanban board** - visual overview of recruitment status: Sent → In progress → Completed, with drag & drop
-- **Recruitment stages** - tracking current stage: HR interview, technical interview, manager interview, recruitment task, final interview
-- **CV archive** - storing different CV versions and assigning them to specific applications
-- **Notes** - saving interview questions, feedback, and personal thoughts for each application 
-- **Job posting archive** - copy of the job description in case the link expires
-- **Badge system** - achievements for rejections and ghosting (gamification)
-- **Authentication** - Google OAuth2 login, JWT access token + refresh token
-- **i18n** - Polish and English interface with a language switcher
-- **Settings** - account management: change display name, delete account
-- **Data export** - download all personal data as JSON (RODO Art. 20)
-- **Service notices** - system announcements displayed on login (maintenance, updates)
-- **API documentation** - Swagger UI with all endpoints, schemas, and authorization
-- **Screening cheat sheet** - a "General" answers template (written once) plus a per-application "About the company" note, composed with the proposed salary on one screen before a recruiter call
-- **Board cleanup** - flags applications stuck in "Sent" for 60+ days with no response, with one-click archiving
-- **Company brief** - AI-generated summary of the company (industry, product and customers, tech stack, size and stage), generated once per company, reused across applications and editable by hand
+- **Kanban board** - every application as a card, Sent → In progress → Finished, drag & drop
+- **Recruitment stage** - on the card: HR call, technical, manager, recruitment task, final
+- **Application card** - salary, job source and link, a copy of the ad for when it expires
+- **CVs and notes** - the version you sent, and what was said in every conversation
+- **Screening cheat sheet** - your standard answers, the company note and your salary, on one screen
+- **Company brief** - *"what do you know about us?"* from public web data, once per company, editable
+- **Board cleanup** - 60 days in "Sent" means rejected: flagged, archived in one click
+- **Your data** - Google sign-in, PL/EN, JSON export, and deletion that really deletes
 
+Plus badges for collecting rejections, service notices, and Swagger UI over every endpoint.
 
 ## 🏗 Architecture
 
-A layered Spring Boot monolith - `controller → service → repository` - with PostgreSQL behind
-Flyway migrations and a React SPA talking to it over REST. One deployable unit, one database,
-on purpose.
+Layered Spring Boot monolith, PostgreSQL behind Flyway, React SPA over REST.
+One deployable unit, one database, on purpose.
 
 ```
 Browser  ·  React 19 + React Query
@@ -63,74 +58,109 @@ Spring Boot 3.4
 PostgreSQL 16  ·  schema owned by Flyway; Hibernate runs in `validate` mode only
 ```
 
-**One request, end to end.** The access token is validated before any application code runs;
-the converter turns its `sub` claim into an `AuthenticatedUser` principal, and `MdcUserFilter`
-puts that user id into the logging context - so every log line for the request is attributable
-without an email ever reaching the logs. Responses are DTO records; entities never leave the
-service layer.
+- The access token is validated before any application code runs
+- `MdcUserFilter` puts the user id into the logging context - every log line attributable, no email ever logged
+- Entities never leave the service layer; responses are DTO records
 
-Full reference - packages, every endpoint, schema, component tree:
-[`spec/architecture.md`](spec/architecture.md).
+Full reference: [`spec/architecture.md`](spec/architecture.md)
 
 ## ⚖️ Engineering decisions & trade-offs
 
-A row gets in only if I can name what I rejected and what the choice costs me. Each links to
-its ADR in [`spec/adr/`](spec/adr/).
+A row gets in only if I can name what I rejected and what it costs me.
+Full set in [`spec/adr/`](spec/adr/).
 
-**The system:**
-
-| Decision | Rejected alternative, and why | What it costs |
+| Decision | Rejected, and why | What it costs |
 |---|---|---|
-| [**Monolith + one Postgres on a single VPS**](spec/adr/ADR-v1-004-monolith-single-vps.md) | Microservices / managed cloud - rejected: cost and ops with no user-facing benefit at this scale | Single point of failure, no horizontal scaling. I change this when traffic stops fitting on one machine - not earlier |
-| [**Layered architecture, not hexagonal**](spec/adr/ADR-v1-005-layered-not-hexagonal.md) | Ports and adapters - rejected: one database, one entry channel, it would be ceremony | Business logic knows about JPA |
-| [**Google OAuth2, no passwords of my own**](spec/adr/ADR-v1-001-oauth2-jwt.md) | Own accounts - rejected: password storage, reset flow, breach surface | Hard dependency on one provider; nobody without a Google account can register. A second provider if I needed corporate users |
-| [**Two tokens: 15-min JWT + 7-day refresh in an HttpOnly cookie**](spec/adr/ADR-v1-001-oauth2-jwt.md) | A session in the database (server-side state), or one long-lived JWT | More moving parts. Refresh tokens are stored as HMAC digests, so a database leak yields no usable tokens |
-| [**RSA key generated in memory at startup**](spec/adr/ADR-v1-006-in-memory-rsa-key.md) | Key from env as PEM - rejected: no key management needed for a single instance | Restart invalidates every JWT (acceptable - access tokens live 15 min). **Breaks on a second instance** |
-| [**Flyway migrations, Hibernate in `validate` mode**](spec/adr/ADR-v1-002-flyway-versioned-migrations.md) | `ddl-auto=update` - rejected: the schema becomes whatever Hibernate inferred last, reviewed by nobody | A shipped migration is immutable. Every fix is a new migration, including the trivial ones |
-| [**`EnumType.STRING` everywhere**](spec/adr/ADR-v1-007-enum-type-string.md) | `ORDINAL` - rejected: reordering an enum rewrites the meaning of numbers in existing rows | Slightly more storage. Worth it |
-| [**No soft delete - account deletion really deletes**](spec/adr/ADR-v1-008-no-soft-delete.md) | A `deleted` flag - rejected: GDPR Art. 17 requires actual erasure | No undo. Data export before deletion covers the user |
-| [**React Query for server state**](spec/adr/ADR-v1-003-react-query.md) | `useEffect` + `useState` per screen - rejected: caching, retries and invalidation are where hand-rolled fetching breaks | One more library, and a cache to reason about |
-
-**The company brief**, the one feature that calls an LLM:
-
-| Decision | Rejected alternative, and why | What it costs |
-|---|---|---|
-| [**AI provider behind a `BriefChatModel` port**](spec/adr/ADR-v2-001-brief-provider-strategy.md) | The vendor SDK called straight from the service - rejected: free tiers move, and Gemini's closed mid-build | A dormant second adapter that still has to compile. Switching provider is one property, not a rewrite |
-| [**Brief generation async via a transactional event**](spec/adr/ADR-v2-002-in-process-async-brief-generation.md) | A queue (Kafka/Rabbit) - rejected: separate infrastructure to run for a single use case | An event published outside a transaction is silently dropped. No retries - a failed brief is marked `FAILED` and the user retries |
-| [**Job-ad link dropped from the brief prompt**](spec/adr/ADR-v2-003-drop-job-ad-link-from-brief-prompt.md) | Keeping the link - rejected after measuring: output unchanged, the company name carries the result | Briefs are per company, not per posting. Two roles at one company share one |
+| [**Monolith + one Postgres, one VPS**](spec/adr/ADR-v1-004-monolith-single-vps.md) | Microservices - ops cost, no user-facing benefit at this scale | Single point of failure, no horizontal scaling |
+| [**Layered, not hexagonal**](spec/adr/ADR-v1-005-layered-not-hexagonal.md) | Ports and adapters - one DB, one entry channel, pure ceremony here | Business logic knows about JPA |
+| [**Google OAuth2, no passwords of my own**](spec/adr/ADR-v1-001-oauth2-jwt.md) | Own accounts - password storage, reset flow, breach surface | No Google account, no registration |
+| [**15-min JWT + 7-day refresh cookie**](spec/adr/ADR-v1-001-oauth2-jwt.md) | Server-side sessions, or one long-lived JWT | More moving parts; refresh tokens stored as HMAC digests |
+| [**RSA key generated in memory at startup**](spec/adr/ADR-v1-006-in-memory-rsa-key.md) | Key from env as PEM - no key management for one instance | Restart invalidates every JWT. **Breaks on a second instance** |
+| [**Flyway, Hibernate in `validate`**](spec/adr/ADR-v1-002-flyway-versioned-migrations.md) | `ddl-auto=update` - schema becomes whatever Hibernate inferred, reviewed by nobody | A shipped migration is immutable |
+| [**No soft delete**](spec/adr/ADR-v1-008-no-soft-delete.md) | A `deleted` flag - GDPR Art. 17 asks for erasure | No undo; export covers the user first |
+| [**AI provider behind a port**](spec/adr/ADR-v2-001-brief-provider-strategy.md) | Vendor SDK in the service - free tiers move, Gemini's closed mid-build | A dormant adapter that still has to compile |
+| [**Async brief via transactional event**](spec/adr/ADR-v2-002-in-process-async-brief-generation.md) | A queue - separate infrastructure for one use case | No retries; a failed brief waits for the user |
 
 ## 🧪 Testing
 
-Tested at four levels, each answering a different question:
+Five levels, unit to end-to-end. `DataIsolationTest` is the one worth naming: it creates data as
+user A, authenticates as user B, and asserts every route refuses - multi-tenant leakage is tested
+explicitly, not assumed.
+
+<details>
+<summary><b>Levels and tooling</b></summary>
 
 | Level | Tooling | What it covers |
 |---|---|---|
-| Unit | JUnit 5 + Mockito | service logic in isolation, collaborators mocked |
-| Web layer | MockMvc | status codes, validation, JSON contract - no server, no network |
-| Integration | `@SpringBootTest` + H2 | the wired context: security, transactions, repositories |
+| Unit | JUnit 5 + Mockito | service logic, collaborators mocked |
+| Web layer | MockMvc | status codes, validation, JSON contract |
+| Integration | `@SpringBootTest` + H2 | security, transactions, repositories |
 | Frontend | Vitest + Testing Library | components and hooks |
 | End to end | Cypress | application CRUD, badges, cheat sheet, company brief |
 
-`DataIsolationTest` is the one worth singling out: it creates data as user A, authenticates as
-user B, and asserts every route refuses. Multi-tenant leakage is the failure this project can
-least afford, so it is tested explicitly rather than assumed.
+CI runs both suites and a production build on every push, then publishes both images to GHCR.
 
-CI runs backend tests, frontend tests and a production build on every push, then publishes both
-images to GHCR - [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+</details>
 
-## 🐳 Run it yourself (Docker)
+## 🚧 Known limitations
 
-> Just want to see the app? Open the [live version](https://aplikujbezspiny.pl) - nothing to install.
-> This section is for running your own instance.
+| Limitation | Why it is fine now | What would force the fix |
+|---|---|---|
+| **Runs as one copy of the backend only.** Every start generates a fresh RSA signing key, so a second copy would reject the tokens the first one issued | One VPS, one container, restarts in seconds | Traffic outgrowing one machine, or wanting deploys with no logged-out users |
+| **`GET /api/applications` is unpaginated** | Real usage is 10-20 a month | The first board slow enough to notice |
+| **A failed brief is not retried** | One optional feature, and it fails visibly | Failures frequent enough to lose trust |
+| **Rotating `APP_TOKEN_HMAC_SECRET` logs everyone out** | Blast radius is one re-login | An incident, or a rotation policy |
+| **CV upload disabled** (503); links only | Hosting personal documents was a liability I did not want | A retention story I can defend |
+
+## 🔒 Privacy & Data
+
+The app stores which companies rejected you and what salary you asked for, so it is built to
+give away as little as possible - refresh tokens are unusable if the database leaks, and the AI
+provider only ever learns a company name.
+
+<details>
+<summary><b>What that means concretely</b></summary>
+
+- **Refresh tokens** stored only as HMAC-SHA256 digests keyed with a server secret - a database dump yields nothing usable
+- **Logs** contain UUIDs only - no emails, names or tokens
+- **Account deletion** removes everything; inactive accounts purged after 12 months
+- **Company brief** sends only the company name to the AI provider - never notes or applications
+
+Full rationale: [`spec/v1/1.0.0/07-privacy-rodo/`](spec/v1/1.0.0/07-privacy-rodo/)
+
+</details>
+
+## 🧠 How this was built
+
+Written with **Claude Code** in a spec-first loop. Nothing was implemented before a plan existed,
+and no plan was written without stating what was **out of scope**. The specs live in the repo,
+not in a chat log.
+
+🟦 **Specify** → 🟪 **Plan** → 🟧 **Implement** → 🟥 **Use it for real** → back to 🟦 ↺
+
+|     | Stage | What it produces |
+|-----|-------|------------------|
+| 🟦  | **Specify** | the problem, the user, **what is out of scope**, user stories with acceptance criteria |
+| 🟪  | **Plan** | implementation steps, each ending with tests |
+| 🟧  | **Implement** | code against the plan - one Conventional Commit per step |
+| 🟥  | **Use it for real** | ship it, then job-hunt with it. Where reality disagrees, that goes in `as-built.md` and becomes the next **Specify** - never a rewrite of the last one |
+| 🟨  | **Review** | findings classified Critical / Important / Nice-to-have, each tracked until closed |
+
+Review ran once, over the v1 MVP: 23 findings classified Critical / Important / Nice-to-have, all
+fixed and tested - [`04-mvp-refactoring`](spec/v1/1.0.0/04-mvp-refactoring/).
+
+Map: [`spec/README.md`](spec/README.md) · Process: [`spec/PROCESS.md`](spec/PROCESS.md)
+
+## 🐳 Run it yourself
+
+> Just want to see it? Open the [live version](https://aplikujbezspiny.pl) - nothing to install.
+
+<details>
+<summary><b>Docker setup (about 5 minutes)</b></summary>
 
 **Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
 
 ### Step 1 - Google OAuth credentials (required for login)
-
-The app uses Google login, so it needs credentials of your own - a one-time setup in Google Cloud Console, about 5 minutes.
-
-<details>
-<summary><b>Show the steps</b></summary>
 
 1. Go to [console.cloud.google.com](https://console.cloud.google.com/) and sign in.
 2. Create a new project (top-left dropdown → **New Project**).
@@ -144,9 +174,7 @@ The app uses Google login, so it needs credentials of your own - a one-time setu
      http://localhost:8080/login/oauth2/code/google
      ```
    - Click **Create**.
-5. Copy the **Client ID** and **Client Secret** - you will need them in the next step.
-
-</details>
+5. Copy the **Client ID** and **Client Secret**.
 
 ### Step 2 - Configure and start
 
@@ -154,7 +182,7 @@ The app uses Google login, so it needs credentials of your own - a one-time setu
 cp .env.example .env
 ```
 
-Open `.env` and fill in the required values:
+Fill in `.env`:
 
 | Variable | Value |
 |----------|-------|
@@ -164,14 +192,12 @@ Open `.env` and fill in the required values:
 | `FRONTEND_URL` | `http://localhost:3000` |
 | `GOOGLE_CLIENT_ID` | from Step 1 |
 | `GOOGLE_CLIENT_SECRET` | from Step 1 |
-| `ADMIN_KEY` | any random string, e.g. output of `openssl rand -base64 32` |
-| `APP_TOKEN_HMAC_SECRET` | any random string, e.g. output of `openssl rand -base64 32` |
-| `GROQ_API_KEY` | free key from [console.groq.com/keys](https://console.groq.com/keys) - powers company brief generation |
+| `ADMIN_KEY` | any random string, e.g. `openssl rand -base64 32` |
+| `APP_TOKEN_HMAC_SECRET` | any random string, e.g. `openssl rand -base64 32` |
+| `GROQ_API_KEY` | free key from [console.groq.com/keys](https://console.groq.com/keys) - powers the company brief |
 
-> Both AI keys may be left empty - the app still starts, only brief generation fails.
+> AI keys may be left empty - the app still starts, only brief generation fails.
 > `GEMINI_API_KEY` is an alternative provider, off by default.
-
-Then start the app:
 
 ```bash
 docker compose up --build
@@ -179,50 +205,16 @@ docker compose up --build
 
 Open `http://localhost:3000`.
 
-Production images (published to GHCR on every `main` build):
+Production images, published to GHCR on every `main` build:
 ```
 ghcr.io/jakubbone/applikon-backend:latest
 ghcr.io/jakubbone/applikon-frontend:latest
 ```
 
-The live instance runs on a Hetzner VPS behind a Caddy reverse proxy - the full
-deployment runbook is in [`spec/deployment/deployment-hetzner.md`](spec/deployment/deployment-hetzner.md).
+The live instance runs on a Hetzner VPS behind Caddy - runbook in
+[`spec/deployment/deployment-hetzner.md`](spec/deployment/deployment-hetzner.md).
 
-
-## 🔒 Privacy & Data
-
-- **Refresh tokens** are stored only as HMAC-SHA256 digests, keyed with a server-side secret - the stored value cannot be replayed, so a database dump yields no usable tokens. Access tokens are stateless and never stored at all
-- **Logs** contain UUIDs only - no emails, names, or tokens in plaintext
-- **Account deletion** permanently removes all data; inactive accounts purged after 12 months
-- **Company brief** sends only the company name to the AI provider - never your notes, applications, or personal data
-
-Full design rationale: [`spec/v1/1.0.0/07-privacy-rodo/`](spec/v1/1.0.0/07-privacy-rodo/)
-
-## 🧠 How this was built
-
-Written with **Claude Code** in a spec-first loop: nothing was implemented before a plan
-existed, and no plan was written without stating what was **out of scope**. The specs live in
-the repo rather than in a chat log - `spec/` holds the vision, the per-release plans, the ADRs
-linked above, and an `as-built.md` per release recording where reality diverged from the plan.
-
-Currently on **v2 - Screening Companion** (`spec/v2/`), built on top of the **v1 MVP**
-(`spec/v1/`).
-
-🟦 **Specify** → 🟪 **Plan** → 🟧 **Implement** → 🟥 **Use it for real** → back to 🟦 ↺
-
-|     | Stage | What it produces |
-|-----|-------|------------------|
-| 🟦  | **Specify** | the idea, user, scope, **out of scope**, user stories with acceptance criteria |
-| 🟪  | **Plan** | implementation steps, with tests batched at the end of each stage |
-| 🟧  | **Implement** | code against the plan - each step with tests, a DoD and a Conventional Commit |
-| 🟥  | **Use it for real** | ship it, then dogfood it. If reality disagrees, that is the next **Specify** - never a rewrite of the last one |
-| 🟨  | **Review** | findings classified Critical / Important / Nice-to-have until each is closed |
-| 🟩  | **Refactor** | fixes applied alongside learning: explain → fix → control questions → notes |
-
-Review and Refactor ran once, for the v1 MVP; both stay available as dedicated skills.
-
-Start with [`spec/README.md`](spec/README.md) for the map and
-[`spec/PROCESS.md`](spec/PROCESS.md) for the process itself.
+</details>
 
 <details>
 <summary><b>Repo tooling (<code>.claude/</code>)</b></summary>
@@ -231,22 +223,12 @@ Start with [`spec/README.md`](spec/README.md) for the map and
 .claude/
 ├── commands/
 │   ├── commit-assistant.md                ← propose Conventional Commit
-│   ├── changelog-manager.md               ← automated CHANGELOG.md
-│   ├── mentor-refactor-backend.md         ← backend refactor + learning (**AI mentor mode**)
-│   └── mentor-refactor-frontend.md        ← frontend refactor + learning (**AI mentor mode**)
+│   └── changelog-manager.md               ← automated CHANGELOG.md
 └── skills/
     ├── spec-assistant/                    ← spec-driven planning: idea → user stories → plan
-    │   ├── SKILL.md
-    │   └── references/
     ├── code-review-backend/               ← Java 21 / Spring Boot 3.4 reviewer
-    │   ├── SKILL.md
-    │   └── references/
     ├── code-review-frontend/              ← React 19 / TypeScript reviewer
-    │   ├── SKILL.md
-    │   └── references/
-    └── security-auditor/                  ← OWASP Top 10 read-only auditor (no code modifications)
-        └── SKILL.md
+    └── security-auditor/                  ← OWASP Top 10 read-only auditor
 ```
 
 </details>
-
