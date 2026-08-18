@@ -1,11 +1,5 @@
 # Applikon — Architecture Reference
 
-> Source of truth: the code. This document reflects the actual implemented state.
-> Originally written for v1; per `spec/PROCESS.md`, v2 gets no separate
-> `architecture.md` of its own (it adds no new technology), so its schema/endpoint/
-> component additions are folded into the same sections here, tagged **(v2)**.
-
----
 
 ## 1. Backend — Actual Architecture
 
