@@ -1,10 +1,6 @@
 # Applikon — Hetzner Deployment (Step-by-Step)
 
-> Production deployment guide. Pure how-to — concepts, terminology, and the
-> rationale for choosing Hetzner are in [`deployment-intro.md`](deployment-intro.md).
->
-> Stack: Hetzner VPS (CX22, Ubuntu 24.04) + Docker Compose + Caddy.
-> Time: ~30 min preparation, ~1 hour deployment.
+> Stack: Hetzner VPS (CX22, Ubuntu 24.04) + Docker Compose + Caddy
 
 ---
 
