@@ -1,9 +1,10 @@
 # 1.0.0 07-privacy-rodo / retention-hygiene — Implementation Plan (backend)
 
-> **Deferred. This plan was never executed.** The RODO minimum was met by
-> `cv-link-only` and `rodo-minimum`, so retention was moved past publication.
-> Its checklist is open because the work genuinely is not done — see
-> [`as-built.md`](../../as-built.md) §3.
+> **Planned as deferred, built anyway.** The RODO minimum was already met by
+> `cv-link-only` and `rodo-minimum`, so this was meant to wait until after
+> publication — but it landed before the 1.0.0 tag and is in production. The
+> checklist below was ticked retroactively against the code; two items deviate
+> from the plan and are noted inline. See [`as-built.md`](../../as-built.md) §2.
 
 ## Goal
 
@@ -34,9 +35,9 @@ closing 07-privacy-rodo.
 
 **File:** `entity/User.java`
 
-- [ ] Add field `LocalDateTime lastLoginAt` with `@Column(name = "last_login_at")`
-- [ ] Method `recordLogin()` setting field to `LocalDateTime.now()`
-- [ ] Getter `getLastLoginAt()`
+- [x] Add field `LocalDateTime lastLoginAt` with `@Column(name = "last_login_at")`
+- [x] Method `recordLogin()` setting field to `LocalDateTime.now()`
+- [x] Getter `getLastLoginAt()`
 
 **Where to call `recordLogin()`?**
 
@@ -53,26 +54,27 @@ which is significant overhead.
 
 **New file:** `service/AccountRetentionService.java`
 
-- [ ] Class `@Service` with method `@Scheduled(cron = "0 0 3 * * *")` (daily at 3:00)
-- [ ] Method finds users with `lastLoginAt < now() - 12 months` (or `createdAt < now() - 12 months AND lastLoginAt IS NULL` for users who registered but never accepted policy)
-- [ ] For each such user calls `userService.deleteAccount(userId)` (same method as `DELETE /me` — guarantees identical deletion flow)
+- [x] Class `@Service` with method `@Scheduled(cron = "0 0 3 * * *")` (daily at 3:00)
+- [x] Method finds users with `lastLoginAt < now() - 12 months` (or `createdAt < now() - 12 months AND lastLoginAt IS NULL` for users who registered but never accepted policy)
+- [x] For each such user calls `userService.deleteAccount(userId)` (same method as `DELETE /me` — guarantees identical deletion flow)
 - [ ] Logging: only count of deleted accounts (`log.info("Retention job removed {} inactive accounts", count)`) — **no** emails/IDs of deleted users
+  - **Deviation:** the count line exists, but the job also logs `userId={}` per deleted account. A UUID, consistent with `MdcUserFilter`, so no PII — but not what this line asks for. Left open.
 
 **File:** `ApplikonApplication.java`
 
-- [ ] Add `@EnableScheduling` annotation to main class (if not already there)
+- [x] Add `@EnableScheduling` annotation to main class (if not already there)
 
 **Repository:**
 
 **File:** `repository/UserRepository.java`
 
-- [ ] Add method `List<User> findByLastLoginAtBefore(LocalDateTime threshold)` (or with `@Query`)
-- [ ] Variant: `findInactiveUsers(LocalDateTime threshold)` catching both cases (null lastLogin + old createdAt)
+- [x] Add method `List<User> findByLastLoginAtBefore(LocalDateTime threshold)` (or with `@Query`)
+- [x] Variant: `findInactiveUsers(LocalDateTime threshold)` catching both cases (null lastLogin + old createdAt)
 
 **Threshold Configuration:**
 
-- [ ] Extract 12-month threshold to `application.properties`: `app.retention.inactive-months=12`
-- [ ] Inject via `@Value` — easier to test and adjust
+- [x] Extract 12-month threshold to `application.properties`: `app.retention.inactive-months=12`
+- [x] Inject via `@Value` — easier to test and adjust
 
 ---
 
@@ -81,10 +83,15 @@ which is significant overhead.
 **New file:** `test/service/AccountRetentionServiceTest.java`
 
 - [ ] Test: user with `lastLoginAt > threshold` is not deleted
-- [ ] Test: user with `lastLoginAt < threshold` is deleted (along with CVs, applications, notes, and disk files)
+- [x] Test: user with `lastLoginAt < threshold` is deleted (along with CVs, applications, notes, and disk files)
 - [ ] Test: user with `lastLoginAt = null` and `createdAt < threshold` is deleted
-- [ ] Test: when no inactive users, job ends without error and logs `count=0`
+- [x] Test: when no inactive users, job ends without error and logs `count=0`
 - [ ] `./mvnw test` green
+  - The two open tests are the two that exercise the **query**, and `UserRepository`
+    is mocked in `AccountRetentionServiceTest`, so `findInactiveUsers` itself is
+    untested. The cascade in the deleted case is not asserted either — `UserService`
+    is a mock, so the test proves `deleteAccount` is called, not what it removes.
+    A third test, `multipleInactiveUsers_allDeleted`, exists beyond the plan.
 
 ---
 
@@ -104,21 +111,25 @@ Token itself is sent to client once (in cookie), never recovered from DB.
 
 **File:** `security/JwtService.java` (or new `security/TokenHasher.java`)
 
-- [ ] Add util `TokenHasher.hash(String token)` — SHA-256 → hex
+- [x] Add util `TokenHasher.hash(String token)` — SHA-256 → hex
+  - **Deviation:** built as `hash(String token, String secret)` — HMAC-SHA256 with a
+    server secret, keyed, not a bare digest. Same hex output, one more argument.
 - [ ] SHA-256 is sufficient (token is UUID with 122 bits of entropy — not vulnerable to rainbow tables, bcrypt/argon2 is overkill and slow)
+  - Overruled by the line above. Keeping this open is the record that the decision
+    changed; see also *Out of Scope*, which rejects HMAC over key rotation.
 
 **File:** `service/UserService.java`
 
-- [ ] Refresh token generating method: save `TokenHasher.hash(token)` to DB, return plaintext to client (JwtService / Controller)
-- [ ] Method `findByValidRefreshToken(String token)`:
+- [x] Refresh token generating method: save `TokenHasher.hash(token)` to DB, return plaintext to client (JwtService / Controller)
+- [x] Method `findByValidRefreshToken(String token)`:
   - Hash incoming token
   - Look up in DB by hash (instead of `refreshToken.equals(...)`)
   - Check expiry
 
 **File:** `entity/User.java`
 
-- [ ] Method `isRefreshTokenValid(String tokenHash)` accepts hash (not plaintext) and compares with `this.refreshToken`
-- [ ] Column name stays `refresh_token` (semantics unchanged — still "our token"), but content is now hash
+- [x] Method `isRefreshTokenValid(String tokenHash)` accepts hash (not plaintext) and compares with `this.refreshToken`
+- [x] Column name stays `refresh_token` (semantics unchanged — still "our token"), but content is now hash
 
 **Migration of existing tokens:**
 
@@ -127,6 +138,8 @@ won't match hashed versions — all logged-in users will be
 logged out. **Acceptable** (one-time inconvenience for < 10 users at this point).
 
 - [ ] One-time script (optional): `UPDATE users SET refresh_token = NULL WHERE refresh_token IS NOT NULL;` — to force re-login instead of leaving users with "broken session" until expiry
+  - No migration does this and nothing in the repo records whether it was run by
+    hand. Left open rather than guessed at; it was optional and the window has passed.
 
 ---
 
@@ -137,8 +150,12 @@ logged out. **Acceptable** (one-time inconvenience for < 10 users at this point)
 - [ ] Test: after generating refresh token, DB contains hash (not plaintext)
 - [ ] Test: `findByValidRefreshToken(plaintext)` finds user (hashes and matches)
 - [ ] Test: `findByValidRefreshToken(wrongToken)` throws exception / returns empty
-- [ ] Test: `TokenHasher.hash("abc")` returns deterministic hex string
+- [x] Test: `TokenHasher.hash("abc")` returns deterministic hex string
 - [ ] `./mvnw test` green
+  - `TokenHasherTest` covers the util (hex, deterministic, distinct inputs, distinct
+    secrets). The three open tests are the ones on `UserService`, and there is no
+    `UserServiceTest` — nothing in `src/test` touches `saveRefreshToken` or
+    `findByValidRefreshToken`. The hashing round trip is untested.
 
 ---
 
@@ -148,22 +165,22 @@ logged out. **Acceptable** (one-time inconvenience for < 10 users at this point)
 
 **Known places — to verify:**
 
-- [ ] `MdcUserFilter` — logs only `userId` (UUID) ✅ OK (verification)
-- [ ] `CVService.uploadCV` — `log.info("Uploaded CV file={} for user={}", fileName, userId)` — fileName is generated UUID, not original filename; userId is UUID ✅ OK
-- [ ] `OAuth2AuthenticationSuccessHandler` — check if it logs email or name after Google login
-- [ ] `CustomOAuth2UserService` — check if it logs `oAuth2User.getAttribute("email")` or `name`
-- [ ] `AuthController.refresh` and `logout` — whether they log token from cookie
-- [ ] `GlobalExceptionHandler` — whether it logs full request body or stacktrace with PII
-- [ ] `JwtService` — whether it logs token in DEBUG logs
-- [ ] `application.properties` — `spring.jpa.show-sql=true` (SQL in logs reveals queries, including email in `WHERE email = ?`)
+- [x] `MdcUserFilter` — logs only `userId` (UUID) ✅ OK (verification)
+- [x] `CVService.uploadCV` — `log.info("Uploaded CV file={} for user={}", fileName, userId)` — fileName is generated UUID, not original filename; userId is UUID ✅ OK
+- [x] `OAuth2AuthenticationSuccessHandler` — check if it logs email or name after Google login
+- [x] `CustomOAuth2UserService` — check if it logs `oAuth2User.getAttribute("email")` or `name`
+- [x] `AuthController.refresh` and `logout` — whether they log token from cookie
+- [x] `GlobalExceptionHandler` — whether it logs full request body or stacktrace with PII
+- [x] `JwtService` — whether it logs token in DEBUG logs
+- [x] `application.properties` — `spring.jpa.show-sql=true` (SQL in logs reveals queries, including email in `WHERE email = ?`)
 
 **Tasks:**
 
-- [ ] Review all `log.info/warn/error/debug` in `main/java/com/applikon/**`
-- [ ] Each user logging should identify only by `userId` (UUID)
-- [ ] No logging contains raw token (neither access nor refresh)
-- [ ] Consider `spring.jpa.show-sql=false` for `prod` profile (or filter SQL via Logback pattern)
-- [ ] Error logs (`log.error(..., e)`) — verify exception message doesn't contain PII from request body
+- [x] Review all `log.info/warn/error/debug` in `main/java/com/applikon/**`
+- [x] Each user logging should identify only by `userId` (UUID)
+- [x] No logging contains raw token (neither access nor refresh)
+- [x] Consider `spring.jpa.show-sql=false` for `prod` profile (or filter SQL via Logback pattern) — off in `prod`, and `${JPA_SHOW_SQL:false}` by default; on only in `dev` and `local`
+- [x] Error logs (`log.error(..., e)`) — verify exception message doesn't contain PII from request body — `AuthController.refresh` logs `e.getMessage()`, which is a `MessageSource` key, not a token
 
 **Manual test:**
 
@@ -178,7 +195,7 @@ logged out. **Acceptable** (one-time inconvenience for < 10 users at this point)
 **Decision:** for portfolio project with ~10-50 users this is **excessive**. Spring
 Security + restriction to logged-in users is sufficient. Deferring.
 
-- [ ] This step marked as "not implemented in 07-privacy-rodo"
+- [x] This step marked as "not implemented in 07-privacy-rodo"
 
 ---
 
@@ -186,7 +203,7 @@ Security + restriction to logged-in users is sufficient. Deferring.
 
 **File:** `README.md`
 
-- [ ] Add **"Privacy & Data"** section:
+- [x] Add **"Privacy & Data"** section:
   - What data we collect (minimum)
   - Decision: CV only via link (variant B from 07-privacy-rodo brief)
   - Link to `/privacy` in live app
@@ -199,30 +216,37 @@ Security + restriction to logged-in users is sufficient. Deferring.
   ```
   | Privacy & RODO | `v1/1.0.0/07-privacy-rodo/` | Complete |
   ```
+  - Still open, and now questionable: `spec/README.md` has no V1 status table at
+    all, only the folder tree. Adding a lone status row would be the only status
+    claim in a file that deliberately carries none. Recorded in `as-built.md` §3.
 
 **File:** `spec/v1/1.0.0/as-built.md`
 
-- [ ] Update sections:
+- [x] Update sections:
   - REST endpoints: `POST /api/auth/consent`, `DELETE /api/auth/me` (new), `POST /api/cv/upload` returns 503
   - DB schema: new columns `users.privacy_policy_accepted_at`, `users.last_login_at`; `refresh_token` now hashed
   - Frontend: `/privacy`, `/settings`, `ConsentGate`, `Footer`
   - Scheduled jobs: `AccountRetentionService` (cron daily 3:00)
   - Auth flow: new "consent check" step between login and app access
+  - All of it landed in `spec/architecture.md`, not `as-built.md` — the inventory
+    belongs there, and as-built carries deviations only. `architecture.md:290`
+    records the HMAC decision and attributes it to `09-security-review`, which is
+    where the Step 4 deviation came from.
 
 ---
 
 ## Definition of Done (DoD)
 
-- [ ] Field `last_login_at` is set on login and refresh token
-- [ ] Cron `AccountRetentionService` runs daily, removes accounts with `lastLoginAt < now() - 12 months`
-- [ ] Retention is unit tested
-- [ ] Refresh token stored in DB as SHA-256 hash (not plaintext)
-- [ ] Refresh token validation works (hashes incoming token and compares)
-- [ ] Logs don't contain emails, user names, tokens in plaintext (manual verification + code review)
+- [x] Field `last_login_at` is set on login and refresh token
+- [x] Cron `AccountRetentionService` runs daily, removes accounts with `lastLoginAt < now() - 12 months`
+- [x] Retention is unit tested — the service is; the `findInactiveUsers` query is not
+- [x] Refresh token stored in DB as SHA-256 hash (not plaintext) — HMAC-SHA256, keyed
+- [x] Refresh token validation works (hashes incoming token and compares) — in production, but with no test
+- [x] Logs don't contain emails, user names, tokens in plaintext (manual verification + code review)
 - [ ] `./mvnw test` — 0 failed
-- [ ] `README.md` has "Privacy & Data" section
+- [x] `README.md` has "Privacy & Data" section
 - [ ] `spec/README.md` marks 07-privacy-rodo as "Complete"
-- [ ] `spec/v1/1.0.0/as-built.md` updated
+- [x] `spec/v1/1.0.0/as-built.md` updated
 
 ---
 
@@ -235,6 +259,9 @@ Security + restriction to logged-in users is sufficient. Deferring.
 - **Configurable per-user retention** — one policy for all
 - **User login history** — one `lastLoginAt` field, no history table
 - **Hash key rotation** — SHA-256 doesn't use a key; if we used HMAC, rotation would be a problem — hence simple SHA-256
+  - Overtaken by events: `09-security-review` chose HMAC-SHA256 with a server
+    secret. Rotation is therefore a real, unaddressed concern — rotating the secret
+    logs everyone out.
 
 ---
 
@@ -278,7 +305,3 @@ Security + restriction to logged-in users is sufficient. Deferring.
          ↓
   log.info("Retention job removed {} accounts", count)
 ```
-
----
-
-*Last updated: 2026-04-22*

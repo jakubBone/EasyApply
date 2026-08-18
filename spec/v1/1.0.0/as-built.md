@@ -62,13 +62,14 @@ The project was renamed from EasyApply to Applikon in topic 14.
 | Onboarding | Not planned | `OnboardingOverlay` and `TourGuide`, plus a demo application on first login | An empty board teaches nothing |
 | Rebrand (14) | A full sweep of EasyApply to Applikon | Done, except `V1__init_schema.sql` | Editing an already-applied migration breaks the Flyway checksum |
 | CI (12) | The workflow triggers on `master` | Triggers on `main` | The repository's default branch. The plan's YAML snippet still shows the older name |
+| `retention-hygiene` (07) | Deferred past publication, its plan left unexecuted | Built and shipped: `AccountRetentionService` (cron daily at 3:00) deleting accounts inactive for 12 months, `users.last_login_at`, and the refresh token stored hashed | The RODO minimum did not need it, but it landed with the rebrand commit anyway. Two deviations from the plan: the hash is HMAC-SHA256 with a secret, not bare SHA-256, and the job logs a `userId` line per deleted account, not only the count |
 | Post-release | — | Security cleanup: `MdcUserFilter` moved to `observability/`, `ConsentRequiredFilter` became a `@Component`, dead code removed | A correlation ID was deliberately skipped as overengineering at this scale |
 
 ## 3. Not done
 
 | Item | Why not |
 |------|---------|
-| `retention-hygiene` (07) | The RODO minimum is met, so auto-deleting inactive accounts moved past publication. The plan is written and unexecuted in `07-privacy-rodo/retention-hygiene/` |
+| Closing `retention-hygiene` in the docs | The code shipped, but `spec/README.md` never got the "Complete" row the plan asked for — there is no V1 status table there at all |
 | Wiring the salary-change auto-note | `NoteService.createSalaryChangeNote()` is implemented and tested, but `ApplicationService.update()` never compares the old and new salary, so it is never called |
 | `rejectionDetails` in the frontend | The backend returns it, but `domain.ts` does not declare it, so the UI cannot display it |
 
