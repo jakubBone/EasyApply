@@ -38,7 +38,31 @@ type(scope): description
 ```
 Types: `feat` · `fix` · `refactor` · `test` · `docs` · `chore`
 Scopes: `backend` · `frontend` · `spec` · `db` · `infra`
-Example: `refactor(backend): extract validation into ApplicationValidator`
+
+Add a short body (2-4 sentences) explaining *why*, not *what* — the diff already shows what changed. No file lists, no essays.
+
+```
+feat(backend): add screening answers export to PDF
+
+Recruiters ask for a printable version of prep answers before interviews.
+Reuses the existing PDF generation pipeline from CVService instead of
+adding a new dependency.
+```
+
+```
+fix(backend): correct inconsistent ApplicationResponse post-save fetch return
+
+Save endpoint was returning the pre-update entity state, so the frontend
+showed stale status right after a stage change. Re-fetches the entity
+after save instead of mapping the detached instance.
+```
+
+```
+refactor(frontend): rename kanban/types.ts to kanban.ts
+
+The file held runtime constants and a function, not just the KanbanStatus
+type, so the name was misleading. No behavior change.
+```
 
 **Important:** Commits should NOT include `Co-Authored-By` trailers. User commits alone.
 
