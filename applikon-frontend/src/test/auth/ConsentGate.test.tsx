@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { ConsentGate } from './ConsentGate'
-import { AuthProvider } from '../../auth/AuthProvider'
+import { ConsentGate } from '../../components/auth/ConsentGate'
+import { AuthProvider } from '../../components/auth/AuthProvider'
 import * as api from '../../services/api'
 
 // Mock API

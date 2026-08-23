@@ -2,12 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
-import { Settings } from './Settings'
-import { AuthProvider } from '../auth/AuthProvider'
-import * as api from '../services/api'
+import { Settings } from '../../pages/Settings'
+import { AuthProvider } from '../../components/auth/AuthProvider'
+import * as api from '../../services/api'
 
 // Mock API
-vi.mock('../services/api', () => ({
+vi.mock('../../services/api', () => ({
   fetchCurrentUser: vi.fn(),
   getToken: vi.fn(),
   clearToken: vi.fn(),
@@ -50,7 +50,7 @@ vi.mock('react-i18next', () => ({
 }))
 
 // Mock Footer
-vi.mock('../components/layout/Footer', () => ({
+vi.mock('../../components/layout/Footer', () => ({
   Footer: () => <div>Footer</div>,
 }))
 

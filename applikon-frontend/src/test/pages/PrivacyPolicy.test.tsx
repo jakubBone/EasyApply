@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { PrivacyPolicy } from './PrivacyPolicy'
+import { PrivacyPolicy } from '../../pages/PrivacyPolicy'
 
 // Mock translation
 vi.mock('react-i18next', () => ({
@@ -12,7 +12,7 @@ vi.mock('react-i18next', () => ({
 }))
 
 // Mock privacy policy content
-vi.mock('../content/privacyPolicy', () => ({
+vi.mock('../../content/privacyPolicy', () => ({
   privacyPolicyPl: `
 # Polityka prywatności Applikon
 
