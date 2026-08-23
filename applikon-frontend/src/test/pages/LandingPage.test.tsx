@@ -2,9 +2,9 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { LandingPage } from '../../pages/LandingPage'
-import { useAuth } from '../../auth/AuthProvider'
+import { useAuth } from '../../components/auth/AuthProvider'
 
-vi.mock('../../auth/AuthProvider', () => ({
+vi.mock('../../components/auth/AuthProvider', () => ({
   useAuth: vi.fn(),
 }))
 

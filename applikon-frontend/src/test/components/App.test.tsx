@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import AppContent from '../../AppContent'
-import { AuthProvider } from '../../auth/AuthProvider'
+import { AuthProvider } from '../../components/auth/AuthProvider'
 import * as api from '../../services/api'
 import { QueryWrapper } from '../test-utils'
 

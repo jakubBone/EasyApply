@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, act } from '@testing-library/react'
-import { AuthProvider, useAuth } from '../../auth/AuthProvider'
+import { AuthProvider, useAuth } from '../../components/auth/AuthProvider'
 
 // Mock entire api module — AuthProvider shouldn't touch real fetch
 vi.mock('../../services/api', () => ({

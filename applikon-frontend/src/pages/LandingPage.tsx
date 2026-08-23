@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Navigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '../auth/AuthProvider'
+import { useAuth } from '../components/auth/AuthProvider'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import './LandingPage.css'
 

@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import { ProtectedRoute } from '../../auth/ProtectedRoute'
-import { useAuth } from '../../auth/AuthProvider'
+import { ProtectedRoute } from '../../components/auth/ProtectedRoute'
+import { useAuth } from '../../components/auth/AuthProvider'
 
 // Mock useAuth — test ProtectedRoute in isolation from user fetch logic.
 // We only care about behavior based on hook return values.
-vi.mock('../../auth/AuthProvider', () => ({
+vi.mock('../../components/auth/AuthProvider', () => ({
   useAuth: vi.fn(),
 }))
 

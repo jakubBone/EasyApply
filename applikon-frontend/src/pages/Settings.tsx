@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../auth/AuthProvider'
+import { useAuth } from '../components/auth/AuthProvider'
 import { Footer } from '../components/layout/Footer'
 import { deleteAccount, exportMyData } from '../services/api'
 import './Settings.css'
