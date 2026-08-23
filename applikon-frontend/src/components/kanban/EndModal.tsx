@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { StageUpdateRequest } from '../../types/domain'
-import { REJECTION_REASONS } from './types'
+import { REJECTION_REASONS } from './kanban'
 
 interface EndModalProps {
   isOpen: boolean

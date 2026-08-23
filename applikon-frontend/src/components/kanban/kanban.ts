@@ -1,4 +1,5 @@
 import type { ParseKeys, TFunction } from 'i18next'
+import { STATUS_CONFIG } from '../../constants/applicationStatus'
 
 export const isMobile = () => window.innerWidth <= 768
 
@@ -8,9 +9,12 @@ export interface KanbanStatus {
   color: string
 }
 
+// SENT/IN_PROGRESS colors are sourced from STATUS_CONFIG so kanban and the
+// application table can't drift apart; FINISHED has no STATUS_CONFIG equivalent
+// (it covers both OFFER and REJECTED) so it keeps its own color here.
 export const STATUSES: KanbanStatus[] = [
-  { id: 'SENT',        labelKey: 'kanban.statusSENT',        color: '#3498db' },
-  { id: 'IN_PROGRESS', labelKey: 'kanban.statusIN_PROGRESS', color: '#f39c12' },
+  { id: 'SENT',        labelKey: 'kanban.statusSENT',        color: STATUS_CONFIG.SENT.color },
+  { id: 'IN_PROGRESS', labelKey: 'kanban.statusIN_PROGRESS', color: STATUS_CONFIG.IN_PROGRESS.color },
   { id: 'FINISHED',    labelKey: 'kanban.statusFINISHED',    color: '#95a5a6' },
 ]
 

@@ -3,7 +3,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useTranslation } from 'react-i18next'
 import type { Application, StageUpdateRequest } from '../../types/domain'
-import { isMobile, PREDEFINED_STAGES, REJECTION_REASONS, translateStageName, normalizeStageKey } from './types'
+import { isMobile, PREDEFINED_STAGES, REJECTION_REASONS, translateStageName, normalizeStageKey } from './kanban'
 import { isStale, ARCHIVE_STALE_PAYLOAD } from '../../utils/stale'
 
 export interface ApplicationCardProps {

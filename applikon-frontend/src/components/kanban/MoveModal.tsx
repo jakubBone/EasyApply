@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Application } from '../../types/domain'
-import type { KanbanStatus } from './types'
+import type { KanbanStatus } from './kanban'
 
 interface MoveModalProps {
   isOpen: boolean

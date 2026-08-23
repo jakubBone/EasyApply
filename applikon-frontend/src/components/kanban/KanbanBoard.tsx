@@ -13,7 +13,7 @@ import {
 import type { DragStartEvent, DragEndEvent, CollisionDetection } from '@dnd-kit/core'
 import { useTranslation } from 'react-i18next'
 import type { Application, StageUpdateRequest } from '../../types/domain'
-import { isMobile, STATUSES } from './types'
+import { isMobile, STATUSES } from './kanban'
 import { ApplicationCard } from './ApplicationCard'
 import { StaleBanner } from './StaleBanner'
 import { isStale } from '../../utils/stale'

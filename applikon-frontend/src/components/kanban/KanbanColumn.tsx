@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useTranslation } from 'react-i18next'
 import type { Application } from '../../types/domain'
-import type { KanbanStatus } from './types'
+import type { KanbanStatus } from './kanban'
 
 interface KanbanColumnProps {
   status: KanbanStatus

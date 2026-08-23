@@ -13,7 +13,7 @@ import { downloadCV } from '../../services/api'
 import { isSafeUrl } from '../../utils/urlValidator'
 import { formatSalary } from '../../utils/salary'
 import { STATUS_CONFIG } from '../../constants/applicationStatus'
-import { translateStageName, STATUSES } from '../kanban/types'
+import { translateStageName, STATUSES } from '../kanban/kanban'
 import type { Application, StageUpdateRequest } from '../../types/domain'
 
 interface Props {
