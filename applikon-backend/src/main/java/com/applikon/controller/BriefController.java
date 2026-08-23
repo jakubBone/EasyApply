@@ -3,7 +3,7 @@ package com.applikon.controller;
 import com.applikon.dto.BriefEditRequest;
 import com.applikon.dto.BriefResponse;
 import com.applikon.security.AuthenticatedUser;
-import com.applikon.service.BriefService;
+import com.applikon.service.brief.BriefService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

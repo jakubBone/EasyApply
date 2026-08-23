@@ -1,4 +1,4 @@
-package com.applikon.service;
+package com.applikon.service.brief;
 
 // Request to generate a brief in the background. Published by BriefService.trigger inside its
 // transaction; BriefGenerationWorker receives it only after that transaction commits.

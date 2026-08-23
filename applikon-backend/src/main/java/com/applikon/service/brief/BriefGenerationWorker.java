@@ -1,4 +1,4 @@
-package com.applikon.service;
+package com.applikon.service.brief;
 
 import com.applikon.service.ai.BriefChatModel;
 import org.slf4j.Logger;

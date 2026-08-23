@@ -1,4 +1,4 @@
-package com.applikon.service;
+package com.applikon.service.brief;
 
 import com.applikon.dto.BriefEditRequest;
 import com.applikon.dto.BriefFieldResponse;
