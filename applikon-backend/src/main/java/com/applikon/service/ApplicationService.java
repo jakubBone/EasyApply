@@ -47,8 +47,7 @@ public class ApplicationService {
 
         Application saved = applicationRepository.save(Application.from(request, user));
 
-        return ApplicationResponse.fromEntity(
-                applicationRepository.findByIdAndUserId(saved.getId(), userId).orElseThrow());
+        return ApplicationResponse.fromEntity(getApplicationByIdAndUserId(saved.getId(), userId));
     }
 
     @Transactional(readOnly = true)
