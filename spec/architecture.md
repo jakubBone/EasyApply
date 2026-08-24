@@ -24,7 +24,7 @@ com.applikon/
     StatisticsController.java      — /api/statistics
     SystemController.java          — /api/system (08-user-data)
   dto/
-    ApplicationRequest.java        — record (company, position, link, salary*, currency, salaryType, contractType, salarySource, source, jobDescription, agency)
+    ApplicationRequest.java        — record (company, position, link, salary*, currency, salaryType, contractType, source, jobDescription)
     ApplicationResponse.java       — record (all Application fields + cv info flattened: cvId, cvFileName, cvType, cvExternalUrl)
     ApplicationStats.java          — record (rejections, ghosting, offers) — for JPQL projection
     BadgeResponse.java             — record (name, icon, description, threshold, currentCount, nextThreshold, nextBadgeName)
@@ -54,7 +54,6 @@ com.applikon/
     CVType.java                    — enum: FILE, LINK, NOTE
     NoteCategory.java              — enum: QUESTIONS, FEEDBACK, OTHER
     RejectionReason.java           — enum: NO_RESPONSE, EMAIL_REJECTION, REJECTED_AFTER_INTERVIEW, OTHER
-    SalarySource.java              — enum: FROM_POSTING, MY_PROPOSAL
     SalaryType.java                — enum: GROSS, NET
   exception/
     GlobalExceptionHandler.java    — @RestControllerAdvice, handles validation / EntityNotFoundException (WARN log, 10-logging) / DateTimeParseException (08-user-data) / fallback (ERROR log)
@@ -270,6 +269,7 @@ involved: timeouts live in the client beans, retry in Spring AI's `RetryTemplate
 | V19 | `V19__screening_answers_application_scope.sql` | Add nullable `screening_answers.application_id` FK — scopes rows to one application for "About the company" (v2 02-cheat-sheet-consolidation, Step 2) |
 | V20 | `V20__drop_application_company_research.sql` | Drop `applications.company_research` — superseded by V19 (v2 02-cheat-sheet-consolidation, Step 2) |
 | V21 | `V21__company_briefs.sql` | Create `company_briefs` + `company_brief_fields` — the AI company brief (v2 03-company-brief, Step 1) |
+| V22 | `V22__drop_application_agency_and_salary_source.sql` | Drop `applications.agency` and `applications.salary_source` — never wired up in the frontend across the project's history |
 
 ### Current tables
 
@@ -301,11 +301,9 @@ involved: timeouts live in the client beans, retry in Spring AI's `RetryTemplate
 | currency | VARCHAR(10) | nullable |
 | salary_type | VARCHAR(50) | nullable (GROSS/NET) |
 | contract_type | VARCHAR(50) | nullable (B2B/EMPLOYMENT/MANDATE/OTHER) |
-| salary_source | VARCHAR(50) | nullable (FROM_POSTING/MY_PROPOSAL) |
 | source | VARCHAR(255) | nullable |
 | status | VARCHAR(50) | NOT NULL, default 'SENT' (SENT/IN_PROGRESS/OFFER/REJECTED) |
 | job_description | TEXT | nullable |
-| agency | VARCHAR(255) | nullable |
 | cv_id | BIGINT | FK → cvs(id), nullable |
 | applied_at | TIMESTAMP | NOT NULL |
 | current_stage | VARCHAR(255) | nullable |
