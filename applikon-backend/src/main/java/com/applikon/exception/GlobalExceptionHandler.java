@@ -63,9 +63,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(DateTimeParseException.class)
-    public ResponseEntity<Map<String, String>> handleDateTimeParse(DateTimeParseException ex) {
-        return ResponseEntity.badRequest()
-                .body(Map.of("error", "Invalid date format. Expected ISO-8601, e.g. 2026-12-31T23:59:59"));
+    public ProblemDetail handleDateTimeParse(DateTimeParseException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "Invalid date format. Expected ISO-8601, e.g. 2026-12-31T23:59:59");
+        problem.setTitle(messageSource.getMessage("error.request.title", null, LocaleContextHolder.getLocale()));
+        return problem;
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
