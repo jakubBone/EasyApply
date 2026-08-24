@@ -1,28 +1,28 @@
-# Szablon PRD
+# PRD template
 
-Poniższy szablon skopiować do pliku `05-prd.md` projektu i wypełnić razem z użytkownikiem.
+Copy the template below into the project's `05-prd.md` file and fill it in together with the user.
 
 ---
 
 ```markdown
-# PRD — [Nazwa produktu]
+# PRD — [Product name]
 
-## 1. Opis produktu
+## 1. Product description
 
-[Jedno zdanie: co to jest, dla kogo, jaki problem rozwiązuje, czym się wyróżnia]
+[One sentence: what it is, who it's for, what problem it solves, what makes it stand out]
 
 ## 2. Scope
 
-### MVP (robimy na pewno)
+### MVP (definitely doing)
 - [ ] ...
 - [ ] ...
 - [ ] ...
 
-### In scope (w planie, nie MVP)
+### In scope (planned, not MVP)
 - [ ] ...
 - [ ] ...
 
-### Out of scope (NIE robimy)
+### Out of scope (NOT doing)
 - [ ] ...
 - [ ] ...
 - [ ] ...
@@ -31,37 +31,37 @@ Poniższy szablon skopiować do pliku `05-prd.md` projektu i wypełnić razem z 
 
 ## 3. User flows
 
-### Flow 1: [Nazwa]
-[Start] → [Krok 1] → [Krok 2] → ... → [Sukces]
+### Flow 1: [Name]
+[Start] → [Step 1] → [Step 2] → ... → [Success]
 
-**Warianty:**
-- Jeśli [warunek] → [co się dzieje]
-- Jeśli [błąd] → [jak system reaguje]
+**Variants:**
+- If [condition] → [what happens]
+- If [error] → [how the system reacts]
 
-### Flow 2: [Nazwa]
+### Flow 2: [Name]
 ...
 
-### Flow 3: [Nazwa]
+### Flow 3: [Name]
 ...
 
 ## 4. User stories + acceptance criteria
 
-### Story 1: [Tytuł]
-**Jako** [kto] **chcę** [co], **żeby** [po co].
+### Story 1: [Title]
+**As a** [who] **I want** [what], **so that** [why].
 
 **Acceptance criteria:**
 - [ ] ...
 - [ ] ...
 - [ ] ...
 
-### Story 2: [Tytuł]
+### Story 2: [Title]
 ...
 
-### Story 3: [Tytuł]
+### Story 3: [Title]
 ...
 
 ## 5. Definition of Done
-Produkt jest gotowy, gdy:
+The product is done when:
 - [ ] ...
 - [ ] ...
 - [ ] ...
@@ -69,19 +69,19 @@ Produkt jest gotowy, gdy:
 
 ## 6. Non-functional requirements
 
-### Bezpieczeństwo / prywatność
+### Security / privacy
 - ...
 
-### Platforma / dostępność
+### Platform / accessibility
 - ...
 
 ### Performance
 - ...
 
-## 7. Otwarte pytania / założenia
+## 7. Open questions / assumptions
 
-| Pytanie | Status | Decyzja |
-|---------|--------|---------|
-| ... | Do ustalenia | — |
-| ... | Założenie | ... |
+| Question | Status | Decision |
+|----------|--------|----------|
+| ... | To be determined | — |
+| ... | Assumption | ... |
 ```

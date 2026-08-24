@@ -1,46 +1,46 @@
 ---
 name: spec-assistant
 description: >
-  Przeprowadzenie użytkownika przez kompletny proces tworzenia specyfikacji aplikacji
-  — od pomysłu, przez personę, specyfikację użytkową,
-  user stories, architekturę, PRD, SPEC.md, aż do podziału na taski.
-  Skill zarządza projektami — zapisuje postęp, pozwala wracać i kontynuować pracę.
-  Używaj gdy: użytkownik chce zaplanować aplikację, stworzyć specyfikację,
-  przygotować PRD lub SPEC.md, przeprowadzić analizę pomysłu na projekt,
-  lub mówi "specyfikacja", "spec", "spec planning, "zaplanuj aplikację", "PRD", "SPEC.md",
-  "user stories", "zaplanuj projekt".
+  Guide the user through the complete application spec-creation process
+  — from idea, through persona, functional spec,
+  user stories, architecture, PRD, SPEC.md, down to task breakdown.
+  The skill manages projects — saves progress, lets you come back and continue work.
+  Use when: the user wants to plan an application, create a specification,
+  prepare a PRD or SPEC.md, run an analysis of a project idea,
+  or says "specification", "spec", "spec planning", "plan an application", "PRD", "SPEC.md",
+  "user stories", "plan a project".
 ---
 
 # Overview
 
-Praktyczne projektowanie aplikacji budowanych przez modele AI. Celem jest stworzenie
-kompletnej specyfikacji, dzięki której model AI podąża za planem użytkownika zamiast
-wymyślać własne rozwiązania.
+Practical design of applications built by AI models. The goal is to produce a
+complete specification so that the AI model follows the user's plan instead of
+inventing its own solutions.
 
-## Kluczowe zasady
+## Key principles
 
-1. **Nigdy nie zgaduj** — jeśli czegoś nie wiesz, pytaj użytkownika
-2. **Użytkownik jest architektem** — Ty pomagasz, ale to on podejmuje decyzje
-3. **User stories: model pyta, użytkownik odpowiada** — nigdy nie odpowiadaj za niego
-4. **CO przed JAK** — najpierw funkcje, potem technologie
-5. **Zapisuj postęp** — po każdym kroku zapisz artefakt do pliku projektu
+1. **Never guess** — if you don't know something, ask the user
+2. **The user is the architect** — you help, but they make the decisions
+3. **User stories: the model asks, the user answers** — never answer on their behalf
+4. **WHAT before HOW** — features first, technologies later
+5. **Save progress** — after every step, save the artifact to a project file
 
-## Persystencja projektów
+## Project persistence
 
-Wszystkie projekty zapisywać w katalogu `~/.spec-assistant-projects/`. Struktura:
+Save all projects in the `~/.spec-assistant-projects/` directory. Structure:
 
 ```
 ~/.spec-assistant-projects/
-├── projects-index.yaml          # indeks wszystkich projektów
+├── projects-index.yaml          # index of all projects
 └── <project-slug>/
-    ├── project.yaml             # metadane, bieżący krok, status
-    ├── 01-idea.md               # krok 1
-    ├── 02-functional-spec.md    # krok 2
-    ├── 03-user-stories.md       # krok 3
-    ├── 04-architecture.md       # krok 4
-    ├── 05-prd.md                # krok 5
-    ├── 06-spec.md               # krok 6
-    └── 07-tasks.md              # krok 7
+    ├── project.yaml             # metadata, current step, status
+    ├── 01-idea.md               # step 1
+    ├── 02-functional-spec.md    # step 2
+    ├── 03-user-stories.md       # step 3
+    ├── 04-architecture.md       # step 4
+    ├── 05-prd.md                # step 5
+    ├── 06-spec.md               # step 6
+    └── 07-tasks.md              # step 7
 ```
 
 ### projects-index.yaml
@@ -48,7 +48,7 @@ Wszystkie projekty zapisywać w katalogu `~/.spec-assistant-projects/`. Struktur
 ```yaml
 projects:
   - slug: project-slug
-    name: "Nazwa projektu"
+    name: "Project name"
     created: "2025-01-15"
     updated: "2025-01-16"
     current_step: 3
@@ -58,123 +58,123 @@ projects:
 ### project.yaml
 
 ```yaml
-name: "Nazwa projektu"
+name: "Project name"
 slug: project-slug
-description: "Jednozdaniowy opis"
+description: "One-sentence description"
 created: "2025-01-15"
 updated: "2025-01-16"
 current_step: 3
 status: in_progress
 steps:
   1: completed    # idea + persona
-  2: completed    # specyfikacja użytkowa
+  2: completed    # functional spec
   3: in_progress  # user stories
-  4: pending      # architektura
+  4: pending      # architecture
   5: pending      # PRD
   6: pending      # SPEC.md
-  7: pending      # taski
+  7: pending      # tasks
 ```
 
-### Operacje na projektach
+### Project operations
 
-- **Nowy projekt:** Stworzyć katalog, `project.yaml`, wpis w indeksie
-- **Kontynuacja:** Wczytać `project.yaml`, wyświetlić status, przejść do bieżącego kroku
-- **Edycja kroku:** Wczytać plik kroku, przedyskutować zmiany, nadpisać plik
-- **Lista projektów:** Wyświetlić `projects-index.yaml`
-- **Po każdym zapisie:** Zaktualizować `updated` i `current_step` w `project.yaml` i indeksie
+- **New project:** Create the directory, `project.yaml`, an entry in the index
+- **Continuation:** Load `project.yaml`, display status, jump to the current step
+- **Editing a step:** Load the step file, discuss the changes, overwrite the file
+- **List projects:** Display `projects-index.yaml`
+- **After every save:** Update `updated` and `current_step` in `project.yaml` and the index
 
-### ⚠️ Zasady krytyczne — plik indeksu
+### ⚠️ Critical rules — index file
 
-1. **ZAWSZE odczytaj `projects-index.yaml` przed zapisem** — nigdy nie nadpisuj całego pliku
-2. **ZAWSZE dodaj/edytuj tylko wpis bieżącego projektu** — nie usuwaj innych projektów
-3. **Po każdym zapisie artefaktu** — natychmiast zaktualizuj `current_step` i `updated` w obu plikach (`project.yaml` i `projects-index.yaml`)
+1. **ALWAYS read `projects-index.yaml` before writing** — never overwrite the whole file
+2. **ALWAYS add/edit only the current project's entry** — don't remove other projects
+3. **After every artifact save** — immediately update `current_step` and `updated` in both files (`project.yaml` and `projects-index.yaml`)
 
-## Workflow — rozpoczęcie sesji
+## Workflow — starting a session
 
-Na początku każdej sesji:
+At the start of every session:
 
-1. Sprawdzić czy istnieje `~/.spec-assistant-projects/projects-index.yaml`
-2. Jeśli tak — wyświetlić listę projektów i zapytać:
-   - "Kontynuować istniejący projekt, czy zacząć nowy?"
-3. Jeśli nie — zapytać o pomysł i rozpocząć krok 1
+1. Check whether `~/.spec-assistant-projects/projects-index.yaml` exists
+2. If it does — display the list of projects and ask:
+   - "Continue an existing project, or start a new one?"
+3. If not — ask about the idea and start step 1
 
-Gdy użytkownik kontynuuje projekt:
-1. Wczytać `project.yaml` — ustalić bieżący krok
-2. Wczytać artefakt bieżącego kroku (jeśli istnieje)
-3. Wyświetlić krótkie podsumowanie stanu projektu
-4. Zapytać: "Kontynuujemy krok X, czy chcesz wrócić do innego kroku?"
+When the user continues a project:
+1. Load `project.yaml` — determine the current step
+2. Load the current step's artifact (if it exists)
+3. Display a short summary of the project's state
+4. Ask: "Shall we continue with step X, or do you want to go back to another step?"
 
-## Workflow — 7 kroków 
+## Workflow — the 7 steps
 
-Szczegółowe instrukcje dla każdego kroku: przeczytać `references/steps-guide.md`.
+Detailed instructions for each step: read `references/steps-guide.md`.
 
-### Podsumowanie kroków
+### Step summary
 
-| # | Krok | Artefakt | Kluczowe |
-|---|------|----------|----------|
-| 1 | Rozmowa o pomyśle | `01-idea.md` | Persona idealnego użytkownika |
-| 2 | Specyfikacja użytkowa | `02-functional-spec.md` | CO, nie JAK |
-| 3 | User stories | `03-user-stories.md` | Model pyta, USER odpowiada |
-| 4 | Architektura | `04-architecture.md` | Skala + decyzje technologiczne |
-| 5 | PRD | `05-prd.md` | 7 elementów zamkniętego PRD |
-| 6 | SPEC.md | `06-spec.md` | 6 filarów specyfikacji technicznej |
-| 7 | Taski | `07-tasks.md` | Małe, testowalne, jednoznaczne |
+| # | Step | Artifact | Key point |
+|---|------|----------|-----------|
+| 1 | Idea conversation | `01-idea.md` | Persona of the ideal user |
+| 2 | Functional spec | `02-functional-spec.md` | WHAT, not HOW |
+| 3 | User stories | `03-user-stories.md` | The model asks, the USER answers |
+| 4 | Architecture | `04-architecture.md` | Scale + technology decisions |
+| 5 | PRD | `05-prd.md` | 7 elements of a closed PRD |
+| 6 | SPEC.md | `06-spec.md` | 6 pillars of the technical spec |
+| 7 | Tasks | `07-tasks.md` | Small, testable, unambiguous |
 
-### Przejście między krokami
+### Moving between steps
 
-Po zakończeniu każdego kroku:
-1. Zapisać artefakt do pliku
-2. Zaktualizować `project.yaml` (krok completed, next krok in_progress)
-3. Wyświetlić podsumowanie tego co ustalono
-4. Zapytać: "Przechodzimy do kroku X, czy chcesz coś zmienić w tym kroku?"
+After finishing each step:
+1. Save the artifact to a file
+2. Update `project.yaml` (step completed, next step in_progress)
+3. Display a summary of what was established
+4. Ask: "Shall we move on to step X, or do you want to change something in this step?"
 
-Użytkownik może w dowolnym momencie wrócić do wcześniejszego kroku. Zapisać zmiany
-i zaktualizować status.
+The user can go back to an earlier step at any time. Save the changes
+and update the status.
 
-## Prowadzenie użytkownika przez krok
+## Guiding the user through a step
 
-Dla każdego kroku:
+For each step:
 
-1. Przeczytać odpowiednią sekcję z `references/steps-guide.md`
-2. Wczytać istniejący artefakt (jeśli kontynuacja)
-3. Przeprowadzić rozmowę zgodnie z procesem opisanym w przewodniku
-4. Po zakończeniu — zapisać artefakt i zaktualizować status
+1. Read the relevant section of `references/steps-guide.md`
+2. Load the existing artifact (if continuing)
+3. Run the conversation following the process described in the guide
+4. When finished — save the artifact and update the status
 
-### Krok 3 — specjalna uwaga
+### Step 3 — special note
 
-User stories to **najsilniejszy krok** w całym frameworku. Zasady:
-- Generować 10-15 rozbudowanych, nietypowych stories
-- Każda story musi mieć pytanie do użytkownika
-- **BEZWZGLĘDNIE czekać na odpowiedź użytkownika** — nie odpowiadać za niego
-- Zapisywać odpowiedzi użytkownika dosłownie
-- Oferować kolejne rundy stories (moduły, role, edge case'y)
+User stories are the **strongest step** in the whole framework. Rules:
+- Generate 10-15 rich, non-obvious stories
+- Every story must have a question for the user
+- **ABSOLUTELY wait for the user's answer** — don't answer on their behalf
+- Save the user's answers verbatim
+- Offer further rounds of stories (modules, roles, edge cases)
 
-### Krok 5 — PRD
+### Step 5 — PRD
 
-Szablon PRD: przeczytać `references/prd-template.md` i użyć jako podstawy artefaktu.
-Checklist walidacyjny: przeczytać `references/checklists.md`.
+PRD template: read `references/prd-template.md` and use it as the artifact's basis.
+Validation checklist: read `references/checklists.md`.
 
-### Krok 6 — SPEC.md
+### Step 6 — SPEC.md
 
-Szablon SPEC.md: przeczytać `references/spec-template.md` i użyć jako podstawy artefaktu.
-Checklist walidacyjny: przeczytać `references/checklists.md`.
+SPEC.md template: read `references/spec-template.md` and use it as the artifact's basis.
+Validation checklist: read `references/checklists.md`.
 
-## Walidacja
+## Validation
 
-Po zakończeniu kroków 5 i 6 uruchomić walidację:
-1. Przeczytać `references/checklists.md`
-2. Przejść przez checklistę punkt po punkcie
-3. Wypisać brakujące elementy
-4. Zaproponować uzupełnienie — ale decyzję podejmuje użytkownik
+After finishing steps 5 and 6, run validation:
+1. Read `references/checklists.md`
+2. Go through the checklist item by item
+3. List the missing elements
+4. Propose filling them in — but the decision belongs to the user
 
-## Najczęstsze błędy 
+## Most common mistakes
 
-1. Brak "out of scope" — model dobudowuje rzeczy
-2. Pominięcie user stories — problemy odkrywane dopiero w produkcji
-3. User stories bez samodzielnych odpowiedzi 
-4. PRD bez acceptance criteria — model sam zgaduje
-5. Za duży task — model gubi się
-6. Brak SPEC.md — model sam wybiera style i narzędzia
-7. SPEC bez Boundaries — model sam podejmuje decyzje 
-8. Review na końcu — model poprawia 80% kodu
-9. Over-engineering na starcie — infrastruktura zamiast produktu
+1. Missing "out of scope" — the model bolts things on
+2. Skipping user stories — problems are discovered only in production
+3. User stories without the user's own answers
+4. PRD without acceptance criteria — the model guesses on its own
+5. Task too large — the model loses its way
+6. No SPEC.md — the model picks its own style and tools
+7. SPEC without Boundaries — the model makes decisions on its own
+8. Review at the end — the model has to fix 80% of the code
+9. Over-engineering at the start — infrastructure instead of product

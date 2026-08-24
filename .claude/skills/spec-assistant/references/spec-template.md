@@ -1,16 +1,16 @@
-# Szablon SPEC.md
+# SPEC.md template
 
-Poniższy szablon skopiować do pliku `06-spec.md` projektu i wypełnić razem z użytkownikiem.
+Copy the template below into the project's `06-spec.md` file and fill it in together with the user.
 
 ---
 
 ```markdown
-# SPEC.md — [Nazwa produktu]
+# SPEC.md — [Product name]
 
 ## Commands
 
-| Operacja | Komenda |
-|----------|---------|
+| Operation | Command |
+|-----------|---------|
 | Install | `...` |
 | Dev | `...` |
 | Build | `...` |
@@ -20,15 +20,15 @@ Poniższy szablon skopiować do pliku `06-spec.md` projektu i wypełnić razem z
 | DB migrate | `...` |
 | DB seed | `...` |
 
-**Wymagania:** Node >= X, Python >= X, ...
+**Requirements:** Node >= X, Python >= X, ...
 
 ## Testing
 
 - **Framework:** ...
-- **Lokalizacja testów:** ...
+- **Test location:** ...
 - **Naming:** ...
-- **Kiedy pisać testy:** ...
-- **Mockowanie:** ...
+- **When to write tests:** ...
+- **Mocking:** ...
 - **CI:** ...
 
 ## Project Structure
@@ -43,19 +43,19 @@ src/
 └── api/          — ...
 ```
 
-**Reguły importów:**
+**Import rules:**
 - ...
 - ...
 - ...
 
 ## Code Style
 
-### Prefer (używaj)
+### Prefer
 - ...
 - ...
 - ...
 
-### Avoid (nie używaj)
+### Avoid
 - ...
 - ...
 - ...
@@ -73,44 +73,44 @@ src/
 
 ### Commit format
 Format: `type(scope): description`
-Typy: feat, fix, refactor, test, docs, chore
-Język: angielski, max 72 znaki
+Types: feat, fix, refactor, test, docs, chore
+Language: English, max 72 characters
 
 ### PR Checklist
-- [ ] Testy przechodzą
-- [ ] Lint przechodzi
-- [ ] Opis: co zmieniono i dlaczego
-- [ ] Nowe zależności — uzasadnione
-- [ ] Brak console.log, brak TODO bez issue
+- [ ] Tests pass
+- [ ] Lint passes
+- [ ] Description: what changed and why
+- [ ] New dependencies — justified
+- [ ] No console.log, no TODO without an issue
 
 ## Boundaries
 
-### Always (rób zawsze, bez pytania)
+### Always (do without asking)
 1. ...
 2. ...
 3. ...
 4. ...
 5. ...
 
-### Ask First (zatrzymaj się i zapytaj)
+### Ask First (stop and ask)
 1. ...
 2. ...
 3. ...
 4. ...
 5. ...
 
-### Never (twarde zakazy)
+### Never (hard prohibitions)
 1. ...
 2. ...
 3. ...
 4. ...
 5. ...
 
-## Weryfikacja zmian od AI
-- Czy zmiany odpowiadają temu, o co prosiłem?
-- Czy testy przechodzą?
-- Czy nie dodano nowych zależności bez pytania?
-- Czy styl kodu jest spójny z resztą projektu?
-- Czy nie ma hardcoded values, sekretów, TODO bez issue?
-- Czy nowe pliki są we właściwym miejscu w strukturze?
+## Verifying AI changes
+- Do the changes match what I asked for?
+- Do the tests pass?
+- Were no new dependencies added without asking?
+- Is the code style consistent with the rest of the project?
+- No hardcoded values, secrets, or TODOs without an issue?
+- Are new files in the right place in the structure?
 ```

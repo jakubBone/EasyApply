@@ -1,40 +1,40 @@
-# Checklisty walidacyjne PAF
+# PAF validation checklists
 
-## Checklist PRD — czy jest "zamknięty"
+## PRD checklist — is it "closed"
 
-- [ ] Czy **opis produktu** (1 zdanie) jasno mówi co to jest i dla kogo?
-- [ ] Czy **out of scope** ma co najmniej 5 pozycji?
-- [ ] Czy każdy **user flow** ma opisane warianty błędów?
-- [ ] Czy każda **user story** ma acceptance criteria?
-- [ ] Czy istnieje **Definition of Done**?
-- [ ] Czy **NFR** pokrywają platformę, performance i bezpieczeństwo?
-- [ ] Czy wszystkie **niepodjęte decyzje** są w sekcji "Otwarte pytania"?
+- [ ] Does the **product description** (1 sentence) clearly say what it is and who it's for?
+- [ ] Does **out of scope** have at least 5 items?
+- [ ] Does every **user flow** describe error variants?
+- [ ] Does every **user story** have acceptance criteria?
+- [ ] Is there a **Definition of Done**?
+- [ ] Do the **NFRs** cover platform, performance and security?
+- [ ] Are all **undecided decisions** in the "Open questions" section?
 
-Jeśli na którekolwiek pytanie odpowiedź brzmi "nie" — model będzie zgadywał.
+If the answer to any of these is "no" — the model will guess.
 
-## Checklist SPEC.md — czy jest "zamknięty"
+## SPEC.md checklist — is it "closed"
 
-- [ ] Czy **Commands** mają dokładne komendy + wersje?
-- [ ] Czy **Testing** mówi kiedy, jak i gdzie pisać testy?
-- [ ] Czy **Structure** ma mapę katalogów + reguły importów?
-- [ ] Czy **Code Style** ma min. 5-10 konkretnych zasad?
-- [ ] Czy **Git Workflow** opisuje commity, branche i PR?
-- [ ] Czy **Boundaries** mają min. 5/5/5 w trzech poziomach?
+- [ ] Do **Commands** have exact commands + versions?
+- [ ] Does **Testing** say when, how and where to write tests?
+- [ ] Does **Structure** have a directory map + import rules?
+- [ ] Does **Code Style** have at least 5-10 concrete rules?
+- [ ] Does **Git Workflow** describe commits, branches and PRs?
+- [ ] Do **Boundaries** have at least 5/5/5 across the three levels?
 
-Jeśli na którekolwiek pytanie odpowiedź brzmi "nie" — model sam wymyśli odpowiedź.
+If the answer to any of these is "no" — the model will invent its own answer.
 
-## Checklist User Stories — czy wystarczająco pokryte
+## User Stories checklist — is coverage sufficient
 
-- [ ] Czy pokryto **happy path** dla głównych funkcji?
-- [ ] Czy są stories dla **edge case'ów** (concurrent access, limity, dziwne dane)?
-- [ ] Czy są stories dla **błędów** (co gdy coś nie zadziała)?
-- [ ] Czy są stories dla **bezpieczeństwa/prywatności** (RODO, usuwanie danych)?
-- [ ] Czy pokryto **różne role** (admin, user, guest)?
-- [ ] Czy użytkownik **sam napisał odpowiedzi** na pytania (a nie model)?
+- [ ] Is the **happy path** covered for the main features?
+- [ ] Are there stories for **edge cases** (concurrent access, limits, odd data)?
+- [ ] Are there stories for **errors** (what happens when something fails)?
+- [ ] Are there stories for **security/privacy** (GDPR, data deletion)?
+- [ ] Are **different roles** covered (admin, user, guest)?
+- [ ] Did the user **write the answers themselves** to the questions (not the model)?
 
-## Checklist Task — czy dobrze podzielony
+## Task checklist — is it well broken down
 
-- [ ] Czy task jest **mały** (jeden prompt, jeden cel)?
-- [ ] Czy jest **testowalny** (wiadomo po czym poznać sukces)?
-- [ ] Czy jest **niezależny** (nie zależy od niedokończonych tasków)?
-- [ ] Czy jest **jednoznaczny** (model nie musi zgadywać)?
+- [ ] Is the task **small** (one prompt, one goal)?
+- [ ] Is it **testable** (it's clear how to tell it succeeded)?
+- [ ] Is it **independent** (doesn't depend on unfinished tasks)?
+- [ ] Is it **unambiguous** (the model doesn't have to guess)?
