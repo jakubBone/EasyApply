@@ -1,0 +1,1 @@
+ALTER TABLE applications DROP COLUMN agency, DROP COLUMN salary_source;
