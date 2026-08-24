@@ -6,8 +6,6 @@ import org.slf4j.LoggerFactory;
 import java.time.format.DateTimeParseException;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -24,7 +22,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
-@Order(Ordered.HIGHEST_PRECEDENCE)
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
