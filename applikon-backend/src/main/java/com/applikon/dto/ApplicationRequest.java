@@ -1,7 +1,6 @@
 package com.applikon.dto;
 
 import com.applikon.entity.ContractType;
-import com.applikon.entity.SalarySource;
 import com.applikon.entity.SalaryType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -16,7 +15,5 @@ public record ApplicationRequest(
         String currency,
         SalaryType salaryType,
         ContractType contractType,
-        SalarySource salarySource,
         String source,
-        String jobDescription,
-        String agency) {}
+        String jobDescription) {}

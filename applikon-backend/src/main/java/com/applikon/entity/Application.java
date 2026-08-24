@@ -49,9 +49,6 @@ public class Application {
     @Enumerated(EnumType.STRING)
     private ContractType contractType;
 
-    @Enumerated(EnumType.STRING)
-    private SalarySource salarySource;
-
     private String source;
 
     @Enumerated(EnumType.STRING)
@@ -60,8 +57,6 @@ public class Application {
 
     @Column(columnDefinition = "TEXT")
     private String jobDescription;
-
-    private String agency;
 
     @ManyToOne
     @JoinColumn(name = "cv_id")
@@ -96,10 +91,8 @@ public class Application {
         app.setCurrency(request.currency());
         app.setSalaryType(request.salaryType());
         app.setContractType(request.contractType());
-        app.setSalarySource(request.salarySource());
         app.setSource(request.source());
         app.setJobDescription(request.jobDescription());
-        app.setAgency(request.agency());
         return app;
     }
 
@@ -113,9 +106,7 @@ public class Application {
         this.currency = request.currency();
         this.salaryType = request.salaryType();
         this.contractType = request.contractType();
-        this.salarySource = request.salarySource();
         this.source = request.source();
         this.jobDescription = request.jobDescription();
-        this.agency = request.agency();
     }
 }

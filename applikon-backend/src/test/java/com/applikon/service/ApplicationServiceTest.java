@@ -7,7 +7,6 @@ import com.applikon.entity.Application;
 import com.applikon.entity.ApplicationStatus;
 import com.applikon.entity.ContractType;
 import com.applikon.entity.RejectionReason;
-import com.applikon.entity.SalarySource;
 import com.applikon.entity.SalaryType;
 import com.applikon.entity.User;
 import com.applikon.repository.ApplicationRepository;
@@ -105,7 +104,6 @@ class ApplicationServiceTest {
         app.setCurrency("PLN");
         app.setSalaryType(SalaryType.GROSS);
         app.setContractType(ContractType.B2B);
-        app.setSalarySource(SalarySource.FROM_POSTING);
         app.setStatus(ApplicationStatus.SENT);
         return app;
     }
@@ -121,10 +119,8 @@ class ApplicationServiceTest {
                 "PLN",
                 SalaryType.GROSS,
                 ContractType.B2B,
-                SalarySource.FROM_POSTING,
                 "LinkedIn",
-                "Java + Spring",
-                "Agency"
+                "Java + Spring"
         );
     }
 
@@ -224,10 +220,8 @@ class ApplicationServiceTest {
                     "EUR",
                     SalaryType.NET,
                     ContractType.EMPLOYMENT,
-                    SalarySource.MY_PROPOSAL,
                     "Referral",
-                    "Updated desc",
-                    "New agency"
+                    "Updated desc"
             );
 
             ApplicationResponse response = applicationService.update(10L, updateRequest, TEST_USER_ID);
