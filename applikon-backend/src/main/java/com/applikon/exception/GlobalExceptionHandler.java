@@ -41,6 +41,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpHeaders headers,
             HttpStatusCode status,
             WebRequest request) {
+        log.warn("Validation failed: {}", ex.getMessage());
         Map<String, String> errors = ex.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.toMap(
                         FieldError::getField,
@@ -64,6 +65,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(DateTimeParseException.class)
     public ProblemDetail handleDateTimeParse(DateTimeParseException ex) {
+        log.warn("Invalid date format: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
                 "Invalid date format. Expected ISO-8601, e.g. 2026-12-31T23:59:59");
         problem.setTitle(messageSource.getMessage("error.request.title", null, LocaleContextHolder.getLocale()));
@@ -72,6 +74,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgumentException(IllegalArgumentException ex) {
+        log.warn("Illegal argument: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setTitle(messageSource.getMessage("error.request.title", null, LocaleContextHolder.getLocale()));
         return problem;
