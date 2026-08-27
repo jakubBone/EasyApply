@@ -26,15 +26,15 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     boolean existsByIdAndUserId(Long id, UUID userId);
 
     @Query("SELECT new com.applikon.dto.ApplicationStats(" +
-            "SUM(CASE WHEN a.status = :odmowa THEN 1 ELSE 0 END), " +
-            "SUM(CASE WHEN a.status = :odmowa AND a.rejectionReason = :ghosting THEN 1 ELSE 0 END), " +
-            "SUM(CASE WHEN a.status = :oferta THEN 1 ELSE 0 END)) " +
+            "SUM(CASE WHEN a.status = :rejected THEN 1 ELSE 0 END), " +
+            "SUM(CASE WHEN a.status = :rejected AND a.rejectionReason = :ghostingReason THEN 1 ELSE 0 END), " +
+            "SUM(CASE WHEN a.status = :offer THEN 1 ELSE 0 END)) " +
             "FROM Application a WHERE a.user.id = :userId")
     ApplicationStats getApplicationStats(
             @Param("userId") UUID userId,
-            @Param("odmowa") ApplicationStatus odmowa,
-            @Param("oferta") ApplicationStatus oferta,
-            @Param("ghosting") RejectionReason ghosting);
+            @Param("rejected") ApplicationStatus rejected,
+            @Param("offer") ApplicationStatus offer,
+            @Param("ghostingReason") RejectionReason ghostingReason);
 
     @Modifying
     @Query("UPDATE Application a SET a.cv = null WHERE a.cv.id = :cvId")
