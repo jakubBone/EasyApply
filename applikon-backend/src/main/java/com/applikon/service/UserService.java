@@ -164,38 +164,7 @@ public class UserService {
     // Created automatically for every new user on first login.
     // =========================================================================
     private void createDemoApplication(User user) {
-        Application demo = new Application();
-        demo.setUser(user);
-        demo.setCompany("Google");
-        demo.setPosition("Junior Software Engineer");
-        demo.setSalaryMin(7000);
-        demo.setSalaryMax(8000);
-        demo.setCurrency("PLN");
-        demo.setSalaryType(SalaryType.NET);
-        demo.setContractType(ContractType.EMPLOYMENT);
-        demo.setSource("JustJoinIT");
-        demo.setLink("https://justjoin.it/");
-        demo.setStatus(ApplicationStatus.SENT);
-        demo.setJobDescription("""
-                🚀 Junior Software Developer (Java)
-
-                We are looking for a passionate developer to join our team!
-
-                Requirements:
-                • Java 11+
-                • Spring Boot basics
-                • Git, SQL
-                • Willingness to learn
-
-                We offer:
-                • Remote or hybrid work
-                • Mentoring from senior developers
-                • Training budget
-                • Equipment of your choice
-
-                This is a sample application — feel free to delete or modify it!
-                """);
-
+        Application demo = Application.demoFor(user);
         applicationRepository.save(demo);
 
         noteRepository.save(new Note(

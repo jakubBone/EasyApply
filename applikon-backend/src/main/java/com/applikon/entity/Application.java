@@ -77,7 +77,7 @@ public class Application {
 
     private String rejectionDetails;
 
-    protected Application() {}
+    public Application() {}
 
     public static Application from(ApplicationRequest request, User user) {
         Application app = new Application();
@@ -93,6 +93,41 @@ public class Application {
         app.setContractType(request.contractType());
         app.setSource(request.source());
         app.setJobDescription(request.jobDescription());
+        return app;
+    }
+
+    public static Application demoFor(User user) {
+        Application app = new Application();
+        app.setUser(user);
+        app.setCompany("Google");
+        app.setPosition("Junior Software Engineer");
+        app.setSalaryMin(7000);
+        app.setSalaryMax(8000);
+        app.setCurrency("PLN");
+        app.setSalaryType(SalaryType.NET);
+        app.setContractType(ContractType.EMPLOYMENT);
+        app.setSource("JustJoinIT");
+        app.setLink("https://justjoin.it/");
+        app.setStatus(ApplicationStatus.SENT);
+        app.setJobDescription("""
+                🚀 Junior Software Developer (Java)
+
+                We are looking for a passionate developer to join our team!
+
+                Requirements:
+                • Java 11+
+                • Spring Boot basics
+                • Git, SQL
+                • Willingness to learn
+
+                We offer:
+                • Remote or hybrid work
+                • Mentoring from senior developers
+                • Training budget
+                • Equipment of your choice
+
+                This is a sample application — feel free to delete or modify it!
+                """);
         return app;
     }
 
