@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "applications")
-@EntityListeners(AuditingEntityListener.class)
+@EntityListeners(AuditingEntityListener.class) // enable automatic @CreateData/@LasModifiedDate
 public class Application {
 
     @Id
@@ -77,7 +77,7 @@ public class Application {
 
     private String rejectionDetails;
 
-    public Application() {}
+    protected Application() {}
 
     public static Application from(ApplicationRequest request, User user) {
         Application app = new Application();
