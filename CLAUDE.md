@@ -82,6 +82,6 @@ type, so the name was misleading. No behavior change.
 | Original vision / problem / MVP scope | `spec/v1/1.0.0/01-vision/brief.md`                           |
 | Plan vs reality (per release) | `as-built.md` in each release folder, e.g. `spec/v1/1.0.0/as-built.md`, `spec/v2/2.0.0/as-built.md` |
 | Spec index | `spec/README.md`                                       |
-| Current version era (planning + build) | `spec/v2/` — shipped releases in `2.0.0/`, `2.1.0/`; current work in `2.2.0/` (topic `04-question-kind/`) |
+| Current version era (planning + build) | `spec/v2/` — shipped releases in `2.0.0/`, `2.1.0/`; current work in `2.2.0/` (topic `05-company-pitch/`) |
 | Spec-driven process + document templates | `spec/PROCESS.md`                                       |
 | Deploy instructions | `spec/deployment/deployment-hetzner.md` (step-by-step) |
