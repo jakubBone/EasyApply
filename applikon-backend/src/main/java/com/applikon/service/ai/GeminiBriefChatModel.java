@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 // Gemini adapter behind the BriefChatModel port (ADR-001): one Google-Search-grounded request
 // asks for every field in every active locale. Only the company name and the job-ad link ever
 // enter the prompt. Anything malformed or incomplete in the reply throws, which the worker turns
-// into a terminal FAILED — a partial brief is never stored.
+// into a terminal FAILED: a partial brief is never stored.
 // Inactive since ADR-005 (brief.provider switch): Gemini grounding went paid-tier-only for new
 // users, so Groq compound took over. Kept as the documented return path.
 @Component
@@ -103,7 +103,7 @@ public class GeminiBriefChatModel implements BriefChatModel {
         return new GeneratedBrief(fields);
     }
 
-    // Models often wrap JSON in a ```json fence or a sentence — take the outermost {...}
+    // Models often wrap JSON in a ```json fence or a sentence, so take the outermost {...}
     private String extractJsonObject(String answer) {
         int start = answer.indexOf('{');
         int end = answer.lastIndexOf('}');

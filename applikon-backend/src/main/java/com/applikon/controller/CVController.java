@@ -38,7 +38,7 @@ public class CVController {
         this.messageSource = messageSource;
     }
 
-    // Disabled for now — CV files contain personal data (photo, address, phone); handling them properly requires RODO-compliant storage. Can be added later.
+    // Disabled for now. CV files contain personal data (photo, address, phone); handling them properly requires RODO-compliant storage. Can be added later.
     @PostMapping("/upload")
     public ResponseEntity<CVResponse> uploadCV(
             @AuthenticationPrincipal AuthenticatedUser user,

@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// Groq adapter behind the BriefChatModel port - the active brief provider (ADR-005). Groq's
+// Groq adapter behind the BriefChatModel port, the active brief provider (ADR-005). Groq's
 // compound system runs web search server side, replacing Gemini grounding after Google closed
 // it to free-tier users (the fallback ADR-001 designated). Deliberately self-contained: prompt
 // and parsing mirror GeminiBriefChatModel; consolidate only if a third provider ever appears.
@@ -102,7 +102,7 @@ public class GroqBriefChatModel implements BriefChatModel {
         return new GeneratedBrief(fields);
     }
 
-    // Models often wrap JSON in a ```json fence or a sentence — take the outermost {...}
+    // Models often wrap JSON in a ```json fence or a sentence, so take the outermost {...}
     private String extractJsonObject(String answer) {
         int start = answer.indexOf('{');
         int end = answer.lastIndexOf('}');

@@ -18,17 +18,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Manages screening answers in two scopes:
- * <ul>
- *   <li>the user's global "My answers" template (application_id IS NULL), and</li>
- *   <li>a per-application "About the company" set (application_id set).</li>
- * </ul>
- *
- * Saving is a replace-all upsert within a scope: the existing set for that scope is removed
- * and the incoming set re-inserted. At this scale (a handful of rows) this is the simplest
- * correct strategy for debounced autosave, and it never touches the other scope's rows.
- */
+// Screening answers live in two scopes: the user's global "My answers" template
+// (application_id IS NULL) and a per-application "About the company" set.
+// Saving is a replace-all upsert inside one scope: the existing rows go, the incoming set
+// lands. At a handful of rows that is the simplest thing that stays correct under debounced
+// autosave, where a diff would have to reconcile reorders and deletes, and it cannot disturb
+// the other scope's rows.
 @Service
 public class ScreeningAnswerService {
 

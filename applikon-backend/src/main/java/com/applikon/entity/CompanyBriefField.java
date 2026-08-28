@@ -8,7 +8,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 // One brief field in one language (row per field × language), so a new locale or field is just a new
 // row, never a migration. text = null means "not enough public info", shown as an explicit marker
-// rather than a guess. edited = true means the user overwrote the generated value — which marks it as
+// rather than a guess. edited = true means the user overwrote the generated value, which marks it as
 // the user's own data for the GDPR export.
 @Getter
 @Setter

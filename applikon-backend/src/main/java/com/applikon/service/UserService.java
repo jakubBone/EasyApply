@@ -53,14 +53,8 @@ public class UserService {
         this.messageSource = messageSource;
     }
 
-    /**
-     * Upserts a user based on their google_id.
-     *
-     * Logic:
-     * - Look up user by google_id
-     * - If found: update email and name (may have changed in Google)
-     * - If not found: create a new user and add a demo application
-     */
+    // There is no sign-up step: the first Google login is the registration. Profile fields are
+    // refreshed on every login because Google is authoritative for them, not this database.
     @Transactional
     public User findOrCreateUser(String googleId, String email, String name) {
         return userRepository.findByGoogleId(googleId)
@@ -126,7 +120,9 @@ public class UserService {
     public void deleteAccount(UUID userId) {
         User user = getById(userId);
 
-        // 1. Delete CV files from disk
+        // Order is dictated by the foreign keys: children before parents, user last. Files on
+        // disk go first because they are the only part no transaction rollback could undo, and
+        // a leftover file is worse than a leftover row for a deletion the GDPR requires.
         List<CV> cvs = cvRepository.findByUserId(userId);
         for (CV cv : cvs) {
             if (cv.getType() == CVType.FILE && cv.getFilePath() != null) {
@@ -139,30 +135,21 @@ public class UserService {
             }
         }
 
-        // 2. Delete notes (before applications, to avoid FK constraint issues)
         List<Application> applications = applicationRepository.findByUserId(userId);
         for (Application app : applications) {
             noteRepository.deleteByApplicationId(app.getId());
         }
 
-        // 3. Delete applications
         applicationRepository.deleteAll(applications);
 
-        // 4. Delete CVs
         cvRepository.deleteAll(cvs);
 
-        // 5. Delete screening answers ("My answers")
         screeningAnswerRepository.deleteByUserId(userId);
 
-        // 6. Delete user
         userRepository.delete(user);
         log.info("User account deleted: {}", userId);
     }
 
-    // =========================================================================
-    // DEMO APPLICATION
-    // Created automatically for every new user on first login.
-    // =========================================================================
     private void createDemoApplication(User user) {
         Application demo = Application.demoFor(user);
         applicationRepository.save(demo);

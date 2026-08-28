@@ -10,7 +10,7 @@ import java.util.UUID;
 @Repository
 public interface ScreeningAnswerRepository extends JpaRepository<ScreeningAnswer, Long> {
 
-    // "All rows" variants — used by the GDPR export and account deletion, which cover
+    // "All rows" variants, used by the GDPR export and account deletion, which cover
     // both global and per-application answers.
     List<ScreeningAnswer> findByUserIdOrderBySortOrder(UUID userId);
 

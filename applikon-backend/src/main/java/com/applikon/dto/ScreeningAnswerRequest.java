@@ -2,10 +2,8 @@ package com.applikon.dto;
 
 import jakarta.validation.constraints.Size;
 
-/**
- * A single answer in a "My answers" save request. Server assigns ordering by position,
- * so no sortOrder is accepted from the client.
- */
+// One answer in a save request. Order comes from the position in the list, not a client-sent
+// sortOrder, so a reordered list cannot arrive with stale or colliding indexes.
 public record ScreeningAnswerRequest(
         String questionKey,
         String label,
