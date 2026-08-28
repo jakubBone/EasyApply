@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Profile;
 
 // Replaces Spring AI's auto-configured Gemini client (it is @ConditionalOnMissingBean) for two
 // things it cannot do: a hard per-request HTTP timeout (the SDK default is unbounded, which would
-// pin a task-executor thread on a hung call), and tolerating a blank key at startup — a missing
+// pin a task-executor thread on a hung call), and tolerating a blank key at startup: a missing
 // or revoked key then fails the single generation call (terminal FAILED brief), never boot.
 // Timeout and retry live in client configuration only, never annotation-driven AOP (ADR-004).
 // Gated on the same switch as GeminiBriefChatModel (ADR-005): while Groq is the active provider
@@ -28,7 +28,7 @@ public class GeminiClientConfig {
 
     @Bean
     public Client googleGenAiClient(@Value("${spring.ai.google.genai.api-key:}") String apiKey) {
-        // Length and 4-char format prefix only (AIza/AQ.A) - the key itself must never reach the logs
+        // Length and 4-char format prefix only (AIza/AQ.A): the key itself must never reach the logs
         log.info("Gemini client: api key {} ({} chars, prefix '{}'), request timeout {} ms",
                 apiKey.isBlank() ? "MISSING" : "present", apiKey.length(),
                 apiKey.substring(0, Math.min(4, apiKey.length())), REQUEST_TIMEOUT_MS);

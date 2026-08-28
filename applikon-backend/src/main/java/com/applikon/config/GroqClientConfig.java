@@ -36,7 +36,7 @@ public class GroqClientConfig {
     @Bean
     public OpenAiApi groqOpenAiApi(@Value("${spring.ai.openai.base-url}") String baseUrl,
                                    @Value("${spring.ai.openai.api-key:}") String apiKey) {
-        // Length and 4-char format prefix only (gsk_) - the key itself must never reach the logs
+        // Length and 4-char format prefix only (gsk_): the key itself must never reach the logs
         log.info("Groq client: api key {} ({} chars, prefix '{}'), connect timeout {} ms, request timeout {} ms",
                 apiKey.isBlank() ? "MISSING" : "present", apiKey.length(),
                 apiKey.substring(0, Math.min(4, apiKey.length())), CONNECT_TIMEOUT_MS, REQUEST_TIMEOUT_MS);
@@ -46,7 +46,7 @@ public class GroqClientConfig {
         requestFactory.setReadTimeout(REQUEST_TIMEOUT_MS);
 
         // SimpleApiKey rather than the String overload: it carries a blank value unchallenged,
-        // which is the whole point - the failure must happen on the call, not at startup
+        // which is the whole point: the failure must happen on the call, not at startup
         return OpenAiApi.builder()
                 .baseUrl(baseUrl)
                 .apiKey(new SimpleApiKey(apiKey))

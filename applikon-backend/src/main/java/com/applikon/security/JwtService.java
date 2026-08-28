@@ -9,16 +9,9 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
-/**
- * Service responsible for generating and validating JWT tokens.
- *
- * Uses RS256 (asymmetric):
- * - private key (RSAKey) → signs tokens (only the backend holds this)
- * - public key → verifies tokens (can be shared with clients if needed)
- *
- * JwtEncoder = Spring encoder (produces tokens)
- * JwtDecoder = Spring decoder (verifies tokens) — configured in SecurityConfig
- */
+// Issues the two halves of a session. RS256 rather than HS256 so the verifying key can be
+// published without letting anyone mint tokens, which is what makes splitting this into a
+// separate service worthwhile later. Verification itself is Spring's, wired in SecurityConfig.
 @Service
 public class JwtService {
 
@@ -31,16 +24,9 @@ public class JwtService {
         this.jwtEncoder = jwtEncoder;
     }
 
-    /**
-     * Generates an access token for the authenticated user.
-     *
-     * Token payload (claims):
-     * - sub   = user UUID (subject — who this is)
-     * - email, name = profile data
-     * - iss   = issuer (who issued the token)
-     * - iat   = issued at (when it was issued)
-     * - exp   = expiry (when it expires)
-     */
+    // Email and name ride along so the UI can render a header without a round trip. They are a
+    // snapshot: a profile change only shows up after the next token, which the 15-minute expiry
+    // keeps short. Nothing here is a permission, so a stale claim cannot widen access.
     public String generateAccessToken(User user) {
         Instant now = Instant.now();
 
@@ -56,11 +42,9 @@ public class JwtService {
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
-    /**
-     * Generates a refresh token — a random UUID.
-     * The token is opaque and carries no data.
-     * Stored in an httpOnly cookie on the client side.
-     */
+    // Opaque on purpose. A signed refresh token would stay valid until it expired; this one is
+    // only as good as the hash stored on the user row, so logout and account deletion revoke it
+    // immediately.
     public String generateRefreshToken() {
         return UUID.randomUUID().toString();
     }

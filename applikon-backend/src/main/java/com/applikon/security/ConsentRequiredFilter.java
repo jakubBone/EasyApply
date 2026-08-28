@@ -15,23 +15,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Map;
 
-/**
- * Guard filter: Ensures user has accepted the privacy policy.
- *
- * Runs after JWT authentication — user is already authenticated.
- * Checks privacyPolicyAcceptedAt field on every request.
- *
- * Whitelisted endpoints (no check):
- * - GET /api/auth/me
- * - POST /api/auth/consent
- * - POST /api/auth/logout
- * - POST /api/auth/refresh
- * - DELETE /api/auth/me
- * - /actuator/**
- * - /oauth2/**, /login/**
- *
- * For all other requests: if user.privacyPolicyAcceptedAt == null → 403 CONSENT_REQUIRED
- */
+// Blocks every request from a user who has not accepted the privacy policy, answering 403
+// CONSENT_REQUIRED so the frontend can show the consent gate. Enforced here rather than per
+// controller: consent is a precondition for touching any data at all, and one forgotten
+// annotation on a new endpoint would silently be a GDPR hole. The whitelist below is what a
+// not-yet-consenting user still needs: read own profile, consent, log out, refresh, delete.
 @Component
 public class ConsentRequiredFilter extends OncePerRequestFilter {
 
@@ -49,7 +37,6 @@ public class ConsentRequiredFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
 
-        // Skip for whitelisted paths
         if (isWhitelisted(request)) {
             filterChain.doFilter(request, response);
             return;
@@ -57,7 +44,8 @@ public class ConsentRequiredFilter extends OncePerRequestFilter {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // If not authenticated, skip (will be caught by @AuthenticationPrincipal later)
+        // Rejecting anonymous callers is not this filter's job. Either the chain's own rules
+        // already did it, or the endpoint is public on purpose.
         if (authentication == null || !authentication.isAuthenticated()
                 || !(authentication.getPrincipal() instanceof AuthenticatedUser)) {
             filterChain.doFilter(request, response);
@@ -72,7 +60,6 @@ public class ConsentRequiredFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Check consent
         if (user.getPrivacyPolicyAcceptedAt() == null) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/json");

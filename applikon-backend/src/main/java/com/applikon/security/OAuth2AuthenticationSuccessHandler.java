@@ -16,22 +16,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
-/**
- * Handler invoked after a successful Google login.
- *
- * Responsibilities:
- * 1. Load the User from the database (by google_id)
- * 2. Generate an access token (JWT, 15 min)
- * 3. Generate a refresh token (opaque UUID)
- * 4. Persist the refresh token in the database (attached to the user)
- * 5. Set the refresh token as an httpOnly cookie
- * 6. Redirect the frontend to /auth/callback#token=<JWT>
- *
- * Why redirect with the token in the URL?
- * OAuth2 is a redirect-based flow. Spring cannot "return" JSON to the frontend
- * after OAuth2 — it must redirect. The frontend reads the token from the URL,
- * removes it from the address bar, and keeps it in memory.
- */
+// The hand-off from Google's redirect flow to the app's own tokens. OAuth2 ends in a browser
+// redirect, so there is no response body to put a token in; it travels in the URL fragment,
+// which browsers never send to a server, and the callback page strips it from the address bar.
 @Component
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
@@ -64,26 +51,25 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         User user = userService.findOrCreateUser(googleId, email, name);
 
-        // Generate tokens
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken();
 
-        // Persist the refresh token
         LocalDateTime expiry = LocalDateTime.now().plusDays(refreshTokenExpiryDays);
         userService.saveRefreshToken(user, refreshToken, expiry);
 
-        // Set refresh token as an httpOnly cookie
+        // The long-lived half of the pair never touches JavaScript. httpOnly keeps XSS from
+        // reading it, the narrow path keeps it off every other request, and SameSite=Strict
+        // means a foreign site cannot trigger a refresh on the user's behalf.
         Cookie refreshCookie = new Cookie("refresh_token", refreshToken);
-        refreshCookie.setHttpOnly(true);    // not accessible to JavaScript (XSS protection)
-        refreshCookie.setSecure(true);      // HTTPS only
-        refreshCookie.setPath("/api/auth"); // sent only to /api/auth
-        refreshCookie.setAttribute("SameSite", "Strict"); // CSRF protection: only from same site
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true);
+        refreshCookie.setPath("/api/auth");
+        refreshCookie.setAttribute("SameSite", "Strict");
         refreshCookie.setMaxAge(refreshTokenExpiryDays * 24 * 60 * 60);
         response.addCookie(refreshCookie);
 
         log.info("User {} logged in via Google", user.getId());
 
-        // Token in fragment — not sent to the server in subsequent requests (stays client-side only)
         String redirectUrl = frontendUrl + "/auth/callback#token=" + accessToken;
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }

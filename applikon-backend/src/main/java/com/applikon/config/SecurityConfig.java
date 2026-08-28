@@ -30,17 +30,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-/**
- * Central Spring Security configuration.
- *
- * Responsible for:
- * 1. Generating the RSA key pair for signing JWTs (RS256)
- * 2. Configuring JwtEncoder and JwtDecoder (used by JwtService and the Security filter)
- * 3. Endpoint access rules (who can and cannot access)
- * 4. OAuth2 Login configuration (Google)
- * 5. OAuth2 Resource Server configuration (JWT validation on every request)
- * 6. CORS (Security must handle CORS before checking auth)
- */
+// The single place every security decision is made: RS256 signing keys, endpoint access
+// rules, Google login, and the JWT check on each request. Sessions stay out of it, so the
+// only thing identifying a caller is the bearer token.
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -58,13 +50,7 @@ public class SecurityConfig {
         this.jwtAuthenticationConverter = jwtAuthenticationConverter;
     }
 
-    // =====================================================================
-    // RSA KEY PAIR
-    // Generated at application startup. In production this can be loaded
-    // from an env variable (PEM), but for simplicity we generate in-memory.
-    // Consequence: after a server restart old JWTs become invalid
-    // (acceptable — the access token lives only 15 minutes anyway).
-    // =====================================================================
+    // A fresh key pair per boot, held in memory only
     @Bean
     public RSAKey rsaKey() throws Exception {
         return new RSAKeyGenerator(2048)
@@ -72,42 +58,25 @@ public class SecurityConfig {
                 .generate();
     }
 
-    /**
-     * JWKSource is the "key vault" — Nimbus (the underlying JWT library)
-     * asks it: "which key should I use to sign/verify this token?"
-     */
     @Bean
     public JWKSource<SecurityContext> jwkSource(RSAKey rsaKey) {
         JWKSet jwkSet = new JWKSet(rsaKey);
         return new ImmutableJWKSet<>(jwkSet);
     }
 
-    /**
-     * JwtEncoder — creates (signs) JWT tokens.
-     * Used by JwtService.generateAccessToken().
-     */
     @Bean
     public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
         return new NimbusJwtEncoder(jwkSource);
     }
 
-    /**
-     * JwtDecoder — verifies JWT tokens on every API request.
-     * Spring Security automatically calls it for every request
-     * with the "Authorization: Bearer <token>" header.
-     */
     @Bean
     public JwtDecoder jwtDecoder(RSAKey rsaKey) throws Exception {
         return NimbusJwtDecoder.withPublicKey(rsaKey.toRSAPublicKey()).build();
     }
 
-    // =====================================================================
-    // SECURITY FILTER CHAIN
-    // Defines ALL security rules for the application.
-    // Skipped in the "test" profile — TestSecurityConfig provides its own
-    // chain with permitAll(). The other beans (RSAKey, JwtEncoder, JwtDecoder)
-    // remain active in all profiles because JwtService depends on them.
-    // =====================================================================
+    // Only the chain is profiled out; TestSecurityConfig supplies a permitAll() one. The key
+    // beans above stay active in every profile, because JwtService signs tokens even when
+    // nothing is guarding the endpoints.
     @Bean
     @Profile("!test")
     public SecurityFilterChain securityFilterChain(
@@ -117,12 +86,13 @@ public class SecurityConfig {
             ConsentRequiredFilter consentRequiredFilter,
             AdminKeyFilter adminKeyFilter) throws Exception {
         return http
-                // CSRF disabled — we use JWT (stateless), not session/form cookies
+                // Nothing to forge: the credential is a bearer token the client attaches by
+                // hand, not a cookie the browser attaches on its own.
                 .csrf(AbstractHttpConfigurer::disable)
 
-                // HTTP security headers
                 .headers(headers -> headers
-                        // 'unsafe-inline' required by Swagger UI (inline scripts/styles)
+                        // Swagger UI ships inline scripts and styles, so 'unsafe-inline' is the
+                        // price of serving the docs from this app.
                         .contentSecurityPolicy(csp -> csp.policyDirectives(
                                 "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"))
                         .frameOptions(frame -> frame.deny())
@@ -131,55 +101,50 @@ public class SecurityConfig {
                                 .maxAgeInSeconds(31536000))
                 )
 
-                // CORS — Spring Security must know CORS rules before checking authentication
+                // Registered on the security chain rather than the MVC layer: a preflight
+                // OPTIONS carries no token and has to pass before authentication runs.
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                // Stateless sessions — no HttpSession, JWT only
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // Endpoint access rules
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
+                        // Reached precisely when the access token has expired, so it cannot
+                        // require one. The httpOnly refresh cookie is the credential instead.
                         .requestMatchers("/api/auth/refresh").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
-                        // Admin endpoint — secured by AdminKeyFilter, not JWT
+                        // Open to this chain, not to callers: AdminKeyFilter below rejects
+                        // anything without a valid X-Admin-Key header.
                         .requestMatchers("/api/admin/**").permitAll()
-                        // Swagger UI
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
-                        // Everything else requires JWT
                         .anyRequest().authenticated()
                 )
 
-                // OAuth2 Login — handles Google redirect
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService))
                         .successHandler(oAuth2AuthenticationSuccessHandler)
                 )
 
-                // OAuth2 Resource Server — validates JWT on every /api/** request
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .decoder(jwtDecoder)
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter)))
 
-                // Add ConsentRequiredFilter after JWT authentication
+                // Order matters both ways. The consent check reads an authenticated principal,
+                // so it runs after the JWT filter; the admin key is the only credential on
+                // /api/admin/**, so its filter runs before.
                 .addFilterAfter(consentRequiredFilter,
                         org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
-
-                // AdminKeyFilter runs before JWT auth — checks X-Admin-Key header
                 .addFilterBefore(adminKeyFilter,
                         org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
 
                 .build();
     }
 
-    // =====================================================================
-    // CORS CONFIGURATION
-    // Spring Security must handle CORS at the filter level (before auth checks)
-    // =====================================================================
+    // allowCredentials is on for the refresh cookie, which rules out a wildcard origin, so the
+    // allowed list comes from configuration and differs per environment.
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();

@@ -44,10 +44,6 @@ public class AuthController {
         this.userExportService = userExportService;
     }
 
-    /**
-     * Returns the authenticated user's profile.
-     * @AuthenticationPrincipal injects the AuthenticatedUser built by JwtAuthenticationConverter.
-     */
     @GetMapping("/me")
     public ResponseEntity<UserResponse> me(@AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
         User user = userService.getById(authenticatedUser.id());
@@ -100,7 +96,6 @@ public class AuthController {
             HttpServletResponse response) {
         userService.deleteAccount(authenticatedUser.id());
 
-        // Clear the cookie on the client side
         Cookie cookie = new Cookie("refresh_token", "");
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
@@ -111,9 +106,6 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Logs out the user: clears the refresh token in the database and removes the cookie.
-     */
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
@@ -122,7 +114,6 @@ public class AuthController {
         User user = userService.getById(authenticatedUser.id());
         userService.clearRefreshToken(user);
 
-        // Clear the cookie on the client side (max-age=0)
         Cookie cookie = new Cookie("refresh_token", "");
         cookie.setHttpOnly(true);
         cookie.setSecure(true);

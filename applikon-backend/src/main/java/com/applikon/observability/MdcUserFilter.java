@@ -13,16 +13,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-/**
- * Adds the authenticated userId to the MDC (Mapped Diagnostic Context) for the duration of the request.
- *
- * MDC is an SLF4J/Logback mechanism that attaches contextual data (e.g. userId) to every log line
- * without passing it explicitly through every method call.
- * MDC values are printed automatically in each log line when the Logback pattern contains %X{userId}.
- *
- * Must run AFTER Spring Security so that SecurityContextHolder is already populated —
- * Spring Boot auto-registers @Component filters after the Spring Security chain by default.
- */
+// Stamps the caller's id onto every log line of a request (Logback pattern %X{userId}), so a
+// report can be traced without threading a userId through every method signature. Depends on
+// running after the security chain, which is where Boot registers @Component filters anyway.
 @Component
 public class MdcUserFilter extends OncePerRequestFilter {
 
@@ -41,9 +34,8 @@ public class MdcUserFilter extends OncePerRequestFilter {
             }
             filterChain.doFilter(request, response);
         } finally {
-            // ALWAYS clear MDC after the request completes.
-            // Thread pools reuse threads — without clearing, the next request
-            // on the same thread would see the previous user's userId.
+            // The clear has to happen even on an exception. Tomcat reuses request threads, so
+            // a leaked key would label the next user's logs with the previous user's id.
             MDC.remove(MDC_KEY);
         }
     }
