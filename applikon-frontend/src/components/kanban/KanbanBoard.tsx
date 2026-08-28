@@ -101,12 +101,9 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
     return applications.find(app => app.id.toString() === id)
   }
 
-  const getColumnByStatus = (status: string): string => {
-    if (status === 'OFFER' || status === 'REJECTED') return 'FINISHED'
-    if (status === 'REJECTED') return 'FINISHED'
-    if (status === 'IN_PROGRESS' || status === 'IN_PROGRESS') return 'IN_PROGRESS'
-    return status
-  }
+  // Only the two closing statuses share a column; every other status is its own.
+  const getColumnByStatus = (status: string): string =>
+    status === 'OFFER' || status === 'REJECTED' ? 'FINISHED' : status
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string)
