@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-// Pure unit tests of the adapter's prompt/parse logic — the ChatModel is stubbed, no network.
+// Pure unit tests of the adapter's prompt and parse logic; the ChatModel is stubbed, no network.
 class GeminiBriefChatModelTest {
 
     private static final String FULL_JSON = """

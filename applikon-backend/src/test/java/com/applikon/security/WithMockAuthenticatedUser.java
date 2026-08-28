@@ -7,18 +7,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Test annotation — injects an AuthenticatedUser into the SecurityContext before each test.
- *
- * How @WithSecurityContext works in Spring Security Test:
- *   Before the test method runs, JUnit triggers WithSecurityContextTestExecutionListener.
- *   The listener calls WithMockAuthenticatedUserSecurityContextFactory, which builds a SecurityContext
- *   with our AuthenticatedUser as the principal. This allows controllers to read the correct object
- *   via @AuthenticationPrincipal AuthenticatedUser user.
- *
- * The fixed userId "11111111-..." must match the UUID of the user created in @BeforeEach
- * in tests that perform user-scoped operations (e.g. creating applications).
- */
+// Authenticates a test as a given user without minting a real JWT.
+// The default userId has to match the user a @BeforeEach seeds, or user-scoped endpoints will
+// look up a principal that owns nothing and the assertions will blame the wrong thing.
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @WithSecurityContext(factory = WithMockAuthenticatedUserSecurityContextFactory.class)

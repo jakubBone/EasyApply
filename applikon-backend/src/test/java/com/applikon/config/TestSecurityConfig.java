@@ -8,22 +8,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
-/**
- * Test security configuration — active only for the "test" profile.
- *
- * Problem to solve:
- *   The main SecurityConfig requires JWT for EVERY request (.anyRequest().authenticated()).
- *   Controller tests do not generate real JWT tokens — they would all receive 401.
- *
- * Solution:
- *   Register a second SecurityFilterChain with @Order(1) (higher priority than the default 100).
- *   Spring Security selects the FIRST matching filter chain — this one with Order(1) matches
- *   all requests and permits them. The main chain (Order 100) is not used in tests.
- *
- * Note: User authentication in controllers (@AuthenticationPrincipal) is handled separately
- *   by the @WithMockAuthenticatedUser annotation, which injects an AuthenticatedUser object
- *   into the SecurityContext before each test.
- */
+// Opens every endpoint under the "test" profile, so controller tests can assert on behaviour
+// instead of on the 401 they would all get without a signed token. Ordered ahead of the real
+// chain, which Spring then never reaches, because the first match wins. Identity still comes
+// from @WithMockAuthenticatedUser, so tests stay user-scoped; only the gate is gone.
+// The cost of the shortcut: no test exercises the production access rules.
 @Configuration
 @Profile("test")
 public class TestSecurityConfig {

@@ -182,7 +182,7 @@ class CVServiceTest {
 
         @Test
         void uploadCV_pathTraversalFilename_doesNotEscape() throws IOException {
-            // CR-1: original filename contains "../" — the stored path must stay inside uploadDir
+            // CR-1: original filename contains "../", so the stored path must stay inside uploadDir
             MockMultipartFile file = new MockMultipartFile(
                     "file",
                     "../../etc/cron.d/backdoor.pdf",
@@ -235,7 +235,7 @@ class CVServiceTest {
 
         @Test
         void createCV_javascriptUrl_throws() {
-            // CR-B1: javascript: scheme must be rejected — defense in depth even if frontend validates
+            // CR-B1: javascript: scheme must be rejected here too, even though the frontend validates
             // User mock required because URL validation happens after the user lookup in createCV()
             when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(testUser));
 
@@ -248,7 +248,7 @@ class CVServiceTest {
 
         @Test
         void createCV_dataUrl_throws() {
-            // CR-B1: data: scheme is another XSS vector — must also be rejected
+            // CR-B1: data: scheme is another XSS vector and must also be rejected
             when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(testUser));
 
             assertThrows(

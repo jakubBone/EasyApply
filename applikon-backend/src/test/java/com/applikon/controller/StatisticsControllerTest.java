@@ -61,7 +61,7 @@ class StatisticsControllerTest {
         TestSecurityContextHolder.clearContext();
     }
 
-    // ==================== STEP 7: Gamification Tests ====================
+    // Step 7: Gamification Tests
 
     @Test
     @Order(1)
@@ -210,7 +210,6 @@ class StatisticsControllerTest {
                 .andExpect(jsonPath("$.totalOffers").value(1));
     }
 
-    // ==================== Helper methods ====================
 
     private Application createRejectedApplication(String company, RejectionReason reason) {
         Application app = new Application();

@@ -71,7 +71,7 @@ class NoteControllerTest {
         TestSecurityContextHolder.clearContext();
     }
 
-    // ==================== STEP 5: Notes Tests ====================
+    // Step 5: Notes Tests
 
     @Test
     @Order(1)
@@ -209,7 +209,6 @@ class NoteControllerTest {
                 .andExpect(jsonPath("$.category").value("OTHER"));
     }
 
-    // ==================== Helper methods ====================
 
     private Application createTestApplication() {
         Application app = new Application();

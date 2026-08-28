@@ -22,10 +22,8 @@ import java.util.Map;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Verifies that users cannot access or modify each other's data.
- * Each test creates resources for userA, then authenticates as userB and attempts access.
- */
+// The one suite that would catch a missing userId in a repository query. Each test seeds data
+// as userA, switches to userB, and expects the resource to be invisible, not merely read-only.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -63,7 +61,6 @@ class DataIsolationTest {
         TestSecurityContextHolder.clearContext();
     }
 
-    // ── Applications ────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("GET /api/applications/{id} - user B cannot read user A's application")
@@ -114,7 +111,6 @@ class DataIsolationTest {
                 .andExpect(status().isNotFound());
     }
 
-    // ── Notes ───────────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("GET /api/applications/{id}/notes - user B cannot read user A's notes")
@@ -151,7 +147,6 @@ class DataIsolationTest {
                 .andExpect(status().isNotFound());
     }
 
-    // ── CVs ─────────────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("GET /api/cv/{id} - user B cannot read user A's CV")
@@ -173,7 +168,6 @@ class DataIsolationTest {
                 .andExpect(status().isNotFound());
     }
 
-    // ── Helpers ─────────────────────────────────────────────────────────────
 
     private void authenticateAs(User user) {
         AuthenticatedUser principal = new AuthenticatedUser(user.getId(), user.getEmail(), user.getName());

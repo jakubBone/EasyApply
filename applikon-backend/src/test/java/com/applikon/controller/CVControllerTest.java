@@ -67,7 +67,7 @@ class CVControllerTest {
         TestSecurityContextHolder.clearContext();
     }
 
-    // ==================== Step 4: CV CRUD Tests ====================
+    // Step 4: CV CRUD Tests
 
     @Test
     @Order(1)
@@ -233,7 +233,6 @@ class CVControllerTest {
                 .andExpect(jsonPath("$[?(@.type=='NOTE')]", hasSize(1)));
     }
 
-    // ==================== Helper methods ====================
 
     private CV createTestCV(String name, CVType type) {
         CV cv = new CV();

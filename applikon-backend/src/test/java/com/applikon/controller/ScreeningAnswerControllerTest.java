@@ -177,7 +177,6 @@ class ScreeningAnswerControllerTest {
         assertTrue(screeningAnswerRepository.findByUserIdOrderBySortOrder(testUser.getId()).isEmpty());
     }
 
-    // ==================== Helpers ====================
 
     private org.springframework.test.web.servlet.ResultActions saveAnswers(List<Map<String, Object>> answers) throws Exception {
         Map<String, Object> body = new HashMap<>();

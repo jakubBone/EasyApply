@@ -67,7 +67,7 @@ class ApplicationControllerTest {
         TestSecurityContextHolder.clearContext();
     }
 
-    // ==================== STEP 1: CRUD Tests ====================
+    // Step 1: CRUD Tests
 
     @Test
     @Order(1)
@@ -204,7 +204,7 @@ class ApplicationControllerTest {
         assertFalse(applicationRepository.findById(id).isPresent());
     }
 
-    // ==================== Step 2: Duplicates ====================
+    // Step 2: Duplicates
 
     @Test
     @Order(9)
@@ -233,7 +233,7 @@ class ApplicationControllerTest {
                 .andExpect(jsonPath("$", hasSize(1)));
     }
 
-    // ==================== STEP 3: Kanban - status change ====================
+    // Step 3: Kanban, status change
 
     @Test
     @Order(11)
@@ -386,7 +386,7 @@ class ApplicationControllerTest {
         Application app = createTestApplication("Google", "Dev");
 
         Map<String, Object> stageRequest = new HashMap<>();
-        // status is intentionally omitted — server receives null
+        // status is intentionally omitted, so the server receives null
 
         mockMvc.perform(patch("/api/applications/" + app.getId() + "/stage")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -395,7 +395,7 @@ class ApplicationControllerTest {
                 .andExpect(jsonPath("$.errors.status").exists());
     }
 
-    // ==================== STEP 4: CV Assignment ====================
+    // Step 4: CV Assignment
 
     @Test
     @Order(19)
@@ -435,7 +435,6 @@ class ApplicationControllerTest {
                 .andExpect(jsonPath("$.cvFileName").isEmpty());
     }
 
-    // ==================== Helper methods ====================
 
     private Application createTestApplication(String company, String position) {
         Application app = new Application();

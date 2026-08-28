@@ -70,9 +70,7 @@ class AuthControllerTest {
     @Order(1)
     @DisplayName("POST /api/auth/consent - accepts privacy policy and sets timestamp")
     void acceptConsent_SetsPrivacyPolicyTimestamp() throws Exception {
-        // Arrange
         User newUser = new User("new@example.com", "New User", "google-new");
-        // Do not accept policy
         newUser = userRepository.save(newUser);
 
         AuthenticatedUser principal = new AuthenticatedUser(
@@ -82,11 +80,9 @@ class AuthControllerTest {
                 principal, null, Collections.emptyList()));
         TestSecurityContextHolder.setContext(ctx);
 
-        // Act
         mockMvc.perform(post("/api/auth/consent"))
                 .andExpect(status().isNoContent());
 
-        // Assert
         User updated = userRepository.findById(newUser.getId()).orElseThrow();
         assertNotNull(updated.getPrivacyPolicyAcceptedAt(), "Should accept policy");
     }
@@ -95,17 +91,14 @@ class AuthControllerTest {
     @Order(2)
     @DisplayName("POST /api/auth/consent - idempotent: calling twice doesn't overwrite timestamp")
     void acceptConsent_Idempotent() throws Exception {
-        // First call
         mockMvc.perform(post("/api/auth/consent"))
                 .andExpect(status().isNoContent());
 
         User firstCall = userRepository.findById(testUser.getId()).orElseThrow();
         LocalDateTime firstTimestamp = firstCall.getPrivacyPolicyAcceptedAt();
 
-        // Sleep briefly
         Thread.sleep(100);
 
-        // Second call
         mockMvc.perform(post("/api/auth/consent"))
                 .andExpect(status().isNoContent());
 
@@ -119,7 +112,7 @@ class AuthControllerTest {
     @Order(3)
     @DisplayName("DELETE /api/auth/me - deletes user account and all related data")
     void deleteAccount_RemovesUserAndAllRelatedData() throws Exception {
-        // Arrange: Create application, CV, note for testUser
+        // Every one of these must be gone after the delete, including the CV file on disk.
         Application app = new Application();
         app.setUser(testUser);
         app.setCompany("Test Corp");
@@ -142,11 +135,9 @@ class AuthControllerTest {
 
         UUID userId = testUser.getId();
 
-        // Act
         mockMvc.perform(delete("/api/auth/me"))
                 .andExpect(status().isNoContent());
 
-        // Assert
         assertFalse(userRepository.existsById(userId), "User should be deleted");
         assertEquals(0, applicationRepository.findAll().size(), "Applications should be deleted");
         assertEquals(0, cvRepository.findAll().size(), "CVs should be deleted");
@@ -200,6 +191,6 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.applications.length()").value(0));
     }
 
-    // Note: 401 for missing JWT is enforced by production SecurityConfig (anyRequest().authenticated()).
-    // TestSecurityConfig uses permitAll() so JWT enforcement cannot be tested at the controller layer.
+    // Missing-JWT handling is not covered here: TestSecurityConfig replaces the production
+    // chain with permitAll(), so a controller test can never observe the 401 it would produce.
 }

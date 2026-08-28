@@ -196,7 +196,6 @@ class BriefControllerTest {
                 .andExpect(jsonPath("$.briefFields[0].text").value("My correction"));
     }
 
-    // ==================== Helpers ====================
 
     private String url(Long applicationId) {
         return "/api/applications/" + applicationId + "/brief";
