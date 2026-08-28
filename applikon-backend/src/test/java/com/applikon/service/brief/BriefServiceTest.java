@@ -174,6 +174,48 @@ class BriefServiceTest {
     }
 
     @Test
+    void markReady_isNoOp_whenBriefIsGone() {
+        when(briefRepository.findById(BRIEF_ID)).thenReturn(Optional.empty());
+
+        String key = BriefLocales.FIELD_KEYS.get(0);
+        service.markReady(BRIEF_ID, new GeneratedBrief(List.of(
+                new GeneratedBrief.Field(key, "pl", "text pl"))));   // no throw: deleted mid-generation
+
+        verify(fieldRepository, never()).deleteByBriefId(any());
+        verify(fieldRepository, never()).saveAll(any());
+        verify(briefRepository, never()).save(any());
+    }
+
+    @Test
+    void delete_removesBrief_whenPresent() {
+        givenOwnedApplication();
+        CompanyBrief brief = brief(BriefStatus.READY);
+        when(briefRepository.findByUserIdAndCompanyName(USER_ID, COMPANY)).thenReturn(Optional.of(brief));
+
+        service.delete(USER_ID, APP_ID);
+
+        verify(briefRepository).delete(brief);
+    }
+
+    @Test
+    void delete_isNoOp_whenBriefIsMissing() {
+        givenOwnedApplication();
+        when(briefRepository.findByUserIdAndCompanyName(USER_ID, COMPANY)).thenReturn(Optional.empty());
+
+        service.delete(USER_ID, APP_ID);                            // no throw
+
+        verify(briefRepository, never()).delete(any());
+    }
+
+    @Test
+    void delete_rejectsApplicationNotOwnedByUser() {
+        when(applicationRepository.findByIdAndUserId(APP_ID, USER_ID)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> service.delete(USER_ID, APP_ID));
+        verify(briefRepository, never()).delete(any());
+    }
+
+    @Test
     void markFailed_setsFailed() {
         CompanyBrief brief = brief(BriefStatus.PENDING);
         when(briefRepository.findById(BRIEF_ID)).thenReturn(Optional.of(brief));

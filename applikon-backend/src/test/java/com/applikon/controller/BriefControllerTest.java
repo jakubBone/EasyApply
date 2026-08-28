@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -180,6 +181,96 @@ class BriefControllerTest {
 
         mockMvc.perform(post(url(foreignAppId))).andExpect(status().isNotFound());
         mockMvc.perform(get(url(foreignAppId))).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("DELETE removes the brief and its fields")
+    void delete_removesBriefAndFields() throws Exception {
+        Long appId = saveApplication(testUser).getId();
+        mockMvc.perform(post(url(appId))).andExpect(status().isAccepted());
+        awaitStatus(appId, "READY");
+        Long briefId = briefRepository.findByUserIdAndCompanyName(testUser.getId(), COMPANY)
+                .orElseThrow().getId();
+
+        mockMvc.perform(delete(url(appId))).andExpect(status().isNoContent());
+
+        mockMvc.perform(get(url(appId))).andExpect(status().isNotFound());
+        assertTrue(briefFieldRepository.findByBriefId(briefId).isEmpty());
+    }
+
+    @Test
+    @DisplayName("Generating again after a delete produces a fresh PENDING brief, not a cache hit")
+    void delete_thenTrigger_givesFreshPending() throws Exception {
+        Long appId = saveApplication(testUser).getId();
+        mockMvc.perform(post(url(appId))).andExpect(status().isAccepted());
+        awaitStatus(appId, "READY");
+        int callsBefore = fakeBriefChatModel.callCount();
+
+        mockMvc.perform(delete(url(appId))).andExpect(status().isNoContent());
+
+        mockMvc.perform(post(url(appId)))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.status").value("PENDING"));
+        awaitStatus(appId, "READY");
+        assertEquals(1, fakeBriefChatModel.callCount() - callsBefore);   // generated again, not reused
+    }
+
+    @Test
+    @DisplayName("Delete applies to every application to that company")
+    void delete_appliesToEveryApplicationToSameCompany() throws Exception {
+        Long app1 = saveApplication(testUser).getId();
+        Long app2 = saveApplication(testUser).getId();   // same company
+        mockMvc.perform(post(url(app1))).andExpect(status().isAccepted());
+        awaitStatus(app1, "READY");
+
+        mockMvc.perform(delete(url(app1))).andExpect(status().isNoContent());
+
+        mockMvc.perform(get(url(app2))).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Deleting a brief that no longer exists is still 204, not 404")
+    void delete_isNoOp_whenBriefAlreadyGone() throws Exception {
+        Long appId = saveApplication(testUser).getId();
+
+        mockMvc.perform(delete(url(appId))).andExpect(status().isNoContent());   // never generated
+        mockMvc.perform(delete(url(appId))).andExpect(status().isNoContent());   // deleted twice
+    }
+
+    @Test
+    @DisplayName("Deleting a brief on a foreign application is rejected with 404, nothing deleted")
+    void delete_rejectsForeignApplication() throws Exception {
+        User otherUser = createUser("other@example.com", "google-brief-c");
+        Long foreignAppId = saveApplication(otherUser).getId();
+
+        authenticateAs(otherUser);
+        mockMvc.perform(post(url(foreignAppId))).andExpect(status().isAccepted());
+        awaitStatus(foreignAppId, "READY");
+
+        authenticateAs(testUser);
+        mockMvc.perform(delete(url(foreignAppId))).andExpect(status().isNotFound());
+
+        assertTrue(briefRepository.findByUserIdAndCompanyName(otherUser.getId(), COMPANY).isPresent());
+    }
+
+    @Test
+    @DisplayName("Deleting a brief removes its edited text from the export")
+    void delete_removesEditedTextFromExport() throws Exception {
+        Long appId = saveApplication(testUser).getId();
+        mockMvc.perform(post(url(appId))).andExpect(status().isAccepted());
+        awaitStatus(appId, "READY");
+        Map<String, Object> body = Map.of("fields", List.of(
+                Map.of("fieldKey", "pitch", "text", "My correction")));
+        mockMvc.perform(put(url(appId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(delete(url(appId))).andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/auth/me/export"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.briefFields", hasSize(0)));
     }
 
     @Test

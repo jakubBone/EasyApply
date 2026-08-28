@@ -44,4 +44,13 @@ public class BriefController {
         briefService.editFields(user.id(), applicationId, request);
         return ResponseEntity.ok().build();
     }
+
+    // Idempotent: a missing brief is still a 204, not a 404. Allowed in every status.
+    @DeleteMapping
+    public ResponseEntity<Void> delete(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long applicationId) {
+        briefService.delete(user.id(), applicationId);
+        return ResponseEntity.noContent().build();
+    }
 }

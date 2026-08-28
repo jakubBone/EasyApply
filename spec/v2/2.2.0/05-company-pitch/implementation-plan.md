@@ -111,9 +111,9 @@ nothing when the brief is gone instead of throwing. Screening answers untouched.
 application → 404, nothing deleted; deleted edited text leaves the export.
 
 **Checklist**
-- [ ] `BriefService.delete`, ownership-scoped, idempotent
-- [ ] `markReady` tolerates a brief deleted mid-generation
-- [ ] `DELETE /api/applications/{id}/brief` → 204
+- [x] `BriefService.delete`, ownership-scoped, idempotent
+- [x] `markReady` tolerates a brief deleted mid-generation
+- [x] `DELETE /api/applications/{id}/brief` → 204
 - [ ] Tests green
 
 ## Step 4 — Frontend: the pitch

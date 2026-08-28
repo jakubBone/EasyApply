@@ -111,7 +111,10 @@ public class BriefService {
     // so it cannot overwrite a user edit.
     @Transactional
     public void markReady(Long briefId, GeneratedBrief generated) {
-        CompanyBrief brief = briefRepository.findById(briefId).orElseThrow(EntityNotFoundException::new);
+        CompanyBrief brief = briefRepository.findById(briefId).orElse(null);
+        if (brief == null) {
+            return;                                     // deleted mid-generation; nothing to write
+        }
         fieldRepository.deleteByBriefId(briefId);
         List<CompanyBriefField> fields = new ArrayList<>();
         for (GeneratedBrief.Field entry : generated.fields()) {
@@ -123,6 +126,15 @@ public class BriefService {
         fieldRepository.saveAll(fields);
         brief.setStatus(BriefStatus.READY);
         briefRepository.save(brief);
+    }
+
+    // Allowed in every status: a PENDING brief can be deleted mid-generation, and the late
+    // worker write from markReady is a no-op once the row is gone. Screening answers untouched.
+    @Transactional
+    public void delete(UUID userId, Long applicationId) {
+        Application application = requireOwnedApplication(applicationId, userId);
+        briefRepository.findByUserIdAndCompanyName(userId, application.getCompany())
+                .ifPresent(briefRepository::delete);   // missing brief is a no-op, not a 404
     }
 
     @Transactional
