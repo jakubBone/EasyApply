@@ -24,8 +24,8 @@ interface Item {
   custom: boolean
 }
 
-/** Merge the saved per-application answers into the fixed "What do you know about us?"
- *  question followed by any custom questions. */
+// Merge the saved per-application answers into the fixed "What do you know about us?"
+//  question followed by any custom questions.
 function buildItems(answers: ScreeningAnswer[]): Item[] {
   const fixed = answers.find(a => !a.custom && a.questionKey === FIXED_COMPANY_KEY)
   const custom = answers
@@ -41,7 +41,7 @@ const toRequest = (items: Item[]): ScreeningAnswerRequest[] =>
       : { questionKey: FIXED_COMPANY_KEY, label: null, answer: it.answer, custom: false },
   )
 
-/** The brief's texts in the current app language, keyed by field — the editor's starting point. */
+// The brief's texts in the current app language, keyed by field: the editor's starting point.
 function buildBriefTexts(brief: BriefResponse | null | undefined, lang: string): Record<string, string> {
   const texts: Record<string, string> = {}
   if (brief?.status !== 'READY') return texts
@@ -51,12 +51,10 @@ function buildBriefTexts(brief: BriefResponse | null | undefined, lang: string):
   return texts
 }
 
-/**
- * Modal editor for the per-application "About the company" prep — same layout/behaviour as
- * the global answers modal (fixed question + add/remove custom questions), saved as a
- * replace-all set of per-application screening answers. A generated brief adds its four
- * fields on top; those save to the company's brief, not to this application.
- */
+// Modal editor for the per-application "About the company" prep, with the same layout as
+// the global answers modal (fixed question + add/remove custom questions), saved as a
+// replace-all set of per-application screening answers. A generated brief adds its four
+// fields on top; those save to the company's brief, not to this application.
 export function CompanyQuestionsModal({ application, onClose }: { application: Application; onClose: () => void }) {
   const { data, isLoading } = useApplicationScreeningAnswers(application.id)
   const { data: brief, isLoading: briefLoading } = useBrief(application.id)
@@ -89,13 +87,13 @@ function CompanyQuestionsEditor({
   const { mutate: saveBrief, isPending: savingBrief } = useEditBrief(applicationId)
   const [items, setItems] = useState<Item[]>(() => buildItems(initial))
   const [briefTexts, setBriefTexts] = useState<Record<string, string>>(() => buildBriefTexts(brief, lang))
-  // The untouched starting point — only fields the user actually changed are sent, so a
+  // The untouched starting point. Only fields the user actually changed are sent, so a
   // generated field is never flagged as the user's own text (it would enter the GDPR export).
   const [initialBriefTexts] = useState(() => buildBriefTexts(brief, lang))
   const showBrief = brief?.status === 'READY'
   // Same rule as the read-only rows: a ready brief makes an unanswered "What do you know
   // about us?" dead weight. Frozen at open, so the field cannot vanish from under the cursor
-  // when the last character is deleted — clearing it hides the field on the next open. It
+  // when the last character is deleted. Clearing it hides the field on the next open. It
   // stays in `items` either way, so saving never drops the stored row.
   const [showFixedQuestion] = useState(
     () => buildItems(initial)[0].answer.trim() !== '' || brief?.status !== 'READY',
@@ -114,7 +112,7 @@ function CompanyQuestionsEditor({
       text: briefTexts[key],
     }))
 
-  // Brief edits go to the company's brief, the answers to this application — save both,
+  // Brief edits go to the company's brief, the answers to this application. Save both,
   // and close only once the answers land.
   const save = () => {
     const briefEdits = showBrief ? changedBriefFields() : []

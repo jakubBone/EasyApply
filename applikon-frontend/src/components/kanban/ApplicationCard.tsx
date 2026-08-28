@@ -24,7 +24,6 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
   const pressTimerRef = useRef<number | null>(null)
   const touchMovedRef = useRef<boolean>(false)
 
-  // Close stage dropdown on outside click
   useEffect(() => {
     if (!showStageDropdown) return
 
@@ -53,30 +52,27 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
     opacity: isDragging ? 0.5 : 1,
   }
 
-  // Long press detection (mobile only - 500ms)
+  // Touch has no right-click, so a half-second hold is the stand-in for the desktop context
+  // menu. Short enough not to feel stuck, long enough not to fire while scrolling the board.
   const handleTouchStart = () => {
     if (!isMobile()) return
 
     touchMovedRef.current = false
 
     pressTimerRef.current = window.setTimeout(() => {
-      // Haptic feedback
       if (navigator.vibrate) {
         navigator.vibrate(50)
       }
 
-      // Visual feedback
       setIsLifting(true)
 
-      // Trigger long press immediately
       onLongPress(application)
 
-      // Hide hint after modal opens
       setTimeout(() => {
         setIsLifting(false)
         setShowHint(false)
       }, 100)
-    }, 500) // 500ms = 0.5 seconds
+    }, 500)
   }
 
   const handleTouchMove = () => {
@@ -89,8 +85,7 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
   const handleTouchEnd = () => {
     if (pressTimerRef.current !== null) clearTimeout(pressTimerRef.current)
     if (!touchMovedRef.current && !showHint) {
-      // Quick tap - normal click behavior (no long press occurred)
-      // Do nothing — this is handled as a drag & drop event
+      // A quick tap is already handled as a click by dnd-kit, so there is nothing to do here.
     }
     setTimeout(() => {
       if (!document.querySelector('.move-modal')) {

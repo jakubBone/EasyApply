@@ -34,7 +34,7 @@ function formatDate(dateString: string, locale: string): string {
   })
 }
 
-// Distinct accents so the accordion sections are instantly distinguishable.
+// Distinct accents so the sections are told apart at a glance, not by reading headers.
 const ACCENT_CHEAT = '#0ea5a5'
 const ACCENT_INFO = '#667eea'
 const ACCENT_JOB = '#e08e0b'
@@ -69,7 +69,7 @@ export function ApplicationDetails({ application, onBack, onDelete, onStageChang
 
   const handleMoveConfirm = () => {
     if (!selectedStatus) { setMoveModalOpen(false); return }
-    // "In progress" always routes to the stage picker — even when the application
+    // "In progress" always routes to the stage picker, even when the application
     // is already in progress, so the specific stage can be changed (like Kanban).
     if (selectedStatus === 'IN_PROGRESS') {
       setMoveModalOpen(false)
@@ -111,7 +111,7 @@ export function ApplicationDetails({ application, onBack, onDelete, onStageChang
 
   const salary = formatSalary(application, i18n.language, t)
 
-  // Status + stage collapsed into one label, e.g. "In progress (Final interview)".
+  // Status and stage read as one thing to the user, e.g. "In progress (Final interview)".
   const statusLabel = t(STATUS_CONFIG[application.status].labelKey)
   const statusText = application.currentStage
     ? `${statusLabel} (${translateStageName(application.currentStage, t)})`

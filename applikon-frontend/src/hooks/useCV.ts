@@ -40,7 +40,7 @@ export function useDeleteCV() {
   return useMutation({
     mutationFn: (id: number) => deleteCV(id),
     onSuccess: () => {
-      // Deleting a CV may detach it from applications — refresh both lists
+      // Deleting a CV may detach it from applications, so refresh both lists
       void queryClient.invalidateQueries({ queryKey: cvKeys.all })
       void queryClient.invalidateQueries({ queryKey: applicationKeys.all })
     },

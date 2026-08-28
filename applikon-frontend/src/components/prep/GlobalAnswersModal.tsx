@@ -5,8 +5,8 @@ import { useScreeningAnswers, useSaveScreeningAnswers } from '../../hooks/useScr
 import { buildItems, toRequest, MAX_ANSWER_LENGTH, type Item } from './globalAnswers'
 import './prep.css'
 
-/** Modal editor for the global "general" answers (fixed template + custom questions).
- *  Confirmed with Save; the read view elsewhere stays read-only. */
+// Modal editor for the global "general" answers (fixed template + custom questions).
+//  Confirmed with Save; the read view elsewhere stays read-only.
 export function GlobalAnswersModal({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation()
   const { data: server = [] } = useScreeningAnswers()

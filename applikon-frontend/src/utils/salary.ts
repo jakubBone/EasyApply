@@ -8,11 +8,9 @@ const CONTRACT_TYPE_KEYS: Record<string, string> = {
   OTHER: 'salary.contractOther',
 }
 
-/**
- * Formats the salary the user proposed for an application (single amount or range,
- * currency, gross/net, contract type). Returns null when nothing was recorded — the
- * caller decides how to render that (e.g. the cheat sheet shows "—").
- */
+// Formats the salary the user proposed for an application (single amount or range,
+// currency, gross/net, contract type). Returns null when nothing was recorded, and the
+// caller decides how to render that (e.g. the cheat sheet shows "—").
 export function formatSalary(app: Application, locale: string, t: TFunction): string | null {
   if (!app.salary && !app.salaryMin) return null
 

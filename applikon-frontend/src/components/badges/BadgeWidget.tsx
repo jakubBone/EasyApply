@@ -31,7 +31,7 @@ interface BadgeRowProps {
   type: 'rejection' | 'ghosting'
 }
 
-// First badge threshold — the same for rejections and ghosting
+// Both badge tracks share this first threshold.
 const FIRST_THRESHOLD = 5
 
 function BadgeRow({ badge, count, type }: BadgeRowProps) {
@@ -40,13 +40,13 @@ function BadgeRow({ badge, count, type }: BadgeRowProps) {
   const hasAchieved = Boolean(badge?.name)
   const isMaxed = hasAchieved && !badge?.nextThreshold
 
-  // Progress bar target: no badge yet — first threshold (5); badge earned — next threshold
+  // Before the first badge the bar aims at 5; after it, at whatever comes next.
   const progressTarget = hasAchieved ? (badge?.nextThreshold ?? null) : FIRST_THRESHOLD
   const progressLabel = hasAchieved ? (badge?.nextThreshold ?? null) : FIRST_THRESHOLD
 
-  // API name (Polish) — used for icon lookup
+  // The API still returns Polish names; they key the icon lookup.
   const nextBadgeApiName = hasAchieved ? badge?.nextBadgeName : (isGhosting ? 'Widmo' : 'Rękawica')
-  // Translated name — used for display
+  // Display name comes from i18n instead.
   const nextBadgeDisplayName = hasAchieved
     ? (badge?.nextBadgeName ? t(`names.${badge.nextBadgeName}` as unknown as ParseKeys<'badges'>) : undefined)
     : (isGhosting ? t('defaults.firstGhosting') : t('defaults.firstRejection'))
@@ -94,7 +94,6 @@ export function BadgeWidget() {
   const [expanded, setExpanded] = useState(false)
   const { data: stats } = useBadgeStats()
 
-  // Render nothing if data is not ready yet
   if (!stats) return null
 
   const { rejectionBadge, ghostingBadge, sweetRevengeUnlocked, totalRejections, totalGhosting } = stats

@@ -7,9 +7,9 @@ import { FIXED_QUESTION_KEYS, FIXED_COMPANY_KEY } from './globalAnswers'
 import type { Application } from '../../types/domain'
 import './prep.css'
 
-/** Read-only "About the company" block: your salary, the AI brief (once generated), then the
- *  company Q&A (the fixed "What do you know about us?" plus any custom questions).
- *  Empty values render as "-". */
+// Read-only "About the company" block: your salary, the AI brief (once generated), then the
+//  company Q&A (the fixed "What do you know about us?" plus any custom questions).
+//  Empty values render as "-".
 export function CompanyPrepReadonly({
   application,
   salary,
@@ -24,7 +24,7 @@ export function CompanyPrepReadonly({
   const fixed = answers.find(a => !a.custom && a.questionKey === FIXED_COMPANY_KEY)
   const custom = answers.filter(a => a.custom)
   // A ready brief already covers what the company does, so an unanswered "What do you know
-  // about us?" is only noise — hide it. Never hide the user's own text: this reads the
+  // about us?" is only noise, so hide it. Never hide the user's own text: this reads the
   // current answer, so clearing it later hides the row too, and writing one brings it back.
   const companyAnswer = fixed?.answer.trim() ?? ''
   const showCompanyAnswer = companyAnswer !== '' || brief?.status !== 'READY'
@@ -51,7 +51,7 @@ export function CompanyPrepReadonly({
   )
 }
 
-/** Read-only global answers: every fixed question (answer or "-") plus custom ones. */
+// Read-only global answers: every fixed question (answer or "-") plus custom ones.
 export function GlobalAnswersReadonly() {
   const { t } = useTranslation()
   const { data: answers = [] } = useScreeningAnswers()

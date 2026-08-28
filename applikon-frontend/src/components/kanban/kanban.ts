@@ -26,7 +26,7 @@ export const PREDEFINED_STAGES: { key: string; labelKey: ParseKeys<'common'> }[]
   { key: 'stage.finalInterview',     labelKey: 'stage.finalInterview' },
 ]
 
-// Maps legacy Polish DB values to i18n keys — no DB migration needed
+// Maps legacy Polish DB values to i18n keys, so no DB migration is needed
 const LEGACY_STAGE_MAP: Record<string, string> = {
   'Rozmowa z HR':         'stage.hrInterview',
   'Rozmowa techniczna':   'stage.technicalInterview',

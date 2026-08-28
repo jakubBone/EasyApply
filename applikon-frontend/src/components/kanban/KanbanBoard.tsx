@@ -27,7 +27,7 @@ import './KanbanBoard.css'
 // Pointer-based collision so a drop lands on whatever is under the cursor.
 // closestCorners compared the dragged card's corners against each droppable's
 // corners; because column droppables span the full column height, a card in an
-// adjacent column could have a closer corner than the intended column — drops
+// adjacent column could have a closer corner than the intended column, so drops
 // resolved to the wrong column. pointerWithin uses the actual pointer position;
 // rectIntersection is the fallback for keyboard dragging (no pointer).
 const collisionDetection: CollisionDetection = (args) => {
@@ -49,7 +49,6 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
   const [endModalOpen, setEndModalOpen] = useState(false)
   const [pendingApplication, setPendingApplication] = useState<Application | null>(null)
 
-  // Mobile states
   const [showSwipeHint] = useState(false)
   const [moveModalOpen, setMoveModalOpen] = useState(false)
   const [moveModalCard, setMoveModalCard] = useState<Application | null>(null)
@@ -57,13 +56,12 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
   const [activeColumn, setActiveColumn] = useState(0)
   const kanbanBoardRef = useRef<HTMLDivElement>(null)
 
-  // Enhanced sensors for better mobile support
-  // On mobile, disable TouchSensor so long-press works without conflicts
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: { distance: 10 }
     }),
-    // DISABLE TouchSensor on mobile - long press will work then
+    // TouchSensor and the long-press handler both claim the same gesture and dnd-kit wins the
+    // race, so on touch devices the sensor is left out and long-press drives the move modal.
     ...(isMobile() ? [] : [
       useSensor(TouchSensor, {
         activationConstraint: {
@@ -75,13 +73,13 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
     useSensor(KeyboardSensor)
   )
 
-  // Sort by application date (newest first)
   const sortByDate = (apps: Application[]): Application[] => {
     return [...apps].sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime())
   }
 
-  // Group applications by status (merge OFERTA and ODMOWA into ZAKONCZONE)
-  // Also handles legacy statuses: ROZMOWA, ZADANIE -> W_PROCESIE, ODRZUCONE -> ZAKONCZONE
+  // Three columns, four statuses: OFFER and REJECTED both read as "done" on a board.
+  // The merge happens here rather than in a query, so the board and the table can disagree
+  // about grouping without either one changing what the server stores.
   const getApplicationsByStatus = (statusId: string): Application[] => {
     let filtered: Application[]
     if (statusId === 'FINISHED') {
@@ -104,9 +102,7 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
   }
 
   const getColumnByStatus = (status: string): string => {
-    // New statuses
     if (status === 'OFFER' || status === 'REJECTED') return 'FINISHED'
-    // Legacy statuses (backward compatibility)
     if (status === 'REJECTED') return 'FINISHED'
     if (status === 'IN_PROGRESS' || status === 'IN_PROGRESS') return 'IN_PROGRESS'
     return status
@@ -127,7 +123,6 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
 
     let targetColumn: string | null = null
 
-    // Check if dropped on a card or a column
     const overApp = findApplication(over.id as string)
     if (overApp) {
       targetColumn = getColumnByStatus(overApp.status)
@@ -140,24 +135,21 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
 
     const currentColumn = getColumnByStatus(activeApp.status)
 
-    // If no column change, do nothing
     if (!targetColumn || targetColumn === currentColumn) return
 
-    // Handle transition to W_PROCESIE
     if (targetColumn === 'IN_PROGRESS') {
       setPendingApplication(activeApp)
       setStageModalOpen(true)
       return
     }
 
-    // Handle transition to ZAKONCZONE
     if (targetColumn === 'FINISHED') {
       setPendingApplication(activeApp)
       setEndModalOpen(true)
       return
     }
 
-    // Handle transition to WYSLANE (revert - clears all data)
+    // Reverting to WYSLANE wipes stage and outcome, so it goes through the same server path.
     if (targetColumn === 'SENT') {
       onStageChange(activeApp.id, {
         status: 'SENT',
@@ -185,18 +177,15 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
     }
   }
 
-  // Mobile: Long press handler
   const handleLongPress = (application: Application) => {
     if (!isMobile()) return
     setMoveModalCard(application)
     setMoveModalOpen(true)
   }
 
-  // Mobile: Move card via modal
   const handleMoveCard = (targetStatus: string) => {
     if (!moveModalCard) return
 
-    // Handle transition to W_PROCESIE
     if (targetStatus === 'IN_PROGRESS') {
       setPendingApplication(moveModalCard)
       setStageModalOpen(true)
@@ -205,7 +194,6 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
       return
     }
 
-    // Handle transition to ZAKONCZONE
     if (targetStatus === 'FINISHED') {
       setPendingApplication(moveModalCard)
       setEndModalOpen(true)
@@ -214,7 +202,7 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
       return
     }
 
-    // Handle transition to WYSLANE (revert)
+    // Reverting to WYSLANE wipes stage and outcome, so it goes through the same server path.
     if (targetStatus === 'SENT') {
       onStageChange(moveModalCard.id, {
         status: 'SENT',
@@ -224,10 +212,8 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
       })
     }
 
-    // Haptic feedback
     if (navigator.vibrate) navigator.vibrate([50, 100, 50])
 
-    // Success toast
     const targetStatusConfig = STATUSES.find(s => s.id === targetStatus)
     showSuccessToast(t('kanban.movedTo', { status: targetStatusConfig ? t(targetStatusConfig.labelKey) : targetStatus }))
 
@@ -235,7 +221,6 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
     setMoveModalCard(null)
   }
 
-  // Mobile: Success toast
   const showSuccessToast = (message: string) => {
     setSuccessToast(message)
     setTimeout(() => {
@@ -243,7 +228,6 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
     }, 2000)
   }
 
-  // Mobile: Scroll tracking
   useEffect(() => {
     if (!isMobile()) return
 
@@ -266,7 +250,6 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
     }
   }, [])
 
-  // Mobile: Navigate to column
   const scrollToColumn = (index: number) => {
     const board = kanbanBoardRef.current
     if (!board) return
@@ -279,7 +262,7 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
 
   const activeApplication = activeId ? findApplication(activeId) : null
 
-  // Derived from the live query data — recomputes after each archive (no dismissal).
+  // Derived from the live query data, so it recomputes after each archive (no dismissal).
   const staleCount = applications.filter(isStale).length
 
   return (

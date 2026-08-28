@@ -1,8 +1,8 @@
 import type { ScreeningAnswer, ScreeningAnswerRequest } from '../../types/domain'
 
-// Fixed template — stable keys; labels come from i18n (answers.questions.<key>).
+// Fixed template with stable keys; labels come from i18n (answers.questions.<key>).
 // These are global (one set per user). "What do you know about the company" is NOT
-// here — it is a per-application screening answer keyed by FIXED_COMPANY_KEY.
+// here: it is a per-application screening answer keyed by FIXED_COMPANY_KEY.
 export const FIXED_QUESTION_KEYS = [
   'about-me',
   'why-changing',
@@ -15,7 +15,7 @@ export const FIXED_COMPANY_KEY = 'company-knowledge'
 
 export const MAX_ANSWER_LENGTH = 1000
 
-// Editable row — mirrors the wire shape minus server-assigned fields.
+// Editable row, mirroring the wire shape minus server-assigned fields.
 export interface Item {
   questionKey: string | null
   label: string | null
@@ -23,7 +23,7 @@ export interface Item {
   custom: boolean
 }
 
-/** Merge the server set into the fixed template, then append custom questions. */
+// Merge the server set into the fixed template, then append custom questions.
 export function buildItems(server: ScreeningAnswer[]): Item[] {
   const fixed: Item[] = FIXED_QUESTION_KEYS.map((key) => {
     const found = server.find((a) => !a.custom && a.questionKey === key)

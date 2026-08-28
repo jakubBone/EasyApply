@@ -4,8 +4,8 @@ import { useBrief, useGenerateBrief } from '../../hooks/useBrief'
 import { BRIEF_FIELD_KEYS, type BriefField } from '../../types/domain'
 import './prep.css'
 
-/** The text to show for a field: the current app language, falling back to whatever
- *  locale the backend stored (an edited field carries the same user text in all of them). */
+// The text to show for a field: the current app language, falling back to whatever
+//  locale the backend stored (an edited field carries the same user text in all of them).
 function textFor(field: BriefField | undefined, lang: string): string | null {
   if (!field) return null
   const own = field.texts[lang]
@@ -14,11 +14,9 @@ function textFor(field: BriefField | undefined, lang: string): string | null {
   return any ?? null
 }
 
-/**
- * The ✨ generate action for the "About the company" header, next to Add/Edit.
- * Rendered only while the company has no brief — a ready brief never regenerates,
- * and a failed one retries from inside the section.
- */
+// The ✨ generate action for the "About the company" header, next to Add/Edit.
+// Rendered only while the company has no brief: a ready brief never regenerates,
+// and a failed one retries from inside the section.
 export function GenerateBriefButton({ applicationId }: { applicationId: number }) {
   const { t } = useTranslation()
   const { data: brief, isLoading } = useBrief(applicationId)
@@ -38,11 +36,9 @@ export function GenerateBriefButton({ applicationId }: { applicationId: number }
   )
 }
 
-/**
- * The brief itself inside the "About the company" section: generating / failed+retry /
- * the four fields as Q&A rows. Renders nothing before the first generation — the header
- * button is the only entry point.
- */
+// The brief itself inside the "About the company" section: generating / failed+retry /
+// the four fields as Q&A rows. Renders nothing before the first generation; the header
+// button is the only entry point.
 export function BriefFields({ applicationId }: { applicationId: number }) {
   const { t, i18n } = useTranslation()
   const { data: brief } = useBrief(applicationId)
@@ -83,7 +79,7 @@ export function BriefFields({ applicationId }: { applicationId: number }) {
             </div>
             <div className="prep-qa-a">
               {text ?? (field?.edited
-                // The user cleared their own text — an empty answer, not a gap in public
+                // The user cleared their own text. That is an empty answer, not a gap in public
                 // data. Only an untouched field can honestly claim nothing was found.
                 ? t('cheatSheet.empty')
                 : <span className="brief-insufficient">{t('brief.insufficient')}</span>)}

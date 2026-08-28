@@ -3,22 +3,22 @@ import './prep.css'
 
 interface Props {
   title: string
-  /** Emoji / node shown before the title, tinted with `accent`. */
+  // Emoji / node shown before the title, tinted with `accent`.
   icon?: ReactNode
-  /** Accent colour for the icon, left border, and — via `--section-accent` — the
-   *  tinting of the Q&A cards inside the expanded body. */
+  // Accent colour for the icon, the left border, and (via `--section-accent`) the
+  //  tinting of the Q&A cards inside the expanded body.
   accent?: string
-  /** Optional control rendered on the right of the header (e.g. an "Edit" link).
-   *  Lives outside the toggle button, so clicking it never toggles the section. */
+  // Optional control rendered on the right of the header (e.g. an "Edit" link).
+  //  Lives outside the toggle button, so clicking it never toggles the section.
   action?: ReactNode
   defaultOpen?: boolean
-  /** Optional test hook (kept language-independent for E2E). */
+  // Optional test hook (kept language-independent for E2E).
   dataCy?: string
   children: ReactNode
 }
 
-/** Accordion section (chevron + icon + title). The accent colours the inside content
- *  (not the header bar) so expanded sections are easy to tell apart. */
+// Accordion section (chevron + icon + title). The accent colours the inside content
+//  (not the header bar) so expanded sections are easy to tell apart.
 export function CollapsibleSection({ title, icon, accent, action, defaultOpen = false, dataCy, children }: Props) {
   const [open, setOpen] = useState(defaultOpen)
 

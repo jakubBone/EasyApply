@@ -9,15 +9,13 @@ import { formatSalary } from '../../utils/salary'
 import type { Application } from '../../types/domain'
 import '../prep/prep.css'
 
-// Distinct accents so the two blocks are instantly distinguishable.
+// Distinct accents so the two blocks are told apart at a glance.
 const COMPANY_ACCENT = '#0ea5a5' // teal
 const GLOBAL_ACCENT = '#667eea' // violet
 
-/**
- * Cheat sheet — the single preparation hub. Pick a company, then read its prep in two
- * collapsible blocks (About the company / General). Everything is read-only here;
- * editing opens a focused modal.
- */
+// Cheat sheet: the single preparation hub. Pick a company, then read its prep in two
+// collapsible blocks (About the company / General). Everything is read-only here;
+// editing opens a focused modal.
 export function CheatSheet({ applications }: { applications: Application[] }) {
   const { t, i18n } = useTranslation()
   const [selectedId, setSelectedId] = useState<number | null>(applications[0]?.id ?? null)

@@ -9,11 +9,9 @@ export const briefKeys = {
 // How often to re-check a brief that is still generating.
 const POLL_INTERVAL_MS = 2000
 
-/**
- * useBrief — the application's company brief. `null` data means no brief was ever
- * generated for this company (the section then offers the generate button).
- * Polls only while the status is PENDING; a terminal status stops it, as does unmount.
- */
+// useBrief: the application's company brief. `null` data means no brief was ever
+// generated for this company (the section then offers the generate button).
+// Polls only while the status is PENDING; a terminal status stops it, as does unmount.
 export function useBrief(applicationId: number | null) {
   return useQuery({
     queryKey: briefKeys.byApp(applicationId ?? 0),
@@ -23,11 +21,9 @@ export function useBrief(applicationId: number | null) {
   })
 }
 
-/**
- * useGenerateBrief — the user's explicit "generate" click (POST). The response already
- * carries the status, so it seeds the cache and polling starts from PENDING without
- * waiting for the next fetch.
- */
+// useGenerateBrief: the user's explicit "generate" click (POST). The response already
+// carries the status, so it seeds the cache and polling starts from PENDING without
+// waiting for the next fetch.
 export function useGenerateBrief(applicationId: number) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -38,10 +34,8 @@ export function useGenerateBrief(applicationId: number) {
   })
 }
 
-/**
- * useEditBrief — saves the user's own text (PUT). The edit lands on the company's brief,
- * so every application's copy is refetched.
- */
+// useEditBrief: saves the user's own text (PUT). The edit lands on the company's brief,
+// so every application's copy is refetched.
 export function useEditBrief(applicationId: number) {
   const queryClient = useQueryClient()
   return useMutation({
