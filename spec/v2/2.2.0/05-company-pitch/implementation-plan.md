@@ -10,7 +10,7 @@ service/ai/GeminiBriefChatModel.java  the same (dormant twin)
 service/ai/FakeBriefChatModel.java    one field per locale, insufficientNext toggle
 service/BriefService.java             + delete(userId, applicationId)
 controller/BriefController.java       + DELETE, 204
-db/migration/V22__company_pitch.sql   new
+db/migration/V23__company_pitch.sql   new
 ```
 
 **Frontend**
@@ -56,9 +56,9 @@ with `edited=true`.
 - [x] `BriefLocales.FIELD_KEYS` is `["pitch"]`
 - [x] Groq prompt rewritten to the company-knowledge structure, no "why applied"; only the company name leaves the system
 - [x] Gemini and Fake adapters follow
-- [ ] `./mvnw test` green
+- [x] `./mvnw test` green
 
-## Step 2 — `V22__company_pitch.sql`
+## Step 2 — `V23__company_pitch.sql`
 
 ```sql
 -- 1. Fold hand-edited text into `pitch`, newest edit wins.
@@ -92,7 +92,7 @@ exists yet when it runs. Step 5's upsert uses `ON CONFLICT ... DO UPDATE` since 
 `pitch` row may already exist for that brief by then (from generation or step 1).
 
 **Checklist**
-- [ ] `V22__company_pitch.sql` with all statements, including the company-knowledge fold-in
+- [x] `V23__company_pitch.sql` with all statements, including the company-knowledge fold-in
 - [ ] Verified on a restored production dump: edited text and folded-in company-knowledge answers survive as `pitch`, nothing else remains
 - [ ] `./mvnw test` green with the migration applied
 
