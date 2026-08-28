@@ -35,7 +35,7 @@ export default function AppContent() {
   const navigate = useNavigate()
   const { signOut } = useAuth()
   // View and selected application live in the URL (?view=list&app=123) so that
-  // every screen change creates a browser history entry — the back button
+  // every screen change creates a browser history entry, so the back button
   // navigates within the app instead of leaving it.
   const [searchParams, setSearchParams] = useSearchParams()
   const viewParam = searchParams.get('view')
@@ -55,7 +55,7 @@ export default function AppContent() {
   const updateStage = useUpdateStage()
   const deleteApplication = useDeleteApplication()
 
-  // Derive selected application from the cache — always fresh after any mutation
+  // Derive selected application from the cache, so it is fresh after any mutation
   const selectedApp = applications.find(a => a.id === selectedAppId) ?? null
 
   // Synchronize logo width with view tabs width

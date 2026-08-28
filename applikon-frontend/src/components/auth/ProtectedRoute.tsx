@@ -6,14 +6,9 @@ interface ProtectedRouteProps {
   children: ReactNode
 }
 
-/**
- * Guards a route against unauthenticated users.
- *
- * Scenarios:
- * - Token verification in progress (isLoading) → render nothing (avoid redirect flash)
- * - Not authenticated → redirect to /login
- * - Authenticated → render children
- */
+// Rendering nothing while the token is being verified is the point: treating "not yet known"
+// as "not logged in" would bounce every returning user to the landing page for a frame before
+// snapping back. A blank moment is cheaper than that flash.
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth()
 

@@ -2,16 +2,9 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { setToken } from '../services/api'
 
-/**
- * Page called after a successful Google login.
- *
- * Backend redirects to: /auth/callback#token=<JWT>
- * Token is in the URL fragment — never sent to the server by the browser.
- * This page:
- * 1. Extracts the token from the URL fragment
- * 2. Saves it in localStorage
- * 3. Redirects to the dashboard
- */
+// Landing point of the Google redirect, at /auth/callback#token=<JWT>.
+// The token rides in the fragment because browsers never send that part to a server, so it
+// stays out of access logs and referrers. Reading it and navigating away is the whole job.
 export function AuthCallbackPage() {
   const navigate = useNavigate()
 

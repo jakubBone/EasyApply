@@ -10,19 +10,12 @@ import {
 } from '../services/api'
 import type { Application, ApplicationRequest, StageUpdateRequest } from '../types/domain'
 
-// Query keys — central location, eliminates typos when invalidating cache
+// One key for the whole list. Every mutation invalidates it, so a typo in a literal key string
+// cannot silently leave a stale view behind.
 export const applicationKeys = {
   all: ['applications'] as const,
 }
 
-/**
- * useApplications — fetches list of all user applications.
- *
- * useQuery automatically:
- * - manages loading/error/data state
- * - caches results (staleTime from QueryClient)
- * - refreshes data on tab return (refetchOnWindowFocus)
- */
 export function useApplications() {
   return useQuery({
     queryKey: applicationKeys.all,
@@ -30,13 +23,6 @@ export function useApplications() {
   })
 }
 
-/**
- * useCreateApplication — creates a new application.
- *
- * useMutation:
- * - onSuccess: invalidates application cache → React Query automatically
- *   refetches the list, view updates without manual setState
- */
 export function useCreateApplication() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -75,14 +61,14 @@ export function useUpdateStage() {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: StageUpdateRequest }) =>
       updateApplicationStage(id, data),
-    // Optimistic update — move the card immediately instead of waiting for the
-    // server round-trip + refetch, which felt laggy on the deployed backend.
+    // Kanban drags have to look instant. Waiting for the round trip and the refetch read as lag
+    // on the deployed backend, so the card moves first and the server confirms after.
     onMutate: async ({ id, data }) => {
       await queryClient.cancelQueries({ queryKey: applicationKeys.all })
       const previous = queryClient.getQueryData<Application[]>(applicationKeys.all)
       queryClient.setQueryData<Application[]>(applicationKeys.all, (old) =>
-        // Cast: StageUpdateRequest types are wider/nullable vs Application;
-        // the onSettled refetch reconciles against the authoritative shape.
+        // StageUpdateRequest is wider and more nullable than Application, so this shape is a guess
+        // at what the server will store. The onSettled refetch replaces it with the real answer.
         old?.map(app => (app.id === id ? ({ ...app, ...data } as Application) : app))
       )
       return { previous }

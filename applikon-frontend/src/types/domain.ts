@@ -1,6 +1,5 @@
-// ============================================================
-// Applikon domain types — mirror backend response shapes
-// ============================================================
+// Hand-written mirrors of the backend response shapes. Nothing generates these, so a backend
+// field rename shows up as a type error here only if this file is updated alongside it.
 
 export type ApplicationStatus = 'SENT' | 'IN_PROGRESS' | 'OFFER' | 'REJECTED'
 
@@ -15,10 +14,6 @@ export type RejectionReason = 'NO_RESPONSE' | 'EMAIL_REJECTION' | 'REJECTED_AFTE
 export type CVType = 'FILE' | 'LINK' | 'NOTE'
 
 export type NoteCategory = 'QUESTIONS' | 'FEEDBACK' | 'OTHER'
-
-// ============================================================
-// Encje
-// ============================================================
 
 export interface Application {
   id: number
@@ -68,9 +63,7 @@ export interface User {
   privacyPolicyAcceptedAt: string | null
 }
 
-// ============================================================
-// Request types (request bodies)
-// ============================================================
+// Request bodies
 
 export interface ApplicationRequest {
   company: string
@@ -93,9 +86,7 @@ export interface StageUpdateRequest {
   rejectionDetails?: string | null
 }
 
-// ============================================================
 // Screening answers ("My answers")
-// ============================================================
 
 // Mirrors ScreeningAnswerResponse.java
 export interface ScreeningAnswer {
@@ -107,7 +98,7 @@ export interface ScreeningAnswer {
   sortOrder: number
 }
 
-// Mirrors ScreeningAnswerRequest.java — server assigns sortOrder by position
+// Mirrors ScreeningAnswerRequest.java; the server assigns sortOrder by position
 export interface ScreeningAnswerRequest {
   questionKey: string | null
   label: string | null
@@ -115,16 +106,14 @@ export interface ScreeningAnswerRequest {
   custom: boolean
 }
 
-// ============================================================
 // Company brief (AI)
-// ============================================================
 
 export type BriefStatus = 'PENDING' | 'READY' | 'FAILED'
 
 // The brief's four fields, in render order. Mirrors BriefLocales.FIELD_KEYS.
 export const BRIEF_FIELD_KEYS = ['industry', 'product_customers', 'tech_stack', 'size_stage'] as const
 
-// Mirrors BriefFieldResponse.java — one text per active locale; null = "not enough public info"
+// Mirrors BriefFieldResponse.java: one text per active locale, null = "not enough public info"
 export interface BriefField {
   key: string
   texts: Record<string, string | null>
@@ -137,15 +126,13 @@ export interface BriefResponse {
   fields: BriefField[]
 }
 
-// Mirrors BriefEditRequest.Field — one user text, stored for every locale
+// Mirrors BriefEditRequest.Field: one user text, stored for every locale
 export interface BriefFieldEdit {
   fieldKey: string
   text: string
 }
 
-// ============================================================
 // Service notices
-// ============================================================
 
 export interface ServiceNotice {
   id: number
@@ -155,9 +142,7 @@ export interface ServiceNotice {
   expiresAt: string | null
 }
 
-// ============================================================
-// Badge / statystyki
-// ============================================================
+// Gamification
 
 // Mirrors BadgeResponse.java from the backend
 export interface BadgeInfo {

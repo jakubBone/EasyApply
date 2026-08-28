@@ -15,7 +15,6 @@ export function ConsentGate({ children }: ConsentGateProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // If user has accepted privacy policy, render children
   if (user && user.privacyPolicyAcceptedAt) {
     return <>{children}</>
   }
@@ -25,7 +24,8 @@ export function ConsentGate({ children }: ConsentGateProps) {
       setIsLoading(true)
       setError(null)
       await acceptConsent()
-      // Reload to fetch updated user data with privacyPolicyAcceptedAt set
+      // A full reload rather than a state update: consent changes what every downstream request is
+      // allowed to do, so the simplest correct move is to start the app over with the new answer.
       window.location.reload()
     } catch {
       setError(t('consent.error') || 'Failed to accept privacy policy')
@@ -39,7 +39,7 @@ export function ConsentGate({ children }: ConsentGateProps) {
       await logout()
       window.location.href = '/'
     } catch {
-      // Even if logout fails, clear local token and redirect
+      // Declining consent has to end the session no matter what the server says.
       localStorage.removeItem('applikon_token')
       window.location.href = '/'
     }

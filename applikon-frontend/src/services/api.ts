@@ -23,11 +23,8 @@ export const getToken = (): string | null => localStorage.getItem(TOKEN_KEY)
 export const setToken = (token: string): void => localStorage.setItem(TOKEN_KEY, token)
 export const clearToken = (): void => localStorage.removeItem(TOKEN_KEY)
 
-/**
- * Builds HTTP headers for each request.
- * JWT access token is sent in the Authorization: Bearer header.
- * Refresh token is in an httpOnly cookie — the browser sends it automatically.
- */
+// Only the access token is set by hand. The refresh cookie is httpOnly, so this code cannot
+// read it and does not need to; the browser attaches it to /api/auth on its own.
 const getHeaders = (contentType?: string): HeadersInit => {
   const headers: Record<string, string> = {}
   const token = getToken()
@@ -53,12 +50,9 @@ const refreshAccessToken = (): Promise<string> => {
   return refreshingPromise
 }
 
-/**
- * Performs a fetch. On 401, tries a silent refresh (via the httpOnly refresh-token
- * cookie) and retries the request once with the new access token. If the refresh
- * fails too — or the retried request still gets a 401 — clears the token and
- * sends the user to log in again.
- */
+// Access tokens expire every 15 minutes, so without this every user would be thrown back to
+// the login page mid-session. A 401 buys exactly one silent refresh and one replay; the isRetry
+// flag is what stops a server that answers 401 unconditionally from recursing forever.
 const apiFetch = async (input: string, init?: RequestInit, isRetry = false): Promise<Response> => {
   const response = await fetch(input, init)
   if (response.status !== 401) return response
@@ -74,7 +68,7 @@ const apiFetch = async (input: string, init?: RequestInit, isRetry = false): Pro
         },
       }, true)
     } catch {
-      // Refresh failed (no valid refresh-token cookie) — fall through to logout.
+      // No usable refresh cookie, so the session is genuinely over. Fall through to logout.
     }
   }
 
@@ -82,10 +76,6 @@ const apiFetch = async (input: string, init?: RequestInit, isRetry = false): Pro
   window.location.href = '/login'
   throw new Error('Unauthorized')
 }
-
-// ============================================================
-// Auth
-// ============================================================
 
 export const fetchCurrentUser = async (): Promise<User> => {
   const response = await apiFetch(`${API_URL}/auth/me`, { headers: getHeaders() })
@@ -125,10 +115,6 @@ export const deleteAccount = async (): Promise<void> => {
   if (!response.ok) throw new Error('api.deleteAccount')
   clearToken()
 }
-
-// ============================================================
-// Applications
-// ============================================================
 
 export const fetchApplications = async (): Promise<Application[]> => {
   const response = await apiFetch(`${API_URL}/applications`, { headers: getHeaders() })
@@ -203,11 +189,7 @@ export const saveApplicationScreeningAnswers = async (
   return response.json() as Promise<ScreeningAnswer[]>
 }
 
-// ============================================================
-// Company brief (AI)
-// ============================================================
-
-/** Starts generation (or returns the cached brief). Always 202 — the body carries the status. */
+// Starts generation (or returns the cached brief). Always 202; the body carries the status.
 export const triggerBrief = async (applicationId: number): Promise<BriefResponse> => {
   const response = await apiFetch(`${API_URL}/applications/${applicationId}/brief`, {
     method: 'POST',
@@ -217,7 +199,7 @@ export const triggerBrief = async (applicationId: number): Promise<BriefResponse
   return response.json() as Promise<BriefResponse>
 }
 
-/** The application's company brief, or `null` when none was ever generated (backend answers 404). */
+// The application's company brief, or `null` when none was ever generated (backend answers 404).
 export const fetchBrief = async (applicationId: number): Promise<BriefResponse | null> => {
   const response = await apiFetch(`${API_URL}/applications/${applicationId}/brief`, { headers: getHeaders() })
   if (response.status === 404) return null
@@ -225,7 +207,7 @@ export const fetchBrief = async (applicationId: number): Promise<BriefResponse |
   return response.json() as Promise<BriefResponse>
 }
 
-/** Writes the user's own text to the company's brief — every locale, on every application to it. */
+// Writes the user's own text to the company's brief: every locale, on every application to it.
 export const editBrief = async (applicationId: number, fields: BriefFieldEdit[]): Promise<void> => {
   const response = await apiFetch(`${API_URL}/applications/${applicationId}/brief`, {
     method: 'PUT',
@@ -243,10 +225,6 @@ export const checkDuplicate = async (company: string, position: string): Promise
   if (!response.ok) throw new Error('api.checkDuplicate')
   return response.json() as Promise<Application[]>
 }
-
-// ============================================================
-// CV
-// ============================================================
 
 export const fetchCVs = async (): Promise<CV[]> => {
   const response = await apiFetch(`${API_URL}/cv`, { headers: getHeaders() })
@@ -306,10 +284,6 @@ export const downloadCV = async (id: number, fileName: string): Promise<void> =>
   URL.revokeObjectURL(url)
 }
 
-// ============================================================
-// Notes
-// ============================================================
-
 export const fetchNotes = async (applicationId: number): Promise<Note[]> => {
   const response = await apiFetch(`${API_URL}/applications/${applicationId}/notes`, {
     headers: getHeaders(),
@@ -346,29 +320,17 @@ export const deleteNote = async (noteId: number): Promise<void> => {
   if (!response.ok) throw new Error('api.deleteNote')
 }
 
-// ============================================================
-// Statistics
-// ============================================================
-
 export const fetchBadgeStats = async (): Promise<BadgeStats> => {
   const response = await apiFetch(`${API_URL}/statistics/badges`, { headers: getHeaders() })
   if (!response.ok) throw new Error('api.fetchStats')
   return response.json() as Promise<BadgeStats>
 }
 
-// ============================================================
-// Service notices
-// ============================================================
-
 export const fetchActiveNotices = async (): Promise<ServiceNotice[]> => {
   const response = await apiFetch(`${API_URL}/system/notices/active`, { headers: getHeaders() })
   if (!response.ok) return []
   return response.json() as Promise<ServiceNotice[]>
 }
-
-// ============================================================
-// Screening answers ("My answers")
-// ============================================================
 
 export const fetchScreeningAnswers = async (): Promise<ScreeningAnswer[]> => {
   const response = await apiFetch(`${API_URL}/screening-answers`, { headers: getHeaders() })
@@ -385,10 +347,6 @@ export const saveScreeningAnswers = async (answers: ScreeningAnswerRequest[]): P
   if (!response.ok) throw new Error('api.saveScreeningAnswers')
   return response.json() as Promise<ScreeningAnswer[]>
 }
-
-// ============================================================
-// User data export
-// ============================================================
 
 export const exportMyData = async (): Promise<void> => {
   const response = await apiFetch(`${API_URL}/auth/me/export`, { headers: getHeaders() })

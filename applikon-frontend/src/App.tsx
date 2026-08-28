@@ -10,13 +10,10 @@ import { DashboardPage } from './pages/DashboardPage'
 import { Settings } from './pages/Settings'
 import { PrivacyPolicy } from './pages/PrivacyPolicy'
 
-/**
- * QueryClient — global client managing query cache.
- *
- * staleTime: 30s — data is "fresh" for 30 seconds, React Query won't
- *   refetch if data is cached and newer than 30s.
- * retry: 1 — retries once on network error before throwing.
- */
+// A 30s staleTime because the data here only changes when this user changes it, in this tab.
+// Refetching on every mount would spend requests to confirm what the cache already knows, and
+// mutations invalidate their own keys anyway. One retry, so a dropped request is not an error
+// screen, but a genuinely down backend still fails fast.
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -26,10 +23,9 @@ const queryClient = new QueryClient({
   },
 })
 
-/**
- * App root — routing and providers only.
- * No business logic.
- */
+// Routing and provider nesting only. The order matters: AuthProvider sits inside the router
+// because it redirects, and ErrorBoundary inside AuthProvider so a crash still renders the
+// fallback for a logged-in user instead of bouncing them to the landing page.
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>

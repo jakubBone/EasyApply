@@ -10,17 +10,7 @@ interface AuthContextValue {
   signOut: () => Promise<void>
 }
 
-// ============================================================
-// Context
-// createContext with undefined as initial value — enforces that
-// useAuth() is only used inside AuthProvider (checked below).
-// ============================================================
-
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
-
-// ============================================================
-// Provider
-// ============================================================
 
 interface AuthProviderProps {
   children: ReactNode
@@ -31,8 +21,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // On app start, check if we have a token and fetch the user data.
-    // If the token has expired or doesn't exist — user stays null.
+    // A token in storage is not proof of a session: it may be expired or revoked. The only way to
+    // find out is to spend one request on it before the app decides what to render.
     const token = getToken()
     if (!token) {
       setIsLoading(false)
@@ -42,7 +32,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     fetchCurrentUser()
       .then(setUser)
       .catch(() => {
-        // Invalid token — clear it and leave user unauthenticated
+        // Dropping the dead token here keeps the next reload from repeating this round trip.
         clearToken()
       })
       .finally(() => setIsLoading(false))
@@ -52,7 +42,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       await logout()
     } catch {
-      // Backend unreachable — log out locally anyway
+      // A failed server logout must not trap the user in a session they asked to leave. The
+      // refresh token then outlives the click, but it expires on its own and the local token
+      // is gone either way.
     }
     clearToken()
     sessionStorage.removeItem('dismissed_notices')
@@ -66,10 +58,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     </AuthContext.Provider>
   )
 }
-
-// ============================================================
-// Hook
-// ============================================================
 
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext)
