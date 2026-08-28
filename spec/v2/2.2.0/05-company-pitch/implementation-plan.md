@@ -53,9 +53,9 @@ survives into the response; `editFields` still writes one text to every locale
 with `edited=true`.
 
 **Checklist**
-- [ ] `BriefLocales.FIELD_KEYS` is `["pitch"]`
-- [ ] Groq prompt rewritten to the company-knowledge structure, no "why applied"; only the company name leaves the system
-- [ ] Gemini and Fake adapters follow
+- [x] `BriefLocales.FIELD_KEYS` is `["pitch"]`
+- [x] Groq prompt rewritten to the company-knowledge structure, no "why applied"; only the company name leaves the system
+- [x] Gemini and Fake adapters follow
 - [ ] `./mvnw test` green
 
 ## Step 2 — `V22__company_pitch.sql`

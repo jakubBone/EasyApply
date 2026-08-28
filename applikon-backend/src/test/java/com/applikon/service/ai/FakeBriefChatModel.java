@@ -11,10 +11,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Profile("test")
 public class FakeBriefChatModel implements BriefChatModel {
 
-    private static final String INSUFFICIENT_FIELD = "size_stage";
-
     private final AtomicInteger calls = new AtomicInteger();
     private volatile boolean failNext = false;
+    private volatile boolean insufficientNext = false;
 
     @Override
     public GeneratedBrief generate(String companyName) {
@@ -22,10 +21,12 @@ public class FakeBriefChatModel implements BriefChatModel {
         if (failNext) {
             throw new IllegalStateException("Fake brief provider forced failure");
         }
+        boolean insufficient = insufficientNext;
+        insufficientNext = false;
         List<GeneratedBrief.Field> fields = new ArrayList<>();
         for (String key : BriefLocales.FIELD_KEYS) {
             for (String lang : BriefLocales.LOCALES) {
-                String text = INSUFFICIENT_FIELD.equals(key) ? null : "[" + lang + "] " + key + " for " + companyName;
+                String text = insufficient ? null : "[" + lang + "] " + key + " for " + companyName;
                 fields.add(new GeneratedBrief.Field(key, lang, text));
             }
         }
@@ -38,5 +39,11 @@ public class FakeBriefChatModel implements BriefChatModel {
 
     public void setFailNext(boolean failNext) {
         this.failNext = failNext;
+    }
+
+    // One-shot: the next generate() returns the "not enough public info" marker (null text) for
+    // every locale, then reverts to normal.
+    public void setInsufficientNext(boolean insufficientNext) {
+        this.insufficientNext = insufficientNext;
     }
 }

@@ -77,6 +77,7 @@ class BriefControllerTest {
         userRepository.deleteAll();
 
         fakeBriefChatModel.setFailNext(false);   // reset the shared fake between tests
+        fakeBriefChatModel.setInsufficientNext(false);
 
         testUser = createUser("test@example.com", "google-brief-a");
         authenticateAs(testUser);
@@ -88,8 +89,8 @@ class BriefControllerTest {
     }
 
     @Test
-    @DisplayName("POST generates a brief; GET returns 4 fields with an insufficient-info marker")
-    void trigger_generatesBrief_withInsufficientMarker() throws Exception {
+    @DisplayName("POST generates a brief; GET returns the pitch field")
+    void trigger_generatesBrief() throws Exception {
         Long appId = saveApplication(testUser).getId();
 
         mockMvc.perform(post(url(appId)))
@@ -97,17 +98,25 @@ class BriefControllerTest {
                 .andExpect(jsonPath("$.status").value("PENDING"));   // generation runs in the background
 
         BriefResponse brief = awaitStatus(appId, "READY");
-        assertEquals(4, brief.fields().size());
+        assertEquals(1, brief.fields().size());
 
-        BriefFieldResponse industry = field(brief, "industry");
-        assertEquals("[pl] industry for Acme", industry.texts().get("pl"));
-        assertEquals("[en] industry for Acme", industry.texts().get("en"));
-        assertFalse(industry.edited());
+        BriefFieldResponse pitch = field(brief, "pitch");
+        assertEquals("[pl] pitch for Acme", pitch.texts().get("pl"));
+        assertEquals("[en] pitch for Acme", pitch.texts().get("en"));
+        assertFalse(pitch.edited());
+    }
 
-        // size_stage is the fake's "not enough public info" field: null text in every locale.
-        BriefFieldResponse sizeStage = field(brief, "size_stage");
-        assertNull(sizeStage.texts().get("pl"));
-        assertNull(sizeStage.texts().get("en"));
+    @Test
+    @DisplayName("Not enough public info generates the insufficient marker (null text) in every locale")
+    void trigger_insufficientInfo_marksNullEveryLocale() throws Exception {
+        Long appId = saveApplication(testUser).getId();
+
+        fakeBriefChatModel.setInsufficientNext(true);
+        mockMvc.perform(post(url(appId))).andExpect(status().isAccepted());
+
+        BriefFieldResponse pitch = field(awaitStatus(appId, "READY"), "pitch");
+        assertNull(pitch.texts().get("pl"));
+        assertNull(pitch.texts().get("en"));
     }
 
     @Test
@@ -149,7 +158,7 @@ class BriefControllerTest {
         awaitStatus(app1, "READY");
 
         Map<String, Object> body = Map.of("fields", List.of(
-                Map.of("fieldKey", "industry", "text", "My correction")));
+                Map.of("fieldKey", "pitch", "text", "My correction")));
         mockMvc.perform(put(url(app1))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
@@ -157,10 +166,10 @@ class BriefControllerTest {
 
         // A different application to the same company sees the edit in every language.
         Long app2 = saveApplication(testUser).getId();
-        BriefFieldResponse industry = field(getBrief(app2), "industry");
-        assertEquals("My correction", industry.texts().get("pl"));
-        assertEquals("My correction", industry.texts().get("en"));
-        assertTrue(industry.edited());
+        BriefFieldResponse pitch = field(getBrief(app2), "pitch");
+        assertEquals("My correction", pitch.texts().get("pl"));
+        assertEquals("My correction", pitch.texts().get("en"));
+        assertTrue(pitch.edited());
     }
 
     @Test
@@ -180,9 +189,8 @@ class BriefControllerTest {
         mockMvc.perform(post(url(appId))).andExpect(status().isAccepted());
         awaitStatus(appId, "READY");
 
-        // Edit one field; the other three stay generated (derived public data).
         Map<String, Object> body = Map.of("fields", List.of(
-                Map.of("fieldKey", "industry", "text", "My correction")));
+                Map.of("fieldKey", "pitch", "text", "My correction")));
         mockMvc.perform(put(url(appId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
@@ -190,9 +198,9 @@ class BriefControllerTest {
 
         mockMvc.perform(get("/api/auth/me/export"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.briefFields", hasSize(1)))   // only the edited field, not generated ones
+                .andExpect(jsonPath("$.briefFields", hasSize(1)))   // the edited field, not generated text
                 .andExpect(jsonPath("$.briefFields[0].company").value(COMPANY))
-                .andExpect(jsonPath("$.briefFields[0].fieldKey").value("industry"))
+                .andExpect(jsonPath("$.briefFields[0].fieldKey").value("pitch"))
                 .andExpect(jsonPath("$.briefFields[0].text").value("My correction"));
     }
 

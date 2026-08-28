@@ -27,10 +27,8 @@ public class GroqBriefChatModel implements BriefChatModel {
 
     // What each BriefLocales.FIELD_KEYS entry means, spelled out for the model
     private static final Map<String, String> FIELD_HINTS = Map.of(
-            "industry", "the industry the company operates in",
-            "product_customers", "what the company builds and who its customers are",
-            "tech_stack", "the technologies the company works with",
-            "size_stage", "company size and maturity stage (startup, scale-up, corporation)");
+            "pitch", "the classic \"what do you know about our company\" interview answer: what "
+                    + "it does, its product or service, its market, what sets it apart");
 
     private final ChatModel chatModel;
     private final ObjectMapper objectMapper;
@@ -65,15 +63,20 @@ public class GroqBriefChatModel implements BriefChatModel {
                 .map(key -> "%s = %s".formatted(key, FIELD_HINTS.getOrDefault(key, key)))
                 .collect(Collectors.joining("; "));
         return """
-                You research companies for job applicants. Search the web for verifiable \
-                public information about the company "%s".
+                You research companies for job applicants preparing for a screening call. Search \
+                the web for verifiable public information about the company "%s".
                 Reply with ONLY one JSON object, no prose and no markdown, exactly in this shape:
                 %s
                 Field meanings: %s.
                 Rules:
+                - write what the candidate would say out loud when asked "what do you know about \
+                  the company", not a research summary
+                - name something concrete: a product, market, technology, or recent move — generic \
+                  filler that would fit any employer is a failed answer
+                - do not cover why the candidate applied here; that is a different, personal question
                 - each value is 1-2 concise sentences written in the language whose ISO 639-1 code is its key
                 - use only verifiable public information
-                - if there is not enough public information for a field, set it to null for EVERY language key — never guess
+                - if there is not enough public information, set it to null for EVERY language key — never guess
                 """.formatted(companyName, schema, hints);
     }
 

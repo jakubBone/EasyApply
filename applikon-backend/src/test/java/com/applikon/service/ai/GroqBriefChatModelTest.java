@@ -24,10 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class GroqBriefChatModelTest {
 
     private static final String FULL_JSON = """
-            {"industry": {"pl": "Fintech (pl)", "en": "Fintech (en)"},
-             "product_customers": {"pl": "Payments (pl)", "en": "Payments (en)"},
-             "tech_stack": {"pl": "Java", "en": "Java"},
-             "size_stage": {"pl": null, "en": null}}
+            {"pitch": {"pl": "Fintech (pl)", "en": "Fintech (en)"}}
             """;
 
     @Test
@@ -36,18 +33,20 @@ class GroqBriefChatModelTest {
         GeneratedBrief brief = adapterReturning("```json\n" + FULL_JSON + "\n```").generate("Acme");
 
         assertEquals(BriefLocales.FIELD_KEYS.size() * BriefLocales.LOCALES.size(), brief.fields().size());
-        assertEquals("Fintech (en)", textOf(brief, "industry", "en"));
-        assertEquals("Fintech (pl)", textOf(brief, "industry", "pl"));
+        assertEquals("Fintech (en)", textOf(brief, "pitch", "en"));
+        assertEquals("Fintech (pl)", textOf(brief, "pitch", "pl"));
     }
 
     @Test
     @DisplayName("JSON null and blank strings become the insufficient-info marker (null text)")
     void nullAndBlankMeanInsufficient() {
-        GeneratedBrief brief = adapterReturning(FULL_JSON.replace("\"Java\"", "\"  \"")).generate("Acme");
+        String json = """
+                {"pitch": {"pl": null, "en": "  "}}
+                """;
+        GeneratedBrief brief = adapterReturning(json).generate("Acme");
 
-        assertNull(textOf(brief, "size_stage", "pl"));
-        assertNull(textOf(brief, "size_stage", "en"));
-        assertNull(textOf(brief, "tech_stack", "en"));
+        assertNull(textOf(brief, "pitch", "pl"));
+        assertNull(textOf(brief, "pitch", "en"));
     }
 
     @Test
