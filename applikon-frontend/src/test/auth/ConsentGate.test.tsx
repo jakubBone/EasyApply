@@ -5,7 +5,6 @@ import { ConsentGate } from '../../components/auth/ConsentGate'
 import { AuthProvider } from '../../components/auth/AuthProvider'
 import * as api from '../../services/api'
 
-// Mock API
 vi.mock('../../services/api', () => ({
   fetchCurrentUser: vi.fn(),
   getToken: vi.fn(),
@@ -15,7 +14,6 @@ vi.mock('../../services/api', () => ({
   deleteAccount: vi.fn(),
 }))
 
-// Mock translation
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => {
@@ -93,7 +91,6 @@ describe('ConsentGate', () => {
       expect(screen.getByText(/To use Applikon/)).toBeInTheDocument()
     })
 
-    // Should NOT render dashboard
     expect(screen.queryByText('Dashboard Content')).not.toBeInTheDocument()
   })
 
@@ -120,13 +117,10 @@ describe('ConsentGate', () => {
     const acceptButton = screen.getByRole('button', { name: /Accept and continue/i })
     const checkbox = screen.getByRole('checkbox')
 
-    // Button should be disabled initially
     expect(acceptButton).toBeDisabled()
 
-    // Check the checkbox
     await userEvent.click(checkbox)
 
-    // Button should now be enabled
     expect(acceptButton).not.toBeDisabled()
   })
 

@@ -25,10 +25,8 @@ const mockApplications = [
   { id: 2, company: 'Meta', position: 'Engineer', status: 'IN_PROGRESS' },
 ]
 
-/**
- * Create a fresh QueryClient for each test via factory.
- * If we used one client, cache from one test would poison the next.
- */
+// Fresh QueryClient per test. Sharing one would let a cached list from an earlier test
+// satisfy a later assertion that should have failed.
 function createWrapper() {
   const queryClient = createTestQueryClient()
   return function Wrapper({ children }: { children: ReactNode }) {

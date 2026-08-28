@@ -36,8 +36,6 @@ describe('API Service', () => {
     localStorage.clear()
   })
 
-  // ==================== Applications API ====================
-
   describe('Applications API', () => {
     it('fetchApplications - fetches list of applications', async () => {
       const mockApplications = [
@@ -153,8 +151,6 @@ describe('API Service', () => {
     })
   })
 
-  // ==================== CV API ====================
-
   describe('CV API', () => {
     it('fetchCVs - fetches list of CVs', async () => {
       const mockCVs = [
@@ -221,8 +217,6 @@ describe('API Service', () => {
     })
   })
 
-  // ==================== Notes API ====================
-
   describe('Notes API', () => {
     it('fetchNotes - fetches notes for application', async () => {
       const mockNotes = [
@@ -268,8 +262,6 @@ describe('API Service', () => {
     })
   })
 
-  // ==================== Statistics API ====================
-
   describe('Statistics API', () => {
     it('fetchBadgeStats - fetches badge statistics', async () => {
       const mockStats = {
@@ -298,7 +290,7 @@ describe('API Service', () => {
     })
   })
 
-  // ==================== apiFetch — refresh flow ====================
+  // apiFetch: the refresh flow
 
   describe('apiFetch refresh flow', () => {
     it('retries with the new token after a 401, then succeeds', async () => {

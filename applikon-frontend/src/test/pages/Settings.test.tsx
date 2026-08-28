@@ -6,7 +6,6 @@ import { Settings } from '../../pages/Settings'
 import { AuthProvider } from '../../components/auth/AuthProvider'
 import * as api from '../../services/api'
 
-// Mock API
 vi.mock('../../services/api', () => ({
   fetchCurrentUser: vi.fn(),
   getToken: vi.fn(),

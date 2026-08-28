@@ -17,7 +17,6 @@ const renderApp = () =>
     { wrapper: QueryWrapper }
   )
 
-// Mock all API functions
 vi.mock('../../services/api', () => ({
   fetchApplications: vi.fn(),
   createApplication: vi.fn(),
@@ -40,7 +39,6 @@ describe('App Component', () => {
   beforeEach(() => {
     vi.resetAllMocks()
 
-    // Default mocks
     vi.mocked(api.fetchApplications).mockResolvedValue([])
     vi.mocked(api.fetchBadgeStats).mockResolvedValue({
       totalRejections: 0,
@@ -54,8 +52,6 @@ describe('App Component', () => {
     vi.mocked(api.fetchCVs).mockResolvedValue([])
     vi.mocked(api.fetchActiveNotices).mockResolvedValue([])
   })
-
-  // ==================== INITIAL RENDERING Tests ====================
 
   describe('Initial Rendering', () => {
     it('renders app header', async () => {
@@ -85,7 +81,6 @@ describe('App Component', () => {
     })
 
     it('shows loading message', async () => {
-      // Delay the API response
       vi.mocked(api.fetchApplications).mockImplementation(() => new Promise(() => {}))
 
       renderApp()
@@ -102,8 +97,6 @@ describe('App Component', () => {
     })
   })
 
-  // ==================== VIEW SWITCHING Tests ====================
-
   describe('View Switching', () => {
     it('switches to list view', async () => {
       vi.mocked(api.fetchApplications).mockResolvedValue([
@@ -118,7 +111,6 @@ describe('App Component', () => {
 
       fireEvent.click(screen.getByText('Lista'))
 
-      // Should switch to table view
       await waitFor(() => {
         expect(screen.getByRole('table')).toBeInTheDocument()
       })
@@ -138,8 +130,6 @@ describe('App Component', () => {
       })
     })
   })
-
-  // ==================== APPLICATION FORM Tests ====================
 
   describe('Application Form', () => {
     it('opens form on button click', async () => {
@@ -222,8 +212,6 @@ describe('App Component', () => {
     })
   })
 
-  // ==================== DUPLICATE CHECKING Tests ====================
-
   describe('Duplicate Checking', () => {
     it('displays duplicate warning', async () => {
       const user = userEvent.setup()
@@ -282,14 +270,14 @@ describe('App Component', () => {
       await user.type(screen.getByLabelText(/Firma/), 'Google')
       await user.type(screen.getByLabelText(/Stanowisko/), 'Developer')
 
-      // First click - shows warning
+      // First submit only warns.
       fireEvent.click(screen.getByText('Dodaj aplikację'))
 
       await waitFor(() => {
         expect(screen.getByText(/Kontynuuj mimo duplikatu/)).toBeInTheDocument()
       })
 
-      // Second click - creates anyway
+      // Second submit goes through despite the warning.
       fireEvent.click(screen.getByText(/Kontynuuj mimo duplikatu/))
 
       await waitFor(() => {
@@ -297,8 +285,6 @@ describe('App Component', () => {
       })
     })
   })
-
-  // ==================== SALARY FORM Tests ====================
 
   describe('Salary Form', () => {
     it('shows single amount field by default', async () => {
@@ -346,8 +332,6 @@ describe('App Component', () => {
     })
   })
 
-  // ==================== APPLICATION LIST Tests ====================
-
   describe('Application List', () => {
     it('displays applications in Kanban view', async () => {
       vi.mocked(api.fetchApplications).mockResolvedValue([
@@ -376,15 +360,13 @@ describe('App Component', () => {
     })
   })
 
-  // ==================== ERROR HANDLING Tests ====================
-
   describe('Error Handling', () => {
     it('handles fetch error — app does not crash', async () => {
       vi.mocked(api.fetchApplications).mockRejectedValue(new Error('Network error'))
 
       renderApp()
 
-      // App should not crash — header and badge widget still render
+      // A failed fetch must degrade, not blank the page.
       await waitFor(() => {
         expect(screen.getByText(/Twoje odznaki/)).toBeInTheDocument()
       })
@@ -406,7 +388,7 @@ describe('App Component', () => {
 
       fireEvent.click(screen.getByText('Dodaj aplikację'))
 
-      // After create error, the form should remain visible (not closed)
+      // Closing the form on error would throw away what the user typed.
       await waitFor(() => {
         expect(screen.getByText('Dodaj nową aplikację')).toBeInTheDocument()
       })

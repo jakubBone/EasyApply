@@ -15,7 +15,7 @@ vi.mock('../../hooks/useScreeningAnswers')
 // The company section also reads the AI brief; this spec is about the prep hub, so it
 // runs with no brief. The brief's own behaviour is covered by BriefSection.test.tsx.
 vi.mock('../../hooks/useBrief')
-// The app form is heavy and only used for salary editing — stub it out here.
+// The app form is heavy and only used for salary editing, so stub it out here.
 vi.mock('../../components/applications/ApplicationForm', () => ({
   ApplicationForm: () => <div data-testid="app-form" />,
 }))
@@ -62,7 +62,7 @@ describe('CheatSheet hub', () => {
       isLoading: false,
     } as never)
     render(<CheatSheet applications={[makeApp()]} />)
-    // Bars are collapsed by default — content is hidden until the user opens them.
+    // Bars are collapsed by default, so content is hidden until the user opens them.
     expect(screen.queryByText('Your salary')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /About the company/ }))
     expect(screen.getByText('Your salary')).toBeInTheDocument()

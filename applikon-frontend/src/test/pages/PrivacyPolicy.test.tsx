@@ -3,7 +3,6 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { PrivacyPolicy } from '../../pages/PrivacyPolicy'
 
-// Mock translation
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
@@ -11,7 +10,6 @@ vi.mock('react-i18next', () => ({
   }),
 }))
 
-// Mock privacy policy content
 vi.mock('../../content/privacyPolicy', () => ({
   privacyPolicyPl: `
 # Polityka prywatności Applikon
@@ -72,7 +70,6 @@ describe('PrivacyPolicy', () => {
   it('displays content with proper formatting', () => {
     render(<MemoryRouter><PrivacyPolicy /></MemoryRouter>)
 
-    // Check for content
     expect(screen.getByText(/Jakub Boniecki/)).toBeInTheDocument()
     expect(screen.getByText(/Email address/)).toBeInTheDocument()
   })
@@ -95,7 +92,6 @@ describe('PrivacyPolicy', () => {
   it('renders with markdown formatting (headings)', () => {
     render(<MemoryRouter><PrivacyPolicy /></MemoryRouter>)
 
-    // Check for markdown-rendered headings
     const h1 = screen.getByRole('heading', { level: 1 })
     expect(h1).toHaveTextContent(/Applikon Privacy Policy/)
 
@@ -106,7 +102,6 @@ describe('PrivacyPolicy', () => {
   it('does NOT display raw markdown syntax', () => {
     render(<MemoryRouter><PrivacyPolicy /></MemoryRouter>)
 
-    // Should NOT contain raw markdown
     expect(screen.queryByText(/^#/)).not.toBeInTheDocument()
     expect(screen.queryByText(/\*\*/)).not.toBeInTheDocument()
   })

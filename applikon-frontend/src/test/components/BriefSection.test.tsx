@@ -44,11 +44,11 @@ const readyBrief: BriefResponse = {
 const generate = vi.fn()
 const editBrief = vi.fn()
 
-/** Point the mocked useBrief at a given brief (null = never generated). */
+// Point the mocked useBrief at a given brief (null = never generated).
 const withBrief = (brief: BriefResponse | null) =>
   vi.mocked(useBrief).mockReturnValue({ data: brief, isLoading: false } as never)
 
-/** Open the "About the company" section — everything but the header button is collapsed. */
+// Open the "About the company" section. Everything but the header button is collapsed.
 const openCompanySection = () =>
   fireEvent.click(screen.getByRole('button', { name: /About the company/ }))
 

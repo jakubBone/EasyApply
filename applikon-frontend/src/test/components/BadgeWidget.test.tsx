@@ -20,8 +20,6 @@ describe('BadgeWidget', () => {
     vi.resetAllMocks()
   })
 
-  // ==================== RENDERING Tests ====================
-
   describe('Rendering', () => {
     it('renders nothing when data is missing', () => {
       vi.mocked(useBadgeStats).mockReturnValue({ data: undefined } as never)
@@ -61,8 +59,6 @@ describe('BadgeWidget', () => {
       expect(screen.getByText(/Odrzucone aplikacje/)).toBeInTheDocument()
     })
   })
-
-  // ==================== REJECTION BADGE Tests ====================
 
   describe('Rejection Badges', () => {
     it('displays "Rękawica" at 5 rejections', () => {
@@ -130,8 +126,6 @@ describe('BadgeWidget', () => {
     })
   })
 
-  // ==================== GHOSTING BADGE Tests ====================
-
   describe('Ghosting Badges', () => {
     it('displays "Widmo" at 5 ghostings', () => {
       vi.mocked(useBadgeStats).mockReturnValue({
@@ -173,8 +167,6 @@ describe('BadgeWidget', () => {
     })
   })
 
-  // ==================== SWEET REVENGE Tests ====================
-
   describe('Sweet Revenge', () => {
     it('displays Sweet Revenge when unlocked', () => {
       vi.mocked(useBadgeStats).mockReturnValue({
@@ -211,8 +203,6 @@ describe('BadgeWidget', () => {
       expect(screen.queryByText('Sweet Revenge')).not.toBeInTheDocument()
     })
   })
-
-  // ==================== ERROR HANDLING Tests ====================
 
   describe('Error Handling', () => {
     it('renders nothing when hook returns no data', () => {

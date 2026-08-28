@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, act } from '@testing-library/react'
 import { AuthProvider, useAuth } from '../../components/auth/AuthProvider'
 
-// Mock entire api module — AuthProvider shouldn't touch real fetch
+// Mock the entire api module so AuthProvider never touches real fetch
 vi.mock('../../services/api', () => ({
   getToken: vi.fn(),
   fetchCurrentUser: vi.fn(),
@@ -56,7 +56,6 @@ describe('AuthProvider', () => {
       </AuthProvider>
     )
 
-    // While loading, should show loading state
     expect(screen.getByText('loading')).toBeInTheDocument()
 
     await waitFor(() => {

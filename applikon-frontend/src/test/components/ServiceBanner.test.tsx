@@ -35,7 +35,7 @@ describe('ServiceBanner', () => {
       t: (key: string) => key,
     })
     render(<ServiceBanner notice={notice} />)
-    // EN test covered by integration — mock reuse is complex; PL tested above
+    // EN test covered by integration; mock reuse is complex, PL tested above
     expect(screen.getByText('Komunikat po polsku')).toBeInTheDocument()
   })
 

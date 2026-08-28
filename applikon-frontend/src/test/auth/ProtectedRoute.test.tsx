@@ -4,19 +4,16 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute'
 import { useAuth } from '../../components/auth/AuthProvider'
 
-// Mock useAuth — test ProtectedRoute in isolation from user fetch logic.
-// We only care about behavior based on hook return values.
+// Mocking useAuth keeps this about redirect behaviour rather than the fetch behind it.
 vi.mock('../../components/auth/AuthProvider', () => ({
   useAuth: vi.fn(),
 }))
 
 const mockUseAuth = vi.mocked(useAuth)
 
-/**
- * Renders ProtectedRoute in a realistic router environment.
- * /login route mimics the login page — this lets us verify
- * that Navigate actually routes there.
- */
+// Renders ProtectedRoute in a realistic router environment.
+// The /login route stands in for the real page, so the assertion can prove Navigate
+// actually routed there rather than just rendering nothing.
 function renderProtectedRoute() {
   return render(
     <MemoryRouter initialEntries={['/dashboard']}>
