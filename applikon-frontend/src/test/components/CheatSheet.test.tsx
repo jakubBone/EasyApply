@@ -8,7 +8,7 @@ import {
   useApplicationScreeningAnswers,
   useSaveApplicationScreeningAnswers,
 } from '../../hooks/useScreeningAnswers'
-import { useBrief, useGenerateBrief, useEditBrief } from '../../hooks/useBrief'
+import { useBrief, useGenerateBrief, useEditBrief, useDeleteBrief } from '../../hooks/useBrief'
 import type { Application } from '../../types/domain'
 
 vi.mock('../../hooks/useScreeningAnswers')
@@ -49,6 +49,7 @@ describe('CheatSheet hub', () => {
     vi.mocked(useBrief).mockReturnValue({ data: null, isLoading: false } as never)
     vi.mocked(useGenerateBrief).mockReturnValue({ mutate: vi.fn(), isPending: false } as never)
     vi.mocked(useEditBrief).mockReturnValue({ mutate: vi.fn(), isPending: false } as never)
+    vi.mocked(useDeleteBrief).mockReturnValue({ mutate: vi.fn(), isPending: false } as never)
   })
 
   it('shows a hint when there are no applications', () => {
@@ -58,7 +59,7 @@ describe('CheatSheet hub', () => {
 
   it('reveals the "About the company" block when expanded', () => {
     vi.mocked(useApplicationScreeningAnswers).mockReturnValue({
-      data: [{ id: 1, questionKey: 'company-knowledge', label: null, answer: 'Fintech, 200 people', custom: false, sortOrder: 0 }],
+      data: [{ id: 1, questionKey: null, label: 'Their office', answer: 'Fintech, 200 people', custom: true, sortOrder: 0 }],
       isLoading: false,
     } as never)
     render(<CheatSheet applications={[makeApp()]} />)

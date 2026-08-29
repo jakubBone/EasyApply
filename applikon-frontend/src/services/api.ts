@@ -217,6 +217,15 @@ export const editBrief = async (applicationId: number, fields: BriefFieldEdit[])
   if (!response.ok) throw new Error('api.editBrief')
 }
 
+// Deletes the company's brief (every application to it). Idempotent: a missing brief is 204.
+export const deleteBrief = async (applicationId: number): Promise<void> => {
+  const response = await apiFetch(`${API_URL}/applications/${applicationId}/brief`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  })
+  if (!response.ok) throw new Error('api.deleteBrief')
+}
+
 export const checkDuplicate = async (company: string, position: string): Promise<Application[]> => {
   const params = new URLSearchParams({ company, position })
   const response = await apiFetch(`${API_URL}/applications/check-duplicate?${params}`, {

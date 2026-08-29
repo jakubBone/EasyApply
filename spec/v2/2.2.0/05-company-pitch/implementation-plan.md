@@ -114,7 +114,7 @@ application → 404, nothing deleted; deleted edited text leaves the export.
 - [x] `BriefService.delete`, ownership-scoped, idempotent
 - [x] `markReady` tolerates a brief deleted mid-generation
 - [x] `DELETE /api/applications/{id}/brief` → 204
-- [ ] Tests green
+- [x] Tests green
 
 ## Step 4 — Frontend: the pitch
 
@@ -145,13 +145,13 @@ closes the editor and the "Generate" action returns; no built-in company row
 exists anywhere in the read view or the editor.
 
 **Checklist**
-- [ ] `BRIEF_PITCH_KEY`, `deleteBrief`, `useDeleteBrief`
-- [ ] Labeled `.brief-pitch` block, clamped to three lines with expand
-- [ ] Pitch delete control lives in the editor (✕ next to the field), not the section header
-- [ ] `cheatSheet.companyLabel` and the built-in company row removed from `PrepReadonly`
-- [ ] Pitch editing + delete in `CompanyQuestionsModal`
-- [ ] i18n PL and EN; the four field labels removed
-- [ ] vitest, lint, build green
+- [x] `BRIEF_PITCH_KEY`, `deleteBrief`, `useDeleteBrief`
+- [x] Labeled `.brief-pitch` block, clamped to three lines with expand
+- [x] Pitch delete control lives in the editor (✕ next to the field), not the section header
+- [x] `cheatSheet.companyLabel` and the built-in company row removed from `PrepReadonly`
+- [x] Pitch editing + delete in `CompanyQuestionsModal`
+- [x] i18n PL and EN; the four field labels removed
+- [x] vitest, lint, build green
 
 ## Step 5 — Frontend: every other question deletable
 

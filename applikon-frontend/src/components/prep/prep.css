@@ -598,9 +598,43 @@
   .brief-spinner { animation: none; }
 }
 
-/* Generated content is tinted apart from the user's own answers below it. */
-.brief-qa {
-  border-left-color: #7c5cff;
+/* The generated pitch: one labeled prose block, tinted apart from the answers below it. */
+.brief-pitch-block {
+  border-left: 3px solid #7c5cff;
+  padding-left: 0.7rem;
+  margin: 0.2rem 0;
+}
+
+.brief-pitch-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #5b6070;
+  margin-bottom: 0.25rem;
+}
+
+.brief-pitch {
+  margin: 0;
+  white-space: pre-wrap;
+  color: #2c2f3a;
+  line-height: 1.5;
+}
+
+.brief-pitch:not(.expanded) {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.brief-pitch-toggle {
+  margin-top: 0.3rem;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #7c5cff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .brief-insufficient {

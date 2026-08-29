@@ -110,8 +110,9 @@ export interface ScreeningAnswerRequest {
 
 export type BriefStatus = 'PENDING' | 'READY' | 'FAILED'
 
-// The brief's four fields, in render order. Mirrors BriefLocales.FIELD_KEYS.
-export const BRIEF_FIELD_KEYS = ['industry', 'product_customers', 'tech_stack', 'size_stage'] as const
+// The brief's single field: the "what do you know about the company" pitch.
+// Mirrors BriefLocales.FIELD_KEYS.
+export const BRIEF_PITCH_KEY = 'pitch'
 
 // Mirrors BriefFieldResponse.java: one text per active locale, null = "not enough public info"
 export interface BriefField {

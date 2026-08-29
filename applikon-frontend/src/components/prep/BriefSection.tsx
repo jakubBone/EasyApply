@@ -1,7 +1,7 @@
-import type { ParseKeys } from 'i18next'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useBrief, useGenerateBrief } from '../../hooks/useBrief'
-import { BRIEF_FIELD_KEYS, type BriefField } from '../../types/domain'
+import { BRIEF_PITCH_KEY, type BriefField } from '../../types/domain'
 import './prep.css'
 
 // The text to show for a field: the current app language, falling back to whatever
@@ -37,12 +37,13 @@ export function GenerateBriefButton({ applicationId }: { applicationId: number }
 }
 
 // The brief itself inside the "About the company" section: generating / failed+retry /
-// the four fields as Q&A rows. Renders nothing before the first generation; the header
-// button is the only entry point.
+// the labeled pitch. Renders nothing before the first generation; the header button is the
+// only entry point. Deleting lives in the editor, not here.
 export function BriefFields({ applicationId }: { applicationId: number }) {
   const { t, i18n } = useTranslation()
   const { data: brief } = useBrief(applicationId)
   const { mutate: retry, isPending: retrying } = useGenerateBrief(applicationId)
+  const [expanded, setExpanded] = useState(false)
 
   if (!brief) return null
 
@@ -67,26 +68,32 @@ export function BriefFields({ applicationId }: { applicationId: number }) {
   }
 
   const lang = i18n.language.split('-')[0]
+  const field = brief.fields.find(f => f.key === BRIEF_PITCH_KEY)
+  const text = textFor(field, lang)
+
   return (
-    <>
-      {BRIEF_FIELD_KEYS.map(key => {
-        const field = brief.fields.find(f => f.key === key)
-        const text = textFor(field, lang)
-        return (
-          <div className="prep-qa brief-qa" key={key} data-cy={`brief-field-${key}`}>
-            <div className="prep-qa-q">
-              <span>✨ {t(`brief.fields.${key}` as unknown as ParseKeys)}</span>
-            </div>
-            <div className="prep-qa-a">
-              {text ?? (field?.edited
-                // The user cleared their own text. That is an empty answer, not a gap in public
-                // data. Only an untouched field can honestly claim nothing was found.
-                ? t('cheatSheet.empty')
-                : <span className="brief-insufficient">{t('brief.insufficient')}</span>)}
-            </div>
-          </div>
-        )
-      })}
-    </>
+    <div className="brief-pitch-block" data-cy={`brief-field-${BRIEF_PITCH_KEY}`}>
+      <div className="brief-pitch-label">✨ {t('brief.pitchLabel')}</div>
+      {text != null ? (
+        <>
+          <p className={`brief-pitch${expanded ? ' expanded' : ''}`}>{text}</p>
+          <button
+            className="brief-pitch-toggle"
+            data-cy="brief-pitch-toggle"
+            onClick={() => setExpanded(e => !e)}
+          >
+            {t(expanded ? 'brief.collapse' : 'brief.expand')}
+          </button>
+        </>
+      ) : (
+        <p className="brief-pitch">
+          {field?.edited
+            // The user cleared their own text. That is an empty answer, not a gap in public
+            // data. Only an untouched field can honestly claim nothing was found.
+            ? t('cheatSheet.empty')
+            : <span className="brief-insufficient">{t('brief.insufficient')}</span>}
+        </p>
+      )}
+    </div>
   )
 }

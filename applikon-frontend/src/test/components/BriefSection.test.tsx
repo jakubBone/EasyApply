@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vites
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import i18n from '../../i18n'
 import { CheatSheet } from '../../components/cheatsheet/CheatSheet'
-import { useBrief, useGenerateBrief, useEditBrief } from '../../hooks/useBrief'
+import { useBrief, useGenerateBrief, useEditBrief, useDeleteBrief } from '../../hooks/useBrief'
 import {
   useScreeningAnswers,
   useSaveScreeningAnswers,
@@ -34,15 +34,13 @@ const app: Application = {
 const readyBrief: BriefResponse = {
   status: 'READY',
   fields: [
-    { key: 'industry', texts: { en: 'Fintech', pl: 'Fintech PL' }, edited: false },
-    { key: 'product_customers', texts: { en: 'B2B payments', pl: 'Płatności B2B' }, edited: false },
-    { key: 'tech_stack', texts: { en: 'Java, Kafka', pl: 'Java, Kafka' }, edited: false },
-    { key: 'size_stage', texts: { en: null, pl: null }, edited: false },
+    { key: 'pitch', texts: { en: 'B2B payments company on Java and Kafka', pl: 'Firma płatności B2B na Javie i Kafce' }, edited: false },
   ],
 }
 
 const generate = vi.fn()
 const editBrief = vi.fn()
+const deleteBrief = vi.fn()
 
 // Point the mocked useBrief at a given brief (null = never generated).
 const withBrief = (brief: BriefResponse | null) =>
@@ -61,6 +59,7 @@ describe('Company brief in the "About the company" section', () => {
     vi.mocked(useSaveApplicationScreeningAnswers).mockReturnValue({ mutate: vi.fn(), isPending: false } as never)
     vi.mocked(useGenerateBrief).mockReturnValue({ mutate: generate, isPending: false } as never)
     vi.mocked(useEditBrief).mockReturnValue({ mutate: editBrief, isPending: false } as never)
+    vi.mocked(useDeleteBrief).mockReturnValue({ mutate: deleteBrief, isPending: false } as never)
     withBrief(null)
   })
 
@@ -82,34 +81,52 @@ describe('Company brief in the "About the company" section', () => {
     expect(screen.getByText(/Generating the brief/)).toBeInTheDocument()
   })
 
-  it('renders the four fields when READY, with no regenerate control', () => {
+  it('renders one labeled pitch block when READY, with no regenerate control', () => {
     withBrief(readyBrief)
     render(<CheatSheet applications={[app]} />)
     expect(screen.queryByRole('button', { name: /Generate brief/ })).not.toBeInTheDocument()
     openCompanySection()
-    expect(screen.getByText('Fintech')).toBeInTheDocument()
-    expect(screen.getByText('B2B payments')).toBeInTheDocument()
-    expect(screen.getByText('Java, Kafka')).toBeInTheDocument()
-    expect(screen.getByText(/Size \/ stage/)).toBeInTheDocument()
+    expect(screen.getByText(/What do you know about the company/)).toBeInTheDocument()
+    expect(screen.getByText('B2B payments company on Java and Kafka')).toBeInTheDocument()
   })
 
-  it('marks a field without public data instead of hiding it', () => {
+  it('clamps the pitch and expands it on the toggle', () => {
     withBrief(readyBrief)
     render(<CheatSheet applications={[app]} />)
     openCompanySection()
+    const pitch = screen.getByText('B2B payments company on Java and Kafka')
+    expect(pitch).not.toHaveClass('expanded')
+    fireEvent.click(screen.getByRole('button', { name: 'Show more' }))
+    expect(pitch).toHaveClass('expanded')
+    fireEvent.click(screen.getByRole('button', { name: 'Show less' }))
+    expect(pitch).not.toHaveClass('expanded')
+  })
+
+  it('marks a pitch without public data instead of hiding it', () => {
+    withBrief({ status: 'READY', fields: [{ key: 'pitch', texts: { en: null, pl: null }, edited: false }] })
+    render(<CheatSheet applications={[app]} />)
+    openCompanySection()
     expect(screen.getByText('Not enough public info')).toBeInTheDocument()
+  })
+
+  it('reads a cleared pitch as an empty answer, not as missing public data', () => {
+    withBrief({ status: 'READY', fields: [{ key: 'pitch', texts: { en: '', pl: '' }, edited: true }] })
+    render(<CheatSheet applications={[app]} />)
+    openCompanySection()
+    expect(screen.queryByText('Not enough public info')).not.toBeInTheDocument()
+    expect(screen.getByText('-')).toBeInTheDocument()
   })
 
   it('follows the app language', async () => {
     withBrief(readyBrief)
     const view = render(<CheatSheet applications={[app]} />)
     openCompanySection()
-    expect(screen.getByText('B2B payments')).toBeInTheDocument()
+    expect(screen.getByText('B2B payments company on Java and Kafka')).toBeInTheDocument()
 
     await act(async () => { await i18n.changeLanguage('pl') })
     view.rerender(<CheatSheet applications={[app]} />)
-    expect(screen.getByText('Płatności B2B')).toBeInTheDocument()
-    expect(screen.queryByText('B2B payments')).not.toBeInTheDocument()
+    expect(screen.getByText('Firma płatności B2B na Javie i Kafce')).toBeInTheDocument()
+    expect(screen.queryByText('B2B payments company on Java and Kafka')).not.toBeInTheDocument()
     await act(async () => { await i18n.changeLanguage('en') })
   })
 
@@ -122,16 +139,18 @@ describe('Company brief in the "About the company" section', () => {
     expect(generate).toHaveBeenCalledTimes(1)
   })
 
-  it('saves only the brief fields the user actually changed', () => {
+  it('saves the pitch only when the user actually changed it', () => {
     withBrief(readyBrief)
     render(<CheatSheet applications={[app]} />)
     fireEvent.click(screen.getAllByRole('button', { name: 'Add/Edit' })[0])
 
-    fireEvent.change(screen.getByDisplayValue('Fintech'), { target: { value: 'Fintech, lending' } })
+    fireEvent.change(screen.getByDisplayValue('B2B payments company on Java and Kafka'), {
+      target: { value: 'B2B payments, lending too' },
+    })
     fireEvent.click(screen.getByText('Save'))
 
     expect(editBrief).toHaveBeenCalledTimes(1)
-    expect(editBrief.mock.calls[0][0]).toEqual([{ fieldKey: 'industry', text: 'Fintech, lending' }])
+    expect(editBrief.mock.calls[0][0]).toEqual([{ fieldKey: 'pitch', text: 'B2B payments, lending too' }])
   })
 
   it('does not touch the brief when only the answers were edited', () => {
@@ -142,60 +161,40 @@ describe('Company brief in the "About the company" section', () => {
     expect(editBrief).not.toHaveBeenCalled()
   })
 
-  it('reads a cleared field as an empty answer, not as missing public data', () => {
-    withBrief({
-      status: 'READY',
-      fields: [
-        { key: 'industry', texts: { en: '', pl: '' }, edited: true },
-        { key: 'product_customers', texts: { en: null, pl: null }, edited: false },
-        { key: 'tech_stack', texts: { en: 'Java', pl: 'Java' }, edited: false },
-        { key: 'size_stage', texts: { en: 'Scale-up', pl: 'Scale-up' }, edited: false },
-      ],
-    })
+  it('deletes the brief from the editor once confirmed', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    withBrief(readyBrief)
     render(<CheatSheet applications={[app]} />)
-    openCompanySection()
-    // Only the untouched empty field may claim nothing was found.
-    expect(screen.getAllByText('Not enough public info')).toHaveLength(1)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Add/Edit' })[0])
+    fireEvent.click(screen.getByRole('button', { name: 'Delete brief' }))
+    expect(deleteBrief).toHaveBeenCalledTimes(1)
+    confirmSpy.mockRestore()
   })
 
-  it('hides the unanswered "What do you know about us?" row once a brief is ready', () => {
+  it('deletes nothing when the delete is cancelled', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    withBrief(readyBrief)
+    render(<CheatSheet applications={[app]} />)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Add/Edit' })[0])
+    fireEvent.click(screen.getByRole('button', { name: 'Delete brief' }))
+    expect(deleteBrief).not.toHaveBeenCalled()
+    confirmSpy.mockRestore()
+  })
+
+  it('has no built-in "What do you know about us?" row in the read view or the editor', () => {
     withBrief(readyBrief)
     render(<CheatSheet applications={[app]} />)
     openCompanySection()
     expect(screen.queryByText('What do you know about us?')).not.toBeInTheDocument()
-  })
-
-  it('keeps that row when the user wrote their own answer there', () => {
-    vi.mocked(useApplicationScreeningAnswers).mockReturnValue({
-      data: [{ id: 1, questionKey: 'company-knowledge', label: null, answer: 'Met them at a meetup', custom: false, sortOrder: 0 }],
-      isLoading: false,
-    } as never)
-    withBrief(readyBrief)
-    render(<CheatSheet applications={[app]} />)
-    openCompanySection()
-    expect(screen.getByText('What do you know about us?')).toBeInTheDocument()
-    expect(screen.getByText('Met them at a meetup')).toBeInTheDocument()
-  })
-
-  it('keeps that row while no brief is ready yet', () => {
-    withBrief({ status: 'PENDING', fields: [] })
-    render(<CheatSheet applications={[app]} />)
-    openCompanySection()
-    expect(screen.getByText('What do you know about us?')).toBeInTheDocument()
-  })
-
-  it('drops the unanswered fixed question from the editor once a brief is ready', () => {
-    withBrief(readyBrief)
-    render(<CheatSheet applications={[app]} />)
     fireEvent.click(screen.getAllByRole('button', { name: 'Add/Edit' })[0])
     expect(screen.queryByText('What do you know about us?')).not.toBeInTheDocument()
-    // The brief's own fields are still editable there.
-    expect(screen.getByDisplayValue('Fintech')).toBeInTheDocument()
+    // The pitch itself is still editable there.
+    expect(screen.getByDisplayValue('B2B payments company on Java and Kafka')).toBeInTheDocument()
   })
 
-  it('shows no brief fields in the editor before a brief exists', () => {
+  it('shows no pitch editor before a brief exists', () => {
     render(<CheatSheet applications={[app]} />)
     fireEvent.click(screen.getAllByRole('button', { name: 'Add/Edit' })[0])
-    expect(screen.queryByText(/Tech stack/)).not.toBeInTheDocument()
+    expect(screen.queryByText('What do you know about the company')).not.toBeInTheDocument()
   })
 })

@@ -34,6 +34,10 @@
     "deleteConfirm": "Are you sure you want to delete this CV? It will also be removed from assigned applications.",
     "removeAssignConfirm": "Are you sure you want to remove the CV assignment?"
   },
+  "brief": {
+    "deleteConfirm": "Delete this company brief? It is shared by every application to this company.",
+    "deleteConfirmEdited": "Delete this company brief? Your own edits to it will be lost, and it is shared by every application to this company."
+  },
   "notes": {
     "deleteConfirm": "Are you sure you want to delete this note?"
   }

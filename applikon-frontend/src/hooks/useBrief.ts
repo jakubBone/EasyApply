@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { editBrief, fetchBrief, triggerBrief } from '../services/api'
+import { deleteBrief, editBrief, fetchBrief, triggerBrief } from '../services/api'
 import type { BriefFieldEdit, BriefResponse } from '../types/domain'
 
 export const briefKeys = {
@@ -40,6 +40,19 @@ export function useEditBrief(applicationId: number) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (fields: BriefFieldEdit[]) => editBrief(applicationId, fields),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brief'] })
+    },
+  })
+}
+
+// useDeleteBrief: removes the company's brief (DELETE). Like the edit, it affects every
+// application to the company, so all copies are refetched. Regenerating afterwards is how
+// a stale brief gets refreshed.
+export function useDeleteBrief(applicationId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => deleteBrief(applicationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brief'] })
     },

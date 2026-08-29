@@ -35,8 +35,6 @@
     "globalSection": "Ogólne",
     "edit": "Dodaj/Edytuj",
     "salaryQuestion": "Twoja stawka",
-    "companyLabel": "Co wiesz o nas?",
-    "companyPlaceholder": "Zbierz najważniejsze fakty o firmie przed rozmową...",
     "answersEmpty": "Nie masz jeszcze ogólnych odpowiedzi.",
     "editCompanyTitle": "Pytania o firmie",
     "editGlobalTitle": "Ogólne pytania",
@@ -49,12 +47,10 @@
     "retry": "Spróbuj ponownie",
     "insufficient": "Za mało publicznych informacji",
     "editTitle": "Brief o firmie",
-    "fields": {
-      "industry": "Branża / czym zajmuje się firma",
-      "product_customers": "Produkt i klienci",
-      "tech_stack": "Stack technologiczny",
-      "size_stage": "Wielkość / etap rozwoju"
-    }
+    "pitchLabel": "Co wiesz o firmie",
+    "delete": "Usuń brief",
+    "expand": "Pokaż więcej",
+    "collapse": "Pokaż mniej"
   },
   "stale": {
     "banner": "Aplikacje bez odpowiedzi ponad 60 dni: {{n}}. Rozważ archiwizację.",

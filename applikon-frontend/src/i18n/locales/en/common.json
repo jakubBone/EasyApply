@@ -35,8 +35,6 @@
     "globalSection": "General",
     "edit": "Add/Edit",
     "salaryQuestion": "Your salary",
-    "companyLabel": "What do you know about us?",
-    "companyPlaceholder": "Gather the key facts about the company before the call...",
     "answersEmpty": "You don't have any general answers yet.",
     "editCompanyTitle": "Company questions",
     "editGlobalTitle": "General questions",
@@ -49,12 +47,10 @@
     "retry": "Try again",
     "insufficient": "Not enough public info",
     "editTitle": "Company brief",
-    "fields": {
-      "industry": "Industry / what the company does",
-      "product_customers": "Product and customers",
-      "tech_stack": "Tech stack",
-      "size_stage": "Size / stage"
-    }
+    "pitchLabel": "What do you know about the company",
+    "delete": "Delete brief",
+    "expand": "Show more",
+    "collapse": "Show less"
   },
   "stale": {
     "banner": "Applications with no response for over 60 days: {{n}}. Consider archiving.",
