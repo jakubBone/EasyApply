@@ -22,10 +22,8 @@
       "Bash(npm test:*)",
       "Bash(npx tsc:*)",
       "Bash(npx cypress:*)",
-      "Bash(./mvnw test *)",
       "Bash(docker-compose --version)",
       "Read(//mnt/**)",
-      "Bash(./mvnw -q test)",
       "WebFetch(domain:ai.google.dev)"
     ],
     "deny": [
