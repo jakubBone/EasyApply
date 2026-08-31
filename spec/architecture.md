@@ -83,7 +83,7 @@ com.applikon/
     BriefGenerationWorker.java     — @TransactionalEventListener(AFTER_COMMIT); hands the model call to `applicationTaskExecutor`, writes back through BriefService
     ai/
       BriefChatModel.java          — port: `GeneratedBrief generate(String companyName)` — the company name is all that leaves the system (ADR-v2-003)
-      BriefLocales.java            — FIELD_KEYS (industry, product_customers, tech_stack, size_stage) + active LOCALES; one source of truth for prompt and persistence
+      BriefLocales.java            — FIELD_KEYS (pitch — collapsed from four fields in 2.2.0 05-company-pitch) + active LOCALES; one source of truth for prompt and persistence
       GeneratedBrief.java          — record (fields: List<Field{fieldKey, lang, text}>); null text = "not enough public info"
       GroqBriefChatModel.java      — active adapter, `groq/compound-mini` via the OpenAI-compatible API (ADR-v2-001)
       GeminiBriefChatModel.java    — dormant adapter, Google Search grounding; kept as the documented return path
@@ -170,9 +170,10 @@ com.applikon/
 |--------|------|-------------|
 | `POST` | `/api/applications/{applicationId}/brief` | Trigger generation — 202 Accepted, body carries the status. Idempotent: `READY` returns the cached brief, `PENDING` is a no-op, only `FAILED` retries |
 | `GET` | `/api/applications/{applicationId}/brief` | The company's brief — 404 when none was ever generated (the frontend reads that as "offer the generate button") |
-| `PUT` | `/api/applications/{applicationId}/brief` | Save the user's own text for one or more fields; writes to the company's brief, so it shows on every application to that company |
+| `PUT` | `/api/applications/{applicationId}/brief` | Save the user's own pitch text; writes to the company's brief, so it shows on every application to that company |
+| `DELETE` | `/api/applications/{applicationId}/brief` | Remove the company's brief (fields cascade). Idempotent (missing brief → 204), allowed in every status. Regeneration is delete-then-generate — [ADR-v2-004](adr/ADR-v2-004-brief-regeneration-is-delete-then-generate.md) |
 
-All three resolve the application first and verify ownership before any work happens.
+All of them resolve the application first and verify ownership before any work happens.
 
 ### Brief generation flow (v2 03-company-brief)
 
@@ -270,6 +271,7 @@ involved: timeouts live in the client beans, retry in Spring AI's `RetryTemplate
 | V20 | `V20__drop_application_company_research.sql` | Drop `applications.company_research` — superseded by V19 (v2 02-cheat-sheet-consolidation, Step 2) |
 | V21 | `V21__company_briefs.sql` | Create `company_briefs` + `company_brief_fields` — the AI company brief (v2 03-company-brief, Step 1) |
 | V22 | `V22__drop_application_agency_and_salary_source.sql` | Drop `applications.agency` and `applications.salary_source` — never wired up in the frontend across the project's history |
+| V23 | `V23__company_pitch.sql` | Collapse the brief's four fields to one `pitch`: fold hand-edited text in (newest wins), drop generated text and now-empty briefs, retire the `project` screening question, and merge the built-in `company-knowledge` answer into `pitch` (v2 2.2.0 05-company-pitch, Step 2) |
 
 ### Current tables
 
@@ -356,7 +358,7 @@ involved: timeouts live in the client beans, retry in Spring AI's `RetryTemplate
 | id | BIGSERIAL | PK |
 | user_id | UUID | FK → users(id), NOT NULL, ON DELETE CASCADE |
 | application_id | BIGINT | FK → applications(id), nullable, ON DELETE CASCADE (V19) — `NULL` = global "General" row, set = "About the company" row for that application |
-| question_key | VARCHAR(64) | nullable — stable key for fixed questions (e.g. `about-me`, `company-knowledge`) |
+| question_key | VARCHAR(64) | nullable — stable key for built-in "General" questions (`about-me`, `why-changing`) |
 | label | VARCHAR(255) | nullable — used for custom questions |
 | answer | TEXT | nullable, max 1000 chars (app-level validation) |
 | custom | BOOLEAN | NOT NULL, default false |
@@ -518,14 +520,14 @@ App.tsx
 |-----------|------|---------|
 | `CheatSheet` | `components/cheatsheet/CheatSheet.tsx` | Cheat-sheet tab: company picker + two read-only collapsible sections + edit-modal triggers |
 | `CollapsibleSection` | `components/prep/CollapsibleSection.tsx` | Accordion with icon/colour header, shared by the cheat sheet and `ApplicationDetails` |
-| `PrepReadonly` | `components/prep/PrepReadonly.tsx` | `CompanyPrepReadonly` (salary + company Q&A) and `GlobalAnswersReadonly` |
-| `GlobalAnswersModal` | `components/prep/GlobalAnswersModal.tsx` | Modal editor for "General" (fixed + custom questions, Save) |
-| `CompanyQuestionsModal` | `components/prep/CompanyQuestionsModal.tsx` | Modal editor for "About the company" (same shape as General, per application) |
-| `BriefSection` | `components/prep/BriefSection.tsx` | (03-company-brief) two exports: `GenerateBriefButton` (the ✨ header action, rendered only while the company has no brief) and `BriefFields` (generating / failed+retry / the four Q&A rows). Both read the same React Query cache, so the cheat sheet and the details page stay in step |
+| `PrepReadonly` | `components/prep/PrepReadonly.tsx` | `CompanyPrepReadonly` (salary + pitch + custom company questions) and `GlobalAnswersReadonly`; both seed via `buildItems`/`labelFor` so a deleted built-in question stays gone |
+| `GlobalAnswersModal` | `components/prep/GlobalAnswersModal.tsx` | Modal editor for "General"; ✕ on every row (built-in included), confirming when the answer is non-empty, Save |
+| `CompanyQuestionsModal` | `components/prep/CompanyQuestionsModal.tsx` | Modal editor for "About the company": the generated pitch with its own ✕ delete on top (ADR-v2-004), then custom questions only — no built-in question, per application |
+| `BriefSection` | `components/prep/BriefSection.tsx` | (03-company-brief) two exports: `GenerateBriefButton` (the ✨ header action, rendered only while the company has no brief) and `BriefFields` (generating / failed+retry / one labeled `pitch` block clamped to three lines with an expand toggle; no delete control — that lives in the editor). Both read the same React Query cache, so the cheat sheet and the details page stay in step |
 | `StaleBanner` | `components/kanban/StaleBanner.tsx` | Top-of-board banner counting stale (`SENT` >60 days) applications |
 | `utils/stale.ts` | `utils/stale.ts` | `isStale`, `daysSince`, `STALE_THRESHOLD_DAYS`, `ARCHIVE_STALE_PAYLOAD` |
 | `utils/salary.ts` | `utils/salary.ts` | `formatSalary` — shared by the cheat sheet and details |
-| `components/prep/globalAnswers.ts` | — | Shared template logic: `FIXED_QUESTION_KEYS`, `FIXED_COMPANY_KEY`, `buildItems` |
+| `components/prep/globalAnswers.ts` | — | Shared answer-row logic: `FIXED_QUESTION_KEYS` (`about-me`, `why-changing`), `buildItems(server, template)` (saved set is authoritative; `template` only seeds a never-saved section, so a deleted built-in question stays deleted), `toRequest`, `labelFor` |
 
 ### Hooks (server state via React Query)
 
@@ -538,7 +540,7 @@ App.tsx
 | `useServiceNotices` | hooks/useServiceNotices.ts | fetch active notices; staleTime 5 min; returns `[]` on error (08-user-data) |
 | `useScreeningAnswers` / `useSaveScreeningAnswers` | hooks/useScreeningAnswers.ts | (v2) fetch/save the global "General" set |
 | `useApplicationScreeningAnswers` / `useSaveApplicationScreeningAnswers` | hooks/useScreeningAnswers.ts | (v2) fetch/save "About the company" for one application |
-| `useBrief` / `useGenerateBrief` / `useEditBrief` | hooks/useBrief.ts | (v2 03-company-brief) fetch the company brief (`null` = never generated), trigger generation, save edited fields. `useBrief` polls every 2 s **only** while the status is `PENDING`; a terminal status and unmount both stop it |
+| `useBrief` / `useGenerateBrief` / `useEditBrief` / `useDeleteBrief` | hooks/useBrief.ts | (v2 03-company-brief) fetch the company brief (`null` = never generated), trigger generation, save the edited pitch, delete the brief. `useBrief` polls every 2 s **only** while the status is `PENDING`; a terminal status and unmount both stop it |
 
 ### API calls (api.ts → backend endpoints)
 
@@ -577,7 +579,8 @@ App.tsx
 | `saveApplicationScreeningAnswers` | PUT | `/api/applications/{id}/screening-answers` (v2) |
 | `triggerBrief` | POST | `/api/applications/{id}/brief` (v2 03-company-brief) |
 | `fetchBrief` | GET | `/api/applications/{id}/brief` — maps 404 to `null`; every other non-OK status throws |
-| `editBrief` | PUT | `/api/applications/{id}/brief` — sends only the fields the user changed |
+| `editBrief` | PUT | `/api/applications/{id}/brief` — sends the pitch only when the user changed it |
+| `deleteBrief` | DELETE | `/api/applications/{id}/brief` — idempotent; called from the editor's ✕ (ADR-v2-004) |
 
 ### i18n
 

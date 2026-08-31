@@ -198,8 +198,8 @@ empty and reopening the editor re-seeds the defaults.
   back up the database first.
 
 **Checklist**
-- [ ] E2E for brief generate/edit/delete and question removal
-- [ ] ADR-v2-004; 2.1.0 open item closed by the ADR alone
-- [ ] `spec/architecture.md` and `as-built.md` updated
-- [ ] CHANGELOG `2.2.0` and version bumps
+- [x] E2E for brief generate/edit/delete and question removal
+- [x] ADR-v2-004; 2.1.0 open item closed by the ADR alone
+- [x] `spec/architecture.md` and `as-built.md` updated
+- [x] CHANGELOG `2.2.0` and version bumps
 - [ ] Backup taken, deployed, verified live
