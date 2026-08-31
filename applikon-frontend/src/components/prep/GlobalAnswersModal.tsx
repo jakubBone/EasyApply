@@ -28,7 +28,7 @@ export function GlobalAnswersModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="prep-modal-overlay" onClick={onClose}>
-      <div className="prep-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div className="prep-modal" data-cy="global-answers-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="prep-modal-head">
           <h2>{t('cheatSheet.editGlobalTitle')}</h2>
           <button className="prep-modal-close" onClick={onClose} aria-label={t('app.close')}>×</button>
@@ -66,7 +66,7 @@ export function GlobalAnswersModal({ onClose }: { onClose: () => void }) {
         </div>
         <div className="prep-modal-actions">
           <button className="prep-modal-btn cancel" onClick={onClose}>{t('notes.cancel')}</button>
-          <button className="prep-modal-btn save" onClick={save} disabled={isPending}>{t('notes.save')}</button>
+          <button className="prep-modal-btn save" data-cy="prep-save" onClick={save} disabled={isPending}>{t('notes.save')}</button>
         </div>
       </div>
     </div>
