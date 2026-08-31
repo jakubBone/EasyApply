@@ -178,11 +178,11 @@ gone from the read view after saving; removing everything leaves the section
 empty and reopening the editor re-seeds the defaults.
 
 **Checklist**
-- [ ] `FIXED_QUESTION_KEYS` is `['about-me', 'why-changing']`; `answers.questions.project` removed
-- [ ] `buildItems(server, template)` seeds only an empty set; shared by both modals
-- [ ] Shared `labelFor`; no private copies
-- [ ] Remove button on every row, confirming on a non-empty answer
-- [ ] vitest, lint, build green
+- [x] `FIXED_QUESTION_KEYS` is `['about-me', 'why-changing']`; `answers.questions.project` removed
+- [x] `buildItems(server, template)` seeds only an empty set; shared by both modals
+- [x] Shared `labelFor`; no private copies
+- [x] Remove button on every row, confirming on a non-empty answer
+- [x] vitest, lint, build green
 
 ## Step 6 — Release chores
 

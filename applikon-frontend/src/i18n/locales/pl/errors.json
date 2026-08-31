@@ -38,6 +38,9 @@
     "deleteConfirm": "Usunąć brief o firmie? Jest współdzielony przez wszystkie aplikacje do tej firmy.",
     "deleteConfirmEdited": "Usunąć brief o firmie? Twoje własne zmiany zostaną utracone, a brief jest współdzielony przez wszystkie aplikacje do tej firmy."
   },
+  "answers": {
+    "deleteConfirm": "Czy na pewno chcesz usunąć to pytanie? Odpowiedź zostanie utracona."
+  },
   "notes": {
     "deleteConfirm": "Czy na pewno chcesz usunąć tę notatkę?"
   }

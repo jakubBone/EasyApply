@@ -2,32 +2,17 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useApplicationScreeningAnswers, useSaveApplicationScreeningAnswers } from '../../hooks/useScreeningAnswers'
 import { useBrief, useDeleteBrief, useEditBrief } from '../../hooks/useBrief'
+import { buildItems, toRequest, MAX_ANSWER_LENGTH, type Item } from './globalAnswers'
 import { BRIEF_PITCH_KEY } from '../../types/domain'
-import type {
-  Application,
-  BriefResponse,
-  ScreeningAnswer,
-  ScreeningAnswerRequest,
-} from '../../types/domain'
+import type { Application, BriefResponse, ScreeningAnswer } from '../../types/domain'
 import './prep.css'
 
-const MAX_ANSWER = 1000
 // Matches BriefEditRequest.Field's @Size(max = 4000)
 const MAX_BRIEF = 4000
 
-interface Item {
-  label: string | null
-  answer: string
-}
-
-// The per-application "About the company" prep is now custom questions only — the generated
-//  pitch covers "what do you know about the company", so there is no built-in question here.
-function buildItems(answers: ScreeningAnswer[]): Item[] {
-  return answers.filter(a => a.custom).map(a => ({ label: a.label ?? '', answer: a.answer }))
-}
-
-const toRequest = (items: Item[]): ScreeningAnswerRequest[] =>
-  items.map(it => ({ questionKey: null, label: it.label, answer: it.answer, custom: true }))
+// The "About the company" prep has no built-in question — the generated pitch already is
+// that answer — so the editor seeds from an empty template: custom questions only.
+const NO_TEMPLATE: readonly string[] = []
 
 // The pitch text in the current app language: the editor's starting point.
 function pitchTextOf(brief: BriefResponse | null | undefined, lang: string): string {
@@ -71,7 +56,7 @@ function CompanyQuestionsEditor({
   const { mutate, isPending } = useSaveApplicationScreeningAnswers(applicationId)
   const { mutate: saveBrief, isPending: savingBrief } = useEditBrief(applicationId)
   const { mutate: removeBrief, isPending: removingBrief } = useDeleteBrief(applicationId)
-  const [items, setItems] = useState<Item[]>(() => buildItems(initial))
+  const [items, setItems] = useState<Item[]>(() => buildItems(initial, NO_TEMPLATE))
   const [pitchText, setPitchText] = useState(() => pitchTextOf(brief, lang))
   // The untouched starting point. Only sent when the user actually changed it, so a generated
   // pitch is never flagged as the user's own text (it would enter the GDPR export).
@@ -83,8 +68,11 @@ function CompanyQuestionsEditor({
     setItems(items.map((it, i) => (i === index ? { ...it, answer: value } : it)))
   const setLabel = (index: number, value: string) =>
     setItems(items.map((it, i) => (i === index ? { ...it, label: value } : it)))
-  const addCustom = () => setItems([...items, { label: '', answer: '' }])
-  const removeCustom = (index: number) => setItems(items.filter((_, i) => i !== index))
+  const addCustom = () => setItems([...items, { questionKey: null, label: '', answer: '', custom: true }])
+  const removeItem = (index: number) => {
+    if (items[index].answer.trim() !== '' && !confirm(tErrors('answers.deleteConfirm'))) return
+    setItems(items.filter((_, i) => i !== index))
+  }
 
   // The brief is shared by every application to this company; warn harder when the user's own
   // edit is about to go. Deleting closes the editor — the read view falls back to "Generate".
@@ -145,18 +133,18 @@ function CompanyQuestionsEditor({
                   placeholder={t('answers.customLabelPlaceholder')}
                   onChange={e => setLabel(index, e.target.value)}
                 />
-                <button className="prep-remove-btn" onClick={() => removeCustom(index)} aria-label={t('answers.removeCustom')}>
+                <button className="prep-remove-btn" onClick={() => removeItem(index)} aria-label={t('answers.removeCustom')}>
                   ✕
                 </button>
               </div>
               <textarea
                 className="prep-textarea"
                 value={item.answer}
-                maxLength={MAX_ANSWER}
+                maxLength={MAX_ANSWER_LENGTH}
                 placeholder={t('answers.answerPlaceholder')}
                 onChange={e => setAnswer(index, e.target.value)}
               />
-              <div className="prep-counter">{item.answer.length}/{MAX_ANSWER}</div>
+              <div className="prep-counter">{item.answer.length}/{MAX_ANSWER_LENGTH}</div>
             </div>
           ))}
           <button className="prep-add-btn" data-cy="prep-add" onClick={addCustom}>+ {t('answers.addCustom')}</button>
