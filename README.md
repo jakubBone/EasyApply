@@ -19,7 +19,6 @@ CVs and interview notes, instead of scattered spreadsheets and expired links.
 [![Applikon screenshot](.github/assets/app-preview.png)](https://aplikujbezspiny.pl)
 <br>
 
-[![WATCH VIDEO DEMO](https://img.shields.io/badge/%20WATCH%20VIDEO%20DEMO%20(PL)-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=sqIwGYWYn_E)
 [![Full App](https://img.shields.io/badge/▶%20%20OPEN%20FULL%20APPLICATION-22C55E?style=for-the-badge)](https://aplikujbezspiny.pl)
 <br>
 
