@@ -24,6 +24,13 @@ DELETE FROM screening_answers WHERE custom = FALSE AND question_key = 'project';
 --    question_key = 'company-knowledge') merges into 'pitch' instead of staying
 --    a separate row — the two read as duplicates of each other. Newest answer
 --    per (user, company) wins.
+--
+--    One statement on purpose: a WITH clause is only in scope for the single
+--    statement it heads, and a data-modifying CTE's inserted rows are invisible
+--    to sibling CTEs except through its own RETURNING. So `ensured_brief` upserts
+--    the brief (DO UPDATE, not DO NOTHING, so its RETURNING also covers a brief
+--    that already existed) and the final INSERT reads the pitch text straight off
+--    that RETURNING output joined back to newest_answer.
 WITH newest_answer AS (
     SELECT DISTINCT ON (a.user_id, ap.company)
            a.user_id, ap.company AS company_name, a.answer
@@ -38,20 +45,15 @@ ensured_brief AS (
     INSERT INTO company_briefs (user_id, company_name, status, created_at, updated_at)
     SELECT user_id, company_name, 'READY', now(), now()
     FROM   newest_answer
-    ON CONFLICT (user_id, company_name) DO NOTHING
+    ON CONFLICT (user_id, company_name)
+        DO UPDATE SET status = 'READY', updated_at = now()
     RETURNING id, user_id, company_name
 )
-UPDATE company_briefs b
-SET    status = 'READY', updated_at = now()
-FROM   newest_answer n
-WHERE  b.user_id = n.user_id AND b.company_name = n.company_name;
-
--- A 'pitch' row may already exist for that brief by now (from step 1, or from a
--- real generation), so this upsert overwrites it: the user's own answer wins.
 INSERT INTO company_brief_fields (brief_id, field_key, lang, text, edited)
-SELECT b.id, 'pitch', lang.code, n.answer, TRUE
-FROM   newest_answer n
-JOIN   company_briefs b ON b.user_id = n.user_id AND b.company_name = n.company_name
+SELECT eb.id, 'pitch', lang.code, n.answer, TRUE
+FROM   ensured_brief eb
+JOIN   newest_answer n
+  ON   n.user_id = eb.user_id AND n.company_name = eb.company_name
 CROSS JOIN (VALUES ('pl'), ('en')) AS lang(code)
 ON CONFLICT (brief_id, field_key, lang) DO UPDATE SET text = EXCLUDED.text, edited = TRUE;
 
