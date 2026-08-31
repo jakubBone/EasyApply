@@ -1,6 +1,6 @@
 # 💼 Applikon
 
-![Version](https://img.shields.io/badge/v-2.1.0-green.svg)
+![Version](https://img.shields.io/badge/v-2.2.0-green.svg)
 ![Java](https://img.shields.io/badge/Java-21-007396?style=flat&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4-6DB33F?style=flat&logo=springboot&logoColor=white)
 ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=flat&logo=springsecurity&logoColor=white)

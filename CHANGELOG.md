@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-08-31
+
+### Changed
+- Company brief is now a single "What do you know about the company" answer instead of four separate fields; existing hand-edited text is carried over
+- The brief shows under its own label, clamped to three lines with a "show more" toggle
+- Every prepared question can now be removed, including the built-in "General" ones; a deleted question stays gone
+
+### Added
+- Delete a company brief from its editor; generating again is how a stale brief gets refreshed
+
+### Removed
+- The built-in "What do you know about us?" question — its answer merges into the brief
+- The built-in "Tell us about your project" question
+
 ## [2.1.0] - 2026-07-22
 
 ### Added
