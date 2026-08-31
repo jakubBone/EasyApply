@@ -202,4 +202,4 @@ empty and reopening the editor re-seeds the defaults.
 - [x] ADR-v2-004; 2.1.0 open item closed by the ADR alone
 - [x] `spec/architecture.md` and `as-built.md` updated
 - [x] CHANGELOG `2.2.0` and version bumps
-- [ ] Backup taken, deployed, verified live
+- [x] Backup taken, deployed, verified live

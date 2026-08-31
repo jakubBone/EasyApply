@@ -49,9 +49,10 @@ built-in question of its own — the pitch is that answer.
 | Step 4, pitch clamp | `-webkit-line-clamp: 3` with an expand toggle | Toggle renders whenever there is pitch text, not only when it overflows three lines | Measuring real overflow needs a ref + resize observer for a control that is harmless when the text is short |
 | Step 5, `labelFor` | Shared by both modals | Shared by the module; `CompanyQuestionsModal` does not call it | Every row there is a custom question with an editable label input; only `GlobalAnswersModal` and the read views render a fixed label |
 | Step 6, deploy note | "`V22` is destructive — back up first" | The destructive migration is **`V23`** | Plan typo; `V22` is the unrelated agency/salary_source column drop |
+| Step 6, deploy | `V23` applies on the first deploy | Failed on the first deploy and rolled back; fixed in a follow-up commit and redeployed | Step 5's second statement referenced the `newest_answer` CTE after it had gone out of scope (a `WITH` clause covers only the one statement it heads). Folded step 5 into a single `INSERT` whose `ensured_brief` CTE upserts with `DO UPDATE ... RETURNING`, so the field insert reads the pitch off that output |
 
 ## 3. Not done
 
 | Item | Why not |
 |------|---------|
-| Backup taken, deployed, verified live | Manual step, run by the maintainer against production per [`deployment-hetzner.md`](../../deployment/deployment-hetzner.md). `V23` deletes generated brief text and two screening questions — a database backup must precede it |
+| Migrations executed against PostgreSQL in the suite | The test profile sets `spring.flyway.enabled=false` and runs on H2, so `./mvnw test` never applies a migration. `V23` reaching production broken is the direct cost — its SQL had only ever been parsed, never run. A Testcontainers pass that applies every migration to real PostgreSQL is the fix; out of scope for this topic |
