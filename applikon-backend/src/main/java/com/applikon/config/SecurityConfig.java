@@ -129,12 +129,13 @@ public class SecurityConfig {
                                 .decoder(jwtDecoder)
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter)))
 
+                // filter runs before because /api/admin/** has X-Admin-Key instead JWT
+                .addFilterBefore(adminKeyFilter,
+                        org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
+
                 // The consent filter reads an authenticated principal from context,
                 // so it runs after the JWT filter (if privacyPolicyAccepted == null -> 403 CONSENT_REQUIRED)
                 .addFilterAfter(consentRequiredFilter,
-                        org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
-                // filter runs before because /api/admin/** has X-Admin-Key instead JWT
-                .addFilterBefore(adminKeyFilter,
                         org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
 
                 .build();
