@@ -26,9 +26,9 @@ public class JwtAuthenticationConverter implements Converter<Jwt, AbstractAuthen
         return new AuthenticatedUserToken(jwt, authenticatedUser);
     }
 
-    // JwtAuthenticationToken.getPrincipal() is hardcoded to return the Jwt, and the class
-    // offers no hook to change that. Subclassing to override the one method is the smallest
-    // way to swap in AuthenticatedUser while keeping the rest of the resource-server plumbing.
+    // JwtAuthenticationToken.getPrincipal() always returns the raw Jwt and can't be
+    // configured otherwise. Subclassing to override that one method is the smallest way
+    // to expose AuthenticatedUser instead
     static class AuthenticatedUserToken extends JwtAuthenticationToken {
 
         private final AuthenticatedUser authenticatedUser;

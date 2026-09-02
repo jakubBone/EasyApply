@@ -30,9 +30,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-// The single place every security decision is made: RS256 signing keys, endpoint access
-// rules, Google login, and the JWT check on each request. Sessions stay out of it, so the
-// only thing identifying a caller is the bearer token.
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -86,13 +83,10 @@ public class SecurityConfig {
             ConsentRequiredFilter consentRequiredFilter,
             AdminKeyFilter adminKeyFilter) throws Exception {
         return http
-                // Nothing to forge: the credential is a bearer token the client attaches by
-                // hand, not a cookie the browser attaches on its own.
+                // No session/no cookies, only use bearer token
                 .csrf(AbstractHttpConfigurer::disable)
 
                 .headers(headers -> headers
-                        // Swagger UI ships inline scripts and styles, so 'unsafe-inline' is the
-                        // price of serving the docs from this app.
                         .contentSecurityPolicy(csp -> csp.policyDirectives(
                                 "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"))
                         .frameOptions(frame -> frame.deny())
@@ -101,42 +95,45 @@ public class SecurityConfig {
                                 .maxAgeInSeconds(31536000))
                 )
 
-                // Registered on the security chain rather than the MVC layer: a preflight
-                // OPTIONS carries no token and has to pass before authentication runs.
+                // Check origin
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
-                        // Reached precisely when the access token has expired, so it cannot
-                        // require one. The httpOnly refresh cookie is the credential instead.
+                        // When the access token has expired
+                        // The httpOnly refresh cookie is the credential instead
                         .requestMatchers("/api/auth/refresh").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
-                        // Open to this chain, not to callers: AdminKeyFilter below rejects
-                        // anything without a valid X-Admin-Key header.
+                        // AdminKeyFilter below rejects anything without a valid X-Admin-Key header.
                         .requestMatchers("/api/admin/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
+                // Register filters for:
+                // - GET /oauth2/authorization/google -> 302 redirect Google
+                // - callback GET /login/oauth2/code/google -> exchange code to tokens/sub
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService))
                         .successHandler(oAuth2AuthenticationSuccessHandler)
                 )
 
+                // Isolate the token from header, verify with RSA public key
+                // create AuthenticatedUser -> add to SecurityContextHolder
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .decoder(jwtDecoder)
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter)))
 
-                // Order matters both ways. The consent check reads an authenticated principal,
-                // so it runs after the JWT filter; the admin key is the only credential on
-                // /api/admin/**, so its filter runs before.
+                // The consent filter reads an authenticated principal from context,
+                // so it runs after the JWT filter (if privacyPolicyAccepted == null -> 403 CONSENT_REQUIRED)
                 .addFilterAfter(consentRequiredFilter,
                         org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
+                // filter runs before because /api/admin/** has X-Admin-Key instead JWT
                 .addFilterBefore(adminKeyFilter,
                         org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
 

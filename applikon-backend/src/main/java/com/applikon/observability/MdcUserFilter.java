@@ -13,9 +13,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-// Stamps the caller's id onto every log line of a request (Logback pattern %X{userId}), so a
-// report can be traced without threading a userId through every method signature. Depends on
-// running after the security chain, which is where Boot registers @Component filters anyway.
+// Mapped Diagnostic Context stamps the caller's id onto every log line of a request
+// (Logback pattern %X{userId}), so a report can be traced without threading a userId
+// through every method signature. Run after the main security chain
 @Component
 public class MdcUserFilter extends OncePerRequestFilter {
 
@@ -34,8 +34,7 @@ public class MdcUserFilter extends OncePerRequestFilter {
             }
             filterChain.doFilter(request, response);
         } finally {
-            // The clear has to happen even on an exception. Tomcat reuses request threads, so
-            // a leaked key would label the next user's logs with the previous user's id.
+            // The clear has to happen after all request, or even on an exception
             MDC.remove(MDC_KEY);
         }
     }
